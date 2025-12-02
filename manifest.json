@@ -1,0 +1,32 @@
+{ 
+  "name": "SDN 172 ANDIR KIDUL KOTA BANDUNG", 
+  "short_name": "SDN 172 ANDIR KIDUL", 
+  "description": "Institusi Pendidikan Dinas Pendidikan Kota Bandung", 
+  "icons": [ 
+    {     
+      "src": "D://", 
+      "sizes": "70x70", 
+      "type": "image/png" 
+    }, 
+    {     
+      "src": "/src/logo-ankid.png", 
+      "sizes": "144x144", 
+      "type": "image/png" 
+    }, 
+    {     
+      "src": "/logo/logo-192x192.png", 
+      "sizes": "192x192", 
+      "type": "image/png" 
+    } , 
+    {     
+      "src": "/logo/logo-600x310.png", 
+      "sizes": "600x310", 
+      "type": "image/png" 
+    }  
+  ],
+ "orientation" : "portrait",
+ "theme_color": "orange",
+ "background_color": "blue",
+ "display": "standalone", 
+  "start_url": "/"
+}
