@@ -1,0 +1,6 @@
+{
+  "id": 99,
+  "type": "auto_backup",
+  "timestamp": "2025-11-26T...",
+  "data": "data:application/x-sqlite3;base64,....."
+}

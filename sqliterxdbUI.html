@@ -1,0 +1,107 @@
+<!-- ======================= HALAMAN PENGATURAN DATABASE ======================= -->
+<div class="container mt-4 p-4 border rounded shadow bg-light">
+  <h2 class="mb-3">Pengaturan Database</h2>
+  <p>Backup dan restore database aplikasi Rapor Kurikulum Merdeka.</p>
+
+  <div class="d-flex gap-2 mt-4">
+    <!-- Tombol Export -->
+    <button class="btn btn-success" onclick="exportSQLite()">
+      📥 Export Database (SQLite)
+    </button>
+
+    <!-- Tombol Import -->
+    <button class="btn btn-primary" onclick="document.getElementById('sqliteImport').click()">
+      📤 Import Database (SQLite)
+    </button>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="sqliteImport" accept=".sqlite" style="display:none" onchange="importSQLite(event)">
+  </div>
+
+  <div id="dbMessage" style="display:none" class="alert mt-3"></div>
+</div>
+
+<script>
+// ======================= EXPORT SQLITE =======================
+async function exportSQLite(){
+  try{
+    const blob = await unifiedDB.exportToSQLite();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'rapor.sqlite';
+    a.click();
+    showDBMessage('Export berhasil! File rapor.sqlite berhasil dibuat.', 'success');
+  }catch(e){
+    showDBMessage('Export gagal: ' + e.message, 'danger');
+  }
+}
+
+// ======================= IMPORT SQLITE =======================
+async function importSQLite(evt){
+  const file = evt.target.files[0];
+  if(!file){
+    showDBMessage('Tidak ada file dipilih.', 'warning');
+    return;
+  }
+
+  try{
+    const buf = await file.arrayBuffer();
+    const count = await unifiedDB.importFromSQLite(buf);
+    showDBMessage(`Import berhasil! ${count} data dimuat dari file SQLite.`, 'success');
+
+    // Refresh UI setelah import
+    if (typeof loadSekolah === 'function') loadSekolah();
+    if (typeof renderStudents === 'function') renderStudents();
+  }catch(e){
+    showDBMessage('Import gagal: ' + e.message, 'danger');
+  }
+}
+
+// ======================= NOTIFIKASI =======================
+function showDBMessage(msg, type='info'){
+  const el = document.getElementById('dbMessage');
+  el.style.display = 'block';
+  el.className = 'alert alert-' + type;
+  el.textContent = msg;
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+// ======================= BACKUP OTOMATIS =======================
+// Melakukan backup otomatis setiap X menit dan menyimpan di IndexedDB (store: 'auto_backup')
+// File backup tetap bisa diunduh manual dari halaman export
+
+let AUTO_BACKUP_INTERVAL_MIN = 5; // setiap 5 menit
+let autoBackupTimer = null;
+
+async function startAutoBackup(){
+  if (autoBackupTimer) clearInterval(autoBackupTimer);
+
+  autoBackupTimer = setInterval(async () => {
+    try{
+      const blob = await unifiedDB.exportToSQLite();
+      const reader = new FileReader();
+
+      reader.onload = async () => {
+        const base64Data = reader.result;
+        // Simpan ke IndexedDB store 'utility' atau 'auto_backup'
+        await unifiedDB.save('utility', {
+          id: 99,
+          type: 'auto_backup',
+          timestamp: new Date().toISOString(),
+          data: base64Data
+        });
+        console.log('Backup otomatis tersimpan pada', new Date().toLocaleString());
+      };
+      reader.readAsDataURL(blob);
+
+    }catch(e){
+      console.warn('Backup otomatis gagal:', e);
+    }
+  }, AUTO_BACKUP_INTERVAL_MIN * 60 * 1000);
+
+  console.log('Auto-backup aktif setiap', AUTO_BACKUP_INTERVAL_MIN, 'menit');
+}
+
+// Mulai auto-backup setelah DB siap
+setTimeout(startAutoBackup, 3000);
+
+</script>

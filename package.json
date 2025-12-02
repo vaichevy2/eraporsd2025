@@ -1,27 +1,25 @@
 {
-  "name": "aplikasi-rapor-electron",
-  "version": "1.0.0",
-  "description": "Aplikasi Rapor Kurikulum Merdeka Deep Learning - versi Electron (offline & online)",
-  "main": "index.js",
-  "type": "module",
-  "author": "Cepi Kunaefi",
-  "license": "MIT",
-  "scripts": {
-    "start": "node_modules.js",
-    "dev": "index.js",
-    "test": "jest --coverage",
-    "electron": "electron ."
-  },
   "dependencies": {
-    "express": "^4.21.1",
-    "cors": "^2.8.5",
+    "@firebase/app-check-interop-types": "0.3.3",
+    "@firebase/auth-interop-types": "0.2.4",
+    "@firebase/component": "0.6.18",
+    "@firebase/logger": "0.5.0",
+    "@firebase/util": "1.12.1",
     "body-parser": "^1.20.3",
-    "sqlite3": "^5.1.7",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "faye-websocket": "0.11.4",
+    "lucide-react": "*",
     "rxdb": "^16.20.0",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "sqlite3": "^5.1.7",
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
-    "electron": "^39.2.3",
+    "@firebase/app": "^0.13.2",
+    "firebase": "0.4.2",
+    "rollup": "2.79.2",
+    "rollup-plugin-typescript2": "0.36.0",
+    "typescript": "5.5.4"
   }
 }
-

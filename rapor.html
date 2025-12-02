@@ -19,11 +19,7 @@
     <!-- SheetJS (For XLSX support) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm"></script>
-    
-    <!-- PWA Manifest (Optional/Placeholder) -->
-    <!-- <link rel="manifest" href="/manifest.json"> -->
-
+      
     <style>
         /* --- CSS UTAMA --- */
         body {
@@ -46,11 +42,57 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- LOGIN PAGE STYLES REMOVED --- */
+        /* --- LOGIN OVERLAY (NEW) --- */
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0c29 100%);
+            z-index: 9999;
+            display: flex; /* Flex agar terpusat, default akan diatur JS */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            text-align: center;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .login-card input {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        
+        .login-card input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        .login-card input:focus { background: rgba(255, 255, 255, 0.3); color: white; outline: none; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .login-card button { background: #ff5722; border: none; padding: 12px; font-weight: bold; border-radius: 8px; width: 100%; transition: 0.3s; }
+        .login-card button:hover { background: #e64a19; transform: scale(1.02); }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         /* --- LAYOUT & SIDEBAR RESPONSIVE --- */
         #wrapper {
-            display: flex; /* Changed from none to flex so it shows immediately */
+            display: none; /* Default hidden, shown after login */
             width: 100%;
             align-items: stretch;
         }
@@ -192,14 +234,6 @@
             display: block;
             animation: fadeIn 0.5s;
         }
-
-        #login.active ~ #page-content-wrapper #menu-toggle {
-            display: none !important;
-        }
-
-        #login.active #menu-toggle {
-            display: none !important;
-        }
         
         .pagination-container {
             display: flex;
@@ -224,6 +258,28 @@
     </style>
 </head>
 <body class="bg-animated">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay">
+        <div class="login-card">
+            <div class="mb-4">
+                <i class="fas fa-graduation-cap fa-3x mb-3 text-warning"></i>
+                <h3>Rapor Merdeka</h3>
+                <p class="small text-white-50">Sistem Informasi Penilaian & Rapor</p>
+            </div>
+            <form onsubmit="event.preventDefault(); app.processLogin();">
+                <input type="text" id="login_username" class="form-control" placeholder="Username / NUPTK" required autocomplete="username">
+                <input type="password" id="login_password" class="form-control" placeholder="Password" required autocomplete="current-password">
+                <button type="submit" class="btn btn-primary">MASUK APLIKASI</button>
+            </form>
+            <div class="mt-4 text-start small">
+                <div class="d-flex align-items-center mb-1">
+                    <i class="fas fa-info-circle me-2 text-info"></i>
+                    <span>Default Admin: <strong>admin</strong> / <strong>rapor123</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MAIN APP WRAPPER -->
     <div id="wrapper">
@@ -251,6 +307,7 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('kokurikuler')"><i class="fas fa-project-diagram"></i> Kokurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('ekskul')"><i class="fas fa-futbol"></i> Ekstrakurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('nilai')"><i class="fas fa-edit"></i> Input Nilai</a>
+                <a class="list-group-item list-group-item-action" onclick="app.nav('input_nilai_mapel')"><i class="fas fa-edit"></i> Input Nilai Mapel</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('rekap')"><i class="fas fa-table"></i> Rekap Penilaian</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('deskripsi')"><i class="fas fa-comment-alt"></i> Deskripsi</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('catatan')"><i class="fas fa-sticky-note"></i> Catatan Guru</a>
@@ -491,6 +548,7 @@
                                         <th>NUPTK</th>
                                         <th>Nama</th>
                                         <th>L/P</th>
+                                        <th>Agama</th>
                                         <th>Mata Pelajaran</th>
                                         <th>Kelas</th>
                                         <th>Aksi</th>
@@ -507,14 +565,14 @@
                     <div class="content-header"><h2>8 Dimensi Lulusan</h2></div>
                     <div class="card card-glass p-4">
                         <form id="form-dimensi">
-                           <div class="mb-2"><label>1. Keimanan dan Ketaqwaan</label><textarea id="dim_1" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>2. Kewargaan</label><textarea id="dim_2" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>3. Penalaran Kritis</label><textarea id="dim_3" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>4. Kreativitas</label><textarea id="dim_4" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>5. Kolaborasi</label><textarea id="dim_5" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>6. Kemandirian</label><textarea id="dim_6" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>7. Kesehatan</label><textarea id="dim_7" class="form-control"></textarea></div>
-                           <div class="mb-2"><label>8. Komunikasi</label><textarea id="dim_8" class="form-control"></textarea></div>
+                           <div class="mb-2"><label>1. Keimanan dan Ketaqwaan</label><textarea id="dim_1" class="form-control">Siswa menunjukkan sikap taqwa kepada Tuhan Yang Maha Esa, menghormati perbedaan agama, dan menjalankan ibadah sesuai keyakinannya.</textarea></div>
+                           <div class="mb-2"><label>2. Kewargaan</label><textarea id="dim_2" class="form-control">Siswa memiliki kesadaran sebagai warga negara yang baik, menghormati simbol negara, dan aktif dalam kegiatan sosial kemasyarakatan.</textarea></div>
+                           <div class="mb-2"><label>3. Penalaran Kritis</label><textarea id="dim_3" class="form-control">Siswa mampu berpikir logis, menganalisis informasi, dan menyelesaikan masalah dengan pendekatan yang sistematis.</textarea></div>
+                           <div class="mb-2"><label>4. Kreativitas</label><textarea id="dim_4" class="form-control">Siswa menunjukkan kemampuan berpikir kreatif, inovatif, dan menghasilkan karya orisinal dalam berbagai bidang.</textarea></div>
+                           <div class="mb-2"><label>5. Kolaborasi</label><textarea id="dim_5" class="form-control">Siswa mampu bekerja sama dalam tim, berkomunikasi efektif, dan menghargai kontribusi orang lain.</textarea></div>
+                           <div class="mb-2"><label>6. Kemandirian</label><textarea id="dim_6" class="form-control">Siswa memiliki tanggung jawab pribadi, disiplin, dan mampu mengambil keputusan secara mandiri.</textarea></div>
+                           <div class="mb-2"><label>7. Kesehatan</label><textarea id="dim_7" class="form-control">Siswa menjaga kesehatan fisik dan mental, serta memiliki kesadaran akan pentingnya gaya hidup sehat.</textarea></div>
+                           <div class="mb-2"><label>8. Komunikasi</label><textarea id="dim_8" class="form-control">Siswa mampu berkomunikasi lisan dan tulisan dengan baik, serta mendengarkan dengan empati.</textarea></div>
                            <button type="button" class="btn btn-custom-save" onclick="app.saveDimensi()">Simpan</button>
                         </form>
                     </div>
@@ -679,6 +737,28 @@
                 <div id="nilai" class="page-section">
                     <div class="content-header"><h2>Input Nilai</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('nilai')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('nilai')"><i class="fas fa-save"></i> Simpan</button></div>
                     <div class="card card-glass p-3">
+                        <div class="mb-3">
+                            <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('nilai')"><i class="fas fa-file-excel"></i> Template</button>
+                            <button class="btn btn-info btn-sm text-white" onclick="app.exportData('nilai')"><i class="fas fa-file-export"></i> Export</button>
+                            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('nilai')"><i class="fas fa-file-import"></i> Import</button>
+                        </div>
+                        <p>Pilih Mata Pelajaran untuk menginput nilai.</p>
+                        <select id="input_nilai_mapel" class="form-select mb-3" onchange="app.renderInputNilaiForm()">
+                            <option value="">Pilih Mapel</option>
+                        </select>
+                        <div id="container-input-nilai" class="table-responsive"></div>
+                    </div>
+                </div>
+
+                <!-- INPUT NILAI MAPEL -->
+                <div id="input_nilai_mapel" class="page-section">
+                    <div class="content-header"><h2>Input Nilai Mapel</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('nilai')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('nilai')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="card card-glass p-3">
+                        <div class="mb-3">
+                            <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('nilai')"><i class="fas fa-file-excel"></i> Template</button>
+                            <button class="btn btn-info btn-sm text-white" onclick="app.exportData('nilai')"><i class="fas fa-file-export"></i> Export</button>
+                            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('nilai')"><i class="fas fa-file-import"></i> Import</button>
+                        </div>
                         <p>Pilih Mata Pelajaran untuk menginput nilai.</p>
                         <select id="input_nilai_mapel" class="form-select mb-3" onchange="app.renderInputNilaiForm()">
                             <option value="">Pilih Mapel</option>
@@ -687,7 +767,12 @@
                     </div>
                 </div>
                 
-                <div id="rekap" class="page-section"><div class="content-header"><h2>Rekap</h2></div><div class="card card-glass p-3">Placeholder Rekap</div></div>
+                <div id="rekap" class="page-section">
+                    <div class="content-header"><h2>Rekap Penilaian</h2></div>
+                    <div class="card card-glass p-3">
+                        <div id="rekap-content"></div>
+                    </div>
+                </div>
                 
                 <!-- CETAK RAPOR -->
                 <div id="rapor" class="page-section">
@@ -767,7 +852,7 @@
         </div>
     </div>
     
-    <div class="modal fade" id="modalGuruMapel" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Guru Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-gurumapel"><input type="hidden" id="gm_id"><div class="row g-3"><div class="col-md-6"><label class="form-label">NUPTK</label><input type="text" class="form-control" id="gm_nuptk"></div><div class="col-md-6"><label class="form-label">Nama Guru</label><input type="text" class="form-control" id="gm_nama"></div><div class="col-md-6"><label class="form-label">Jenis Kelamin</label><select class="form-select" id="gm_jk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div><div class="col-md-6"><label class="form-label">Mata Pelajaran</label><select class="form-select" id="gm_mapel" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-md-12"><label class="form-label">Kelas Mengajar</label><input type="text" class="form-control" id="gm_kelas" placeholder="Contoh: 1.A, 2.B (Pisahkan koma)"></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveGuruMapel()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalGuruMapel" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Guru Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-gurumapel"><input type="hidden" id="gm_id"><div class="row g-3"><div class="col-md-6"><label class="form-label">NUPTK</label><input type="text" class="form-control" id="gm_nuptk"></div><div class="col-md-6"><label class="form-label">Nama Guru</label><input type="text" class="form-control" id="gm_nama"></div><div class="col-md-6"><label class="form-label">Jenis Kelamin</label><select class="form-select" id="gm_jk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div><div class="col-md-6"><label class="form-label">Agama</label><select class="form-select" id="gm_agama"><option>Islam</option><option>Kristen</option><option>Katholik</option><option>Hindu</option><option>Budha</option></select></div><div class="col-md-6"><label class="form-label">Mata Pelajaran</label><select class="form-select" id="gm_mapel" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-md-12"><label class="form-label">Kelas Mengajar</label><input type="text" class="form-control" id="gm_kelas" placeholder="Contoh: 1.A, 2.B (Pisahkan koma)"></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveGuruMapel()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalMapel" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-mapel"><input type="hidden" id="m_id"><div class="mb-3"><label>Nama Mata Pelajaran</label><input type="text" class="form-control" id="m_nama" required></div><div class="mb-3"><label>Singkatan</label><input type="text" class="form-control" id="m_singkat"></div><div class="mb-3"><label>Termasuk SKL?</label><select class="form-select" id="m_skl"><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></div><div class="mb-3"><label>Nomor Urut</label><input type="number" class="form-control" id="m_urut" value="1"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveMapel()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalCPTP" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Tujuan Pembelajaran (TP)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-cptp"><input type="hidden" id="c_id"><div class="row g-2"><div class="col-12 mb-2"><label>Mata Pelajaran</label><select id="c_mapel" class="form-select" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-4 mb-2"><label>Tingkat (Kelas)</label><select id="c_tingkat" class="form-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div><div class="col-4 mb-2"><label>Fase</label><select id="c_fase" class="form-select"><option value="A">A (Kelas 1-2)</option><option value="B">B (Kelas 3-4)</option><option value="C">C (Kelas 5-6)</option></select></div><div class="col-4 mb-2"><label>Semester</label><select id="c_semester" class="form-select"><option value="1">1</option><option value="2">2</option></select></div><div class="col-12 mb-2"><label>Tujuan Pembelajaran (TP)</label><textarea id="c_tp" class="form-control" rows="3" placeholder="Isi narasi TP..."></textarea></div><div class="col-12 mb-2"><label>Status</label><select id="c_status" class="form-select"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option></select></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveCPTP()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalJenisEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Jenis Ekstrakurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-jenis-ekskul"><input type="hidden" id="je_id"><div class="mb-3"><label>Nama Ekstrakurikuler</label><input type="text" class="form-control" id="je_nama" required placeholder="Contoh: Pramuka"></div><div class="mb-3"><label>Kategori</label><select id="je_kategori" class="form-select"><option value="Wajib">Wajib</option><option value="Pilihan">Pilihan</option><option value="Olahraga">Olahraga</option><option value="Seni">Seni</option><option value="Lainnya">Lainnya</option></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveJenisEkskul()">Simpan</button></div></div></div></div>
@@ -899,7 +984,6 @@
         /* --- JAVASCRIPT LOGIC --- */
         const DB_NAME = "RaporDeepLearningDB";
         const DB_VERSION = 6; 
-        let dbInstance;
         
         // STATE MANAGEMENT
         const appState = {
@@ -914,114 +998,168 @@
         };
 
         // ======================== FIXED INDEXEDDB STORAGE ==========================
-// Full DB handler with auto-ID fix, error handlers, and safe async init
+        
+        // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
+        const SINGLE_ENTRY_STORES = ['sekolah', 'utility', 'dimensi', 'kaih'];
 
-const db = {
-    listeners: {},
+        // Variabel internal untuk menyimpan instance koneksi
+        let dbInstance = null;
 
-    // Initialize Database
-    init: () => {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, DB_VERSION);
+        const db = {
+            listeners: {},
 
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                const stores = [
-                    'sekolah','utility','students','teachers','subject_teachers',
-                    'mapel','cptp','dimensi','kaih','nilai','ekskul',
-                    'student_ekskul','kokurikuler','admins'
-                ];
+            // Initialize Database
+            init: () => {
+                return new Promise((resolve, reject) => {
+                    // 1. Cek apakah sudah terkoneksi sebelumnya (Idempotency check)
+                    if (dbInstance) {
+                        resolve(dbInstance);
+                        return;
+                    }
 
-                stores.forEach(s => {
-                    if (!db.objectStore.contains(s)) {
-                        const auto = !(s === 'sekolah' || s === 'utility' || s === 'dimensi' || s === 'kaih');
-                        db.createObjectStore(s, { keyPath: 'id', autoIncrement: auto });
+                    // 2. Cek dukungan browser
+                    if (!window.indexedDB) {
+                        reject("Browser tidak mendukung IndexedDB");
+                        return;
+                    }
+
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                    request.onupgradeneeded = (e) => {
+                        const upgradeDb = e.target.result;
+                        
+                        const stores = [
+                            'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
+                            'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                            'student_ekskul', 'kokurikuler', 'admins'
+                        ];
+
+                        stores.forEach(s => {
+                            // Cek apakah store sudah ada menggunakan objectStoreNames
+                            if (!upgradeDb.objectStoreNames.contains(s)){
+                                // Tentukan apakah autoIncrement aktif atau tidak
+                                // Jika termasuk single entry, autoIncrement false (kita set ID manual jadi 1)
+                                const isSingleEntry = SINGLE_ENTRY_STORES.includes(s);
+                                const auto = !isSingleEntry;
+                                
+                                upgradeDb.createObjectStore(s, { keyPath: 'id', autoIncrement: auto });
+                            }
+                        });
+                    };
+
+                    request.onsuccess = (e) => {
+                        dbInstance = e.target.result;
+                        resolve(dbInstance);
+                    };
+
+                    request.onerror = (e) => reject("DB Error: " + e.target.error);
+                });
+            },
+
+            // Subscribe listener
+            // Mengembalikan fungsi unsubscribe untuk pembersihan memori
+            subscribe: (storeName, callback) => {
+                if (!db.listeners[storeName]) db.listeners[storeName] = [];
+                db.listeners[storeName].push(callback);
+
+                // Return unsubscribe function
+                return () => {
+                    db.listeners[storeName] = db.listeners[storeName].filter(cb => cb !== callback);
+                };
+            },
+
+            notify: (storeName) => {
+                if (db.listeners[storeName]) {
+                    db.listeners[storeName].forEach(cb => cb());
+                }
+            },
+
+            // Save data
+            saveTo: (storeName, data) => {
+                return new Promise((resolve, reject) => {
+                    if (!dbInstance) return reject("Database belum di-init!");
+
+                    try {
+                        const tx = dbInstance.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+
+                        // Logic ID statis untuk tabel single entry (sekolah, utility, dll)
+                        // Menggunakan konstanta SINGLE_ENTRY_STORES yang sudah didefinisikan di atas
+                        if (SINGLE_ENTRY_STORES.includes(storeName) && !data.id) {
+                            data.id = 1; 
+                        }
+
+                        const req = store.put(data);
+
+                        req.onerror = (e) => reject("Save error: " + e.target.error);
+                        req.onsuccess = () => resolve(true);
+
+                        // Notifikasi dijalankan setelah transaksi benar-benar selesai (committed)
+                        tx.oncomplete = () => db.notify(storeName);
+                    } catch (err) {
+                        reject(err.message);
                     }
                 });
-            };
+            },
 
-            request.onsuccess = (e) => {
-                dbInstance = e.target.result;
-                resolve(dbInstance);
-            };
+            // Get data
+            get: (storeName, id) => {
+                return new Promise((resolve, reject) => {
+                    if (!dbInstance) return reject("Database belum di-init!");
 
-            request.onerror = (e) => reject("DB Error: " + e.target.error);
-        });
-    },
+                    try {
+                        const tx = dbInstance.transaction(storeName, 'readonly');
+                        const store = tx.objectStore(storeName);
+                        
+                        // Ambil satu data jika ID ada, atau ambil semua jika tidak
+                        const req = (id !== undefined && id !== null) ? store.get(id) : store.getAll();
 
-    // Listener for auto-reload UI
-    subscribe: (RaporKurmer, callback) => {
-        if (!db.listeners[RaporKurmer]) db.listeners[RaporKurmer] = [];
-        db.listeners[RaporKurmer].push(callback);
-    },
+                        req.onerror = (e) => reject("DB Read Error: " + e.target.error);
+                        req.onsuccess = () => resolve(req.result);
+                    } catch (err) {
+                        reject(err.message);
+                    }
+                });
+            },
 
-    notify: (RaporKurmer) => {
-        if (db.listeners[RaporKurmer]) db.listeners[RaporKurmer].forEach(cb => cb());
-    },
+            // Delete
+            delete: (storeName, id) => {
+                return new Promise((resolve, reject) => {
+                    if (!dbInstance) return reject("Database belum di-init!");
 
-    // Save data (auto ID for non-autoincrement stores)
-    saveTo: (RaporKurmer, data) => {
-        return new Promise((resolve, reject) => {
-            const tx = dbInstance.transaction(RaporKurmer, 'readwrite');
-            const store = tx.objectStore(RaporKurmer);
+                    try {
+                        const tx = dbInstance.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.delete(id);
 
-            // ===== FIX: generate static ID for stores without autoIncrement =====
-            const noAuto = (RaporKurmer === 'sekolah' || RaporKurmer === 'utility' || RaporKurmer === 'dimensi' || RaporKurmer === 'kaih');
-            if (noAuto && !data.id) data.id = 1;
+                        req.onerror = (e) => reject("Delete error: " + e.target.error);
+                        req.onsuccess = () => resolve(true);
+                        tx.oncomplete = () => db.notify(storeName);
+                    } catch (err) {
+                        reject(err.message);
+                    }
+                });
+            },
 
-            const req = store.put(data);
-            req.onerror = (e) => reject("Save error: " + e.target.error);
-            req.onsuccess = () => resolve(true);
+            // Clear store
+            clear: (storeName) => {
+                return new Promise((resolve, reject) => {
+                    if (!dbInstance) return reject("Database belum di-init!");
 
-            tx.oncomplete = () => db.notify(RaporKurmer);
-        });
-    },
+                    try {
+                        const tx = dbInstance.transaction(storeName, 'readwrite');
+                        const store = tx.objectStore(storeName);
+                        const req = store.clear();
 
-    // Get data
-    get: (RaporKurmer, id) => {
-        return new Promise((resolve, reject) => {
-            const tx = dbInstance.transaction(RaporKurmer, 'readonly');
-            const store = tx.objectStore(RaporKurmer);
-            const req = id ? store.get(id) : store.getAll();
-
-            req.onerror = (e) => reject("DB Read Error: " + e.target.error);
-            req.onsuccess = () => resolve(req.result);
-        });
-    },
-
-    // Delete
-    delete: (RaporKurmer, id) => {
-        return new Promise((resolve, reject) => {
-            const tx = dbInstance.transaction(RaporKurmer, 'readwrite');
-            const store = tx.objectStore(RaporKurmer);
-            const req = store.delete(id);
-
-            req.onerror = (e) => reject("Delete error: " + e.target.error);
-            req.onsuccess = () => resolve(true);
-            tx.oncomplete = () => db.notify(RaporKurmer);
-        });
-    },
-
-    // Clear store
-    clear: (RaporKurmer) => {
-        return new Promise((resolve, reject) => {
-            const tx = dbInstance.transaction(RaporKurmer, 'readwrite');
-            const store = tx.objectStore(RaporKurmer);
-            const req = store.clear();
-
-            req.onerror = (e) => reject("Clear error: " + e.target.error);
-            req.onsuccess = () => resolve(true);
-            tx.oncomplete = () => db.notify(RaporKurmer);
-        });
-    }
-};
-
-// ===================== FIX: Ensure app loads AFTER DB =====================
-
-window.onload = async () => {
-    await db.init();
-    app.init(); // render UI after DB ready
-};
+                        req.onerror = (e) => reject("Clear error: " + e.target.error);
+                        req.onsuccess = () => resolve(true);
+                        tx.oncomplete = () => db.notify(storeName);
+                    } catch (err) {
+                        reject(err.message);
+                    }
+                });
+            }
+        };
 
         const app = {
             currentUser: null,
@@ -1136,54 +1274,54 @@ window.onload = async () => {
 
             // --- UNIFIED GET/POST FUNCTIONS FOR DATA PERSISTENCE ---
             // GET function to retrieve all data from a store
-            fetchData: async (RaporKurmer, id = null) => {
+            fetchData: async (indexedDB, id = null) => {
                 try {
                     if (id !== null) {
                         // Get single record by ID
-                        const data = await db.get(RaporKurmer, id);
+                        const data = await db.get(indexedDB, id);
                         return data || null;
                     } else {
                         // Get all records
-                        const data = await db.get(RaporKurmer);
+                        const data = await db.get(indexedDB);
                         return data || [];
                     }
                 } catch (e) {
-                    console.error(`Error fetching data from ${RaporKurmer}:`, e);
+                    console.error(`Error fetching data from ${indexedDB}:`, e);
                     return id !== null ? null : [];
                 }
             },
 
             // POST function to save data to a store (CREATE or UPDATE)
-            saveData: async (RaporKurmer, data) => {
+            saveData: async (indexedDB, data) => {
                 try {
                     if (!data) throw new Error('Data cannot be empty');
-                    const result = await db.saveTo(RaporKurmer, data);
-                    console.log(`Data saved to ${RaporKurmer}:`, data);
+                    const result = await db.saveTo(indexedDB, data);
+                    console.log(`Data saved to ${indexedDB}:`, data);
                     return result;
                 } catch (e) {
-                    console.error(`Error saving data to ${RaporKurmer}:`, e);
+                    console.error(`Error saving data to ${indexedDB}:`, e);
                     throw e;
                 }
             },
 
             // DELETE function to remove data from a store
-            deleteData: async (RaporKurmer, id) => {
+            deleteData: async (indexedDB, id) => {
                 try {
-                    const result = await db.delete(RaporKurmer, id);
-                    console.log(`Data deleted from ${RaporKurmer}:`, id);
+                    const result = await db.delete(indexedDB, id);
+                    console.log(`Data deleted from ${indexedDB}:`, id);
                     return result;
                 } catch (e) {
-                    console.error(`Error deleting data from ${RaporKurmer}:`, e);
+                    console.error(`Error deleting data from ${indexedDB}:`, e);
                     throw e;
                 }
             },
 
             // Batch GET - fetch multiple stores at once for efficiency
-            fetchMultiple: async (RaporKurmerNames) => {
+            fetchMultiple: async (indexedDBNames) => {
                 try {
                     const results = {};
-                    for (const RaporKurmer of RaporKurmerNames) {
-                        results[RaporKurmer] = await app.fetchData(RaporKurmer);
+                    for (const indexedDB of indexedDBNames) {
+                        results[indexedDB] = await app.fetchData(indexedDB);
                     }
                     return results;
                 } catch (e) {
@@ -1193,13 +1331,13 @@ window.onload = async () => {
             },
 
             // Query data with filter function
-            queryData: async (RaporKurmer, filterFn) => {
+            queryData: async (indexedDB, filterFn) => {
                 try {
-                    const allData = await app.fetchData(RaporKurmer);
+                    const allData = await app.fetchData(indexedDB);
                     if (!filterFn) return allData;
                     return allData.filter(filterFn);
                 } catch (e) {
-                    console.error(`Error querying ${RaporKurmer}:`, e);
+                    console.error(`Error querying ${indexedDB}:`, e);
                     return [];
                 }
             },
@@ -1300,10 +1438,10 @@ window.onload = async () => {
             },
 
             // Export a single store to SQLite file
-            exportStoreToSQLite: async (RaporKurmer, filename = null) => {
+            exportStoreToSQLite: async (indexedDB, filename = null) => {
                 try {
-                    if (!RaporKurmer) throw new Error('Store name required');
-                    filename = filename || `${RaporKurmer}.sqlite`;
+                    if (!indexedDB) throw new Error('Store name required');
+                    filename = filename || `${indexedDB}.sqlite`;
 
                     if (typeof initSqlJs === 'undefined') {
                         await new Promise((resolve, reject) => {
@@ -1318,9 +1456,9 @@ window.onload = async () => {
                     const SQL = await initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm' });
                     const db = new SQL.Database();
 
-                    const rows = await app.fetchData(RaporKurmer) || [];
+                    const rows = await app.fetchData(indexedDB) || [];
                     if (!rows || rows.length === 0) {
-                        alert('Tidak ada data pada store "' + RaporKurmer + '"');
+                        alert('Tidak ada data pada store "' + indexedDB + '"');
                         return false;
                     }
 
@@ -1328,16 +1466,16 @@ window.onload = async () => {
                     rows.forEach(r => { if (r && typeof r === 'object') Object.keys(r).forEach(k => colsSet.add(k)); });
                     const cols = Array.from(colsSet);
                     if (cols.length === 0) {
-                        alert('Tidak ada kolom untuk diekspor pada store "' + RaporKurmer + '"');
+                        alert('Tidak ada kolom untuk diekspor pada store "' + indexedDB + '"');
                         return false;
                     }
 
                     const colDefs = cols.map(c => `"${String(c).replace(/"/g,'') }" TEXT`).join(', ');
-                    const createSQL = `CREATE TABLE IF NOT EXISTS "${RaporKurmer}" (${colDefs});`;
+                    const createSQL = `CREATE TABLE IF NOT EXISTS "${indexedDB}" (${colDefs});`;
                     db.run(createSQL);
 
                     const placeholders = cols.map(()=>'?').join(',');
-                    const insertSQL = `INSERT INTO "${RaporKurmer}" (${cols.map(c=>`"${c.replace(/"/g,'')}"`).join(',')}) VALUES (${placeholders});`;
+                    const insertSQL = `INSERT INTO "${indexedDB}" (${cols.map(c=>`"${c.replace(/"/g,'')}"`).join(',')}) VALUES (${placeholders});`;
                     for (const r of rows) {
                         const values = cols.map(c => {
                             const v = r[c];
@@ -1394,11 +1532,11 @@ window.onload = async () => {
             },
 
             // Save cached store data back to IndexedDB and refresh UI (with confirmation + batching)
-            saveStoreCache: async (RaporKurmer) => {
+            saveStoreCache: async (indexedDB) => {
                 try {
-                    if (!RaporKurmer) return false;
+                    if (!indexedDB) return false;
 
-                    const confirmed = await app.confirmAction(`Simpan semua data pada '${RaporKurmer}' ke database? Proses ini dapat menimpa data yang ada.`);
+                    const confirmed = await app.confirmAction(`Simpan semua data pada '${indexedDB}' ke database? Proses ini dapat menimpa data yang ada.`);
                     if (!confirmed) {
                         app.showAlert('Operasi dibatalkan', 'warning');
                         return false;
@@ -1406,10 +1544,10 @@ window.onload = async () => {
 
                     if (app.showLoading) app.showLoading('Menyimpan...');
                     if (app.setLoadingProgress) app.setLoadingProgress(0, cache.length, 'Mempersiapkan penyimpanan...');
-                    const cache = window.appDataCache && window.appDataCache[RaporKurmer] ? window.appDataCache[RaporKurmer] : await app.fetchData(RaporKurmer);
+                    const cache = window.appDataCache && window.appDataCache[indexedDB] ? window.appDataCache[indexedDB] : await app.fetchData(indexedDB);
                     if (!cache || cache.length === 0) {
                         if (app.hideLoading) app.hideLoading();
-                        app.showAlert('Tidak ada data untuk disimpan pada ' + RaporKurmer, 'warning');
+                        app.showAlert('Tidak ada data untuk disimpan pada ' + indexedDB, 'warning');
                         return false;
                     }
 
@@ -1417,7 +1555,7 @@ window.onload = async () => {
                     let usedBatch = false;
                     if (typeof db.batchSave === 'function') {
                         try {
-                            await db.batchSave(RaporKurmer, cache);
+                            await db.batchSave(indexedDB, cache);
                             usedBatch = true;
                             if (app.setLoadingProgress) app.setLoadingProgress(cache.length, cache.length, 'Selesai (batch)');
                         } catch (e) {
@@ -1435,7 +1573,7 @@ window.onload = async () => {
                             if (app.showLoading) app.showLoading(`Menyimpan ${doneAfter}/${cache.length}...`);
                             // parallelize within chunk
                             await Promise.all(chunk.map(async (rec) => {
-                                try { await app.saveData(RaporKurmer, rec); } catch (e) { console.error('Gagal menyimpan record ke', RaporKurmer, e); }
+                                try { await app.saveData(indexedDB, rec); } catch (e) { console.error('Gagal menyimpan record ke', indexedDB, e); }
                             }));
                             if (app.setLoadingProgress) app.setLoadingProgress(doneAfter, cache.length, `Menyimpan ${doneAfter}/${cache.length}...`);
                         }
@@ -1458,10 +1596,10 @@ window.onload = async () => {
                         nilai: 'renderInputNilaiForm',
                         kokurikuler: 'loadKokurikuler'
                     };
-                    const loaderName = loaderMap[RaporKurmer];
+                    const loaderName = loaderMap[indexedDB];
                     if (loaderName && typeof app[loaderName] === 'function') await app[loaderName]();
                     if (app.hideLoading) app.hideLoading();
-                    app.showAlert('Selesai menyimpan: ' + RaporKurmer, 'success');
+                    app.showAlert('Selesai menyimpan: ' + indexedDB, 'success');
                     return true;
                 } catch (e) {
                     if (app.hideLoading) app.hideLoading();
@@ -1536,55 +1674,94 @@ window.onload = async () => {
                 // Directly Setup UI
                 app.setupUI();
 
-                // Check for remembered login
+                // CHECK AUTHENTICATION ON LOAD (Replaced redirect logic)
                 try {
                     const rememberedId = localStorage.getItem('rapor_remember_user_id');
                     if (rememberedId) {
                         const remembered = await db.get('admins', parseInt(rememberedId));
                         if (remembered && remembered.id) {
                             app.currentUser = remembered;
-                            const hl = document.getElementById('headerLogout'); 
-                            if (hl) hl.style.display = 'block';
-                            // Check URL param for page to load
-                            const urlParams = new URLSearchParams(window.location.search);
-                            const page = urlParams.get('page') || 'dashboard';
-                            app.nav(page);
-                            app.showAlert('Login berhasil','success');
+                            app.afterLogin(remembered);
                         } else {
-                            // Token exists but user not found, retry DB fetch
-                            const admins = await db.get('admins') || [];
-                            const user = admins.find(a => a.id === parseInt(rememberedId));
-                            if (user) {
-                                app.currentUser = user;
-                                const hl = document.getElementById('headerLogout'); 
-                                if (hl) hl.style.display = 'block';
-                                const urlParams = new URLSearchParams(window.location.search);
-                                const page = urlParams.get('page') || 'dashboard';
-                                app.nav(page);
-                                app.showAlert('Login berhasil','success');
+                            // Try teachers if admin failed
+                            const teachers = await db.get('teachers');
+                            const teacher = teachers ? teachers.find(t => t.id === parseInt(rememberedId)) : null;
+                            if(teacher) {
+                                app.currentUser = teacher;
+                                app.afterLogin(teacher);
                             } else {
-                                window.location.href = 'login.html';
+                                app.logout(); // No valid user, show login
                             }
                         }
                     } else {
-                        window.location.href = 'login.html';
+                        app.logout(); // Not remembered, show login
                     }
                 } catch (e) {
                     console.error('Auth error', e);
-                    window.location.href = 'login.html';
+                    app.logout();
                 }
             },
 
-            // Login & Logout functions removed
+            // --- LOGIN SYSTEM (FIXED FOR SINGLE FILE) ---
+            processLogin: async () => {
+                const u = document.getElementById('login_username').value;
+                const p = document.getElementById('login_password').value;
+                
+                if(!u || !p) return alert("Harap isi Username dan Password");
 
-            setupUI: () => { 
-                document.getElementById("menu-toggle").addEventListener("click", (e) => { e.preventDefault(); document.getElementById("wrapper").classList.toggle("toggled"); }); 
-                app.nav('dashboard'); 
+                // Check Admin
+                const admins = await db.get('admins') || [];
+                const admin = admins.find(a => a.username === u && a.password === p);
+                if(admin) {
+                    app.currentUser = admin;
+                    app.afterLogin(admin);
+                    return;
+                }
+
+                // Check Guru
+                // Logic: Check NUPTK as username. Password default 'rapor123' or specific if set.
+                // Note: Previous code implied teachers have passwords but didn't show setting them explicitly in sync.
+                // Assuming 'rapor123' as default if not set.
+                const teachers = await db.get('teachers') || [];
+                const teacher = teachers.find(t => t.nuptk === u && (t.password === p || (!t.password && p === 'rapor123')));
+                
+                if(teacher) {
+                    app.currentUser = teacher;
+                    app.afterLogin(teacher);
+                    return;
+                }
+                
+                alert('Username atau Password salah!');
             },
+
+            afterLogin: (user) => {
+                localStorage.setItem('rapor_remember_user_id', user.id);
+                // Hide Login Overlay, Show App
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('wrapper').style.display = 'flex'; // Restore flex display
+                document.getElementById('headerLogout').style.display = 'block';
+                
+                // Load default page
+                app.nav('dashboard');
+                app.showAlert('Selamat Datang, ' + (user.nama || user.username), 'success');
+            },
+
             logout: () => { 
                 localStorage.removeItem('rapor_remember_user_id');
                 app.currentUser = null;
-                window.location.href = 'login.html';
+                // Hide App, Show Login Overlay
+                document.getElementById('wrapper').style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('headerLogout').style.display = 'none';
+                
+                // Clear inputs
+                document.getElementById('login_username').value = '';
+                document.getElementById('login_password').value = '';
+            },
+
+            setupUI: () => { 
+                document.getElementById("menu-toggle").addEventListener("click", (e) => { e.preventDefault(); document.getElementById("wrapper").classList.toggle("toggled"); }); 
+                // Don't auto nav here, let Auth check decide
             },
 
             // --- USER MANAGEMENT ---
@@ -1772,62 +1949,72 @@ window.onload = async () => {
                 app.getModal('modalGuru').show(); 
             },
 
-            loadGuruMapel: async () => { const list = await db.get('subject_teachers'); const tbody = document.getElementById('tbody-gurumapel'); tbody.innerHTML = ''; if(list) list.forEach((g, i) => { tbody.innerHTML += `<tr><td>${i+1}</td><td>${g.nuptk}</td><td>${g.nama}</td><td>${g.jk || 'L'}</td><td>${g.mapel}</td><td>${g.kelas}</td><td><button class="btn btn-sm btn-warning me-1" onclick="app.editGuruMapel(${g.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="app.deleteItem('subject_teachers', ${g.id}, 'gurumapel')">Hapus</button></td></tr>`; }); },
+            loadGuruMapel: async () => { const list = await db.get('subject_teachers'); const tbody = document.getElementById('tbody-gurumapel'); tbody.innerHTML = ''; if(list) list.forEach((g, i) => { tbody.innerHTML += `<tr><td>${i+1}</td><td>${g.nuptk}</td><td>${g.nama}</td><td>${g.jk || 'L'}</td><td>${g.agama || '-'}</td><td>${g.mapel}</td><td>${g.kelas}</td><td><button class="btn btn-sm btn-warning me-1" onclick="app.editGuruMapel(${g.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="app.deleteItem('subject_teachers', ${g.id}, 'gurumapel')">Hapus</button></td></tr>`; }); },
             modalGuruMapel: async () => { const mp=await db.get('mapel'); document.getElementById('gm_mapel').innerHTML='<option value="">-- Pilih Mapel --</option>'+(mp?mp.map(x=>`<option value="${x.nama}">${x.nama}</option>`).join(''):''); document.getElementById('form-gurumapel').reset(); document.getElementById('gm_id').value=''; app.getModal('modalGuruMapel').show(); },
-            saveGuruMapel: async () => { const d={ nuptk:document.getElementById('gm_nuptk').value, nama:document.getElementById('gm_nama').value, jk:document.getElementById('gm_jk').value, mapel:document.getElementById('gm_mapel').value, kelas:document.getElementById('gm_kelas').value }; if(!d.mapel) return alert("Pilih Mapel"); const id=document.getElementById('gm_id').value; if(id) d.id=parseInt(id); await app.saveData('subject_teachers',d); app.getModal('modalGuruMapel').hide(); app.showAlert('Saved!','success'); },
-            editGuruMapel: async (id) => { const g=await db.get('subject_teachers',id); if(!g)return; await app.modalGuruMapel(); document.getElementById('gm_id').value=g.id; document.getElementById('gm_nuptk').value=g.nuptk; document.getElementById('gm_nama').value=g.nama; document.getElementById('gm_jk').value=g.jk; document.getElementById('gm_mapel').value=g.mapel; document.getElementById('gm_kelas').value=g.kelas; },
+            saveGuruMapel: async () => { const d={ nuptk:document.getElementById('gm_nuptk').value, nama:document.getElementById('gm_nama').value, jk:document.getElementById('gm_jk').value, agama:document.getElementById('gm_agama').value, mapel:document.getElementById('gm_mapel').value, kelas:document.getElementById('gm_kelas').value }; if(!d.mapel) return alert("Pilih Mapel"); const id=document.getElementById('gm_id').value; if(id) d.id=parseInt(id); await app.saveData('subject_teachers',d); app.getModal('modalGuruMapel').hide(); app.showAlert('Saved!','success'); },
+            editGuruMapel: async (id) => { const g=await db.get('subject_teachers',id); if(!g)return; await app.modalGuruMapel(); document.getElementById('gm_id').value=g.id; document.getElementById('gm_nuptk').value=g.nuptk; document.getElementById('gm_nama').value=g.nama; document.getElementById('gm_jk').value=g.jk; document.getElementById('gm_agama').value=g.agama; document.getElementById('gm_mapel').value=g.mapel; document.getElementById('gm_kelas').value=g.kelas; },
 
-            downloadTemplate: (type) => { 
-                let headers = [], data = []; 
-                if(type === 'siswa') { 
-                    headers = ['NISN','NoInduk','Nama','L/P','Agama','TempatLahir','TglLahir','Alamat','NamaAyah','NamaIbu','Kelas','Rombel']; 
-                    data = [['E001','1001','Adi Pratama','L','Islam','Jakarta','2015-01-15','Jl. Merdeka No 1','Bapak Adi','Ibu Siti','1','A'],['E002','1002','Siti Nurhaliza','P','Islam','Bandung','2015-03-20','Jl. Sudirman No 2','Bapak Sutrisno','Ibu Nurhaliza','1','A']]; 
-                } else if(type === 'guru') { 
-                    headers = ['NUPTK','NIP','Nama','L/P','GuruKelas']; 
-                    data = [['G001','19800115200001001','Doni Santoso','L','IPA'],['G002','19850320200001002','Rina Suryani','P','IPS']]; 
-                } else if(type === 'gurumapel') { 
-                    headers = ['NUPTK','Nama','L/P','Mapel','Kelas']; 
-                    data = [['G001','Doni Santoso','L','Matematika','1A'],['G002','Rina Suryani','P','Bahasa Indonesia','2B']]; 
-                } else if(type === 'cptp') { 
-                    headers = ['Mapel','Tingkat','Fase','Semester','TP']; 
-                    data = [['Matematika','1','A','1','TP1'],['Bahasa Indonesia','1','A','1','TP1']]; 
-                } 
-                const wb = XLSX.utils.book_new(); 
-                const ws = XLSX.utils.aoa_to_sheet([headers, ...data]); 
-                XLSX.utils.book_append_sheet(wb, ws, 'Template'); 
-                XLSX.writeFile(wb, type + '_template.xlsx'); 
+            downloadTemplate: (type) => {
+                let headers = [], data = [];
+                if(type === 'siswa') {
+                    headers = ['NISN','NoInduk','Nama','L/P','Agama','TempatLahir','TglLahir','Alamat','NamaAyah','NamaIbu','Kelas','Rombel'];
+                    data = [['E001','1001','Adi Pratama','L','Islam','Jakarta','2015-01-15','Jl. Merdeka No 1','Bapak Adi','Ibu Siti','1','A'],['E002','1002','Siti Nurhaliza','P','Islam','Bandung','2015-03-20','Jl. Sudirman No 2','Bapak Sutrisno','Ibu Nurhaliza','1','A']];
+                } else if(type === 'guru') {
+                    headers = ['NUPTK','NIP','Nama','L/P','GuruKelas'];
+                    data = [['G001','19800115200001001','Doni Santoso','L','IPA'],['G002','19850320200001002','Rina Suryani','P','IPS']];
+                } else if(type === 'gurumapel') {
+                    headers = ['NUPTK','Nama','L/P','Mapel','Kelas'];
+                    data = [['G001','Doni Santoso','L','Matematika','1A'],['G002','Rina Suryani','P','Bahasa Indonesia','2B']];
+                } else if(type === 'cptp') {
+                    headers = ['Mapel','Tingkat','Fase','Semester','TP'];
+                    data = [['Matematika','1','A','1','TP1'],['Bahasa Indonesia','1','A','1','TP1']];
+                } else if(type === 'nilai') {
+                    headers = ['NISN','Mapel','Nilai','Deskripsi'];
+                    data = [['E001','Matematika','85','Baik'],['E002','Matematika','90','Sangat Baik']];
+                }
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+                XLSX.utils.book_append_sheet(wb, ws, 'Template');
+                XLSX.writeFile(wb, type + '_template.xlsx');
             },
-            exportData: async (type) => { 
-                const wb = XLSX.utils.book_new(); 
-                if(type === 'siswa') { 
-                    const d = await db.get('students'); 
-                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport'); 
-                        const data = d.map(s => [s.nisn || '', s.induk || '', s.nama || '', s.jk || '', s.agama || '', s.tmp_lahir || '', app.formatDateLong(s.tgl_lahir) || '', s.alamat || '', s.nama_ayah || '', s.nama_ibu || '', (s.kelas_rombel || '1.A').split('.')[0], (s.kelas_rombel || '1.A').split('.')[1]]); 
-                    const ws = XLSX.utils.aoa_to_sheet([['NISN','NoInduk','Nama','L/P','Agama','TempatLahir','TglLahir','Alamat','NamaAyah','NamaIbu','Kelas','Rombel'], ...data]); 
-                    XLSX.utils.book_append_sheet(wb, ws, 'Siswa'); 
-                    XLSX.writeFile(wb, 'siswa_export.xlsx'); 
-                } else if(type === 'guru') { 
-                    const d = await db.get('teachers'); 
-                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport'); 
-                    const data = d.map(g => [g.nuptk || '', g.nip || '', g.nama || '', g.jk || '', g.guru_kelas || '']); 
-                    const ws = XLSX.utils.aoa_to_sheet([['NUPTK','NIP','Nama','L/P','GuruKelas'], ...data]); 
-                    XLSX.utils.book_append_sheet(wb, ws, 'Guru'); 
-                    XLSX.writeFile(wb, 'guru_export.xlsx'); 
-                } else if(type === 'gurumapel') { 
-                    const d = await db.get('subject_teachers'); 
-                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport'); 
-                    const data = d.map(m => [m.nuptk || '', m.nama || '', m.jk || '', m.mapel || '', m.kelas || '']); 
-                    const ws = XLSX.utils.aoa_to_sheet([['NUPTK','Nama','L/P','Mapel','Kelas'], ...data]); 
-                    XLSX.utils.book_append_sheet(wb, ws, 'Guru Mapel'); 
-                    XLSX.writeFile(wb, 'gurumapel_export.xlsx'); 
-                } else if(type === 'cptp') { 
-                    const d = await db.get('cptp'); 
-                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport'); 
-                    const data = d.map(c => [c.mapel || '', c.tingkat || '', c.fase || '', c.semester || '', c.tp || '', c.status || 'Aktif']); 
-                    const ws = XLSX.utils.aoa_to_sheet([['Mapel','Tingkat','Fase','Semester','TP','Status'], ...data]); 
-                    XLSX.utils.book_append_sheet(wb, ws, 'CPTP'); 
-                    XLSX.writeFile(wb, 'cptp_export.xlsx'); 
-                } 
+            exportData: async (type) => {
+                const wb = XLSX.utils.book_new();
+                if(type === 'siswa') {
+                    const d = await db.get('students');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                        const data = d.map(s => [s.nisn || '', s.induk || '', s.nama || '', s.jk || '', s.agama || '', s.tmp_lahir || '', app.formatDateLong(s.tgl_lahir) || '', s.alamat || '', s.nama_ayah || '', s.nama_ibu || '', (s.kelas_rombel || '1.A').split('.')[0], (s.kelas_rombel || '1.A').split('.')[1]]);
+                    const ws = XLSX.utils.aoa_to_sheet([['NISN','NoInduk','Nama','L/P','Agama','TempatLahir','TglLahir','Alamat','NamaAyah','NamaIbu','Kelas','Rombel'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Siswa');
+                    XLSX.writeFile(wb, 'siswa_export.xlsx');
+                } else if(type === 'guru') {
+                    const d = await db.get('teachers');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(g => [g.nuptk || '', g.nip || '', g.nama || '', g.jk || '', g.guru_kelas || '']);
+                    const ws = XLSX.utils.aoa_to_sheet([['NUPTK','NIP','Nama','L/P','GuruKelas'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Guru');
+                    XLSX.writeFile(wb, 'guru_export.xlsx');
+                } else if(type === 'gurumapel') {
+                    const d = await db.get('subject_teachers');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(m => [m.nuptk || '', m.nama || '', m.jk || '', m.mapel || '', m.kelas || '']);
+                    const ws = XLSX.utils.aoa_to_sheet([['NUPTK','Nama','L/P','Mapel','Kelas'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Guru Mapel');
+                    XLSX.writeFile(wb, 'gurumapel_export.xlsx');
+                } else if(type === 'cptp') {
+                    const d = await db.get('cptp');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(c => [c.mapel || '', c.tingkat || '', c.fase || '', c.semester || '', c.tp || '', c.status || 'Aktif']);
+                    const ws = XLSX.utils.aoa_to_sheet([['Mapel','Tingkat','Fase','Semester','TP','Status'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'CPTP');
+                    XLSX.writeFile(wb, 'cptp_export.xlsx');
+                } else if(type === 'nilai') {
+                    const d = await db.get('nilai');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(n => [n.student_id || '', n.mapel || '', n.nilai || '', n.deskripsi || '']);
+                    const ws = XLSX.utils.aoa_to_sheet([['NISN','Mapel','Nilai','Deskripsi'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Nilai');
+                    XLSX.writeFile(wb, 'nilai_export.xlsx');
+                }
             },
             modalImport: (t) => { document.getElementById('importType').value=t; document.getElementById('importTitle').innerText=t.toUpperCase(); document.getElementById('fileImport').value=''; app.getModal('modalImport').show(); },
             processImport: () => { 
@@ -1963,19 +2150,41 @@ window.onload = async () => {
                                         kelas: clean(row[4]) || ''
                                     }); 
                                     importedCount++;; 
-                                } else if(t==='cptp' && row.length >= 5) { 
+                                } else if(t==='cptp' && row.length >= 5) {
                                     const mapel = clean(row[0]);
                                     if (!mapel) { skippedCount++; continue; }
-                                    
+
                                     await app.saveData('cptp', {
-                                        mapel: mapel, 
-                                        tingkat: clean(row[1]) || '', 
-                                        fase: clean(row[2]) || '', 
-                                        semester: clean(row[3]) || '', 
-                                        tp: clean(row[4]) || '', 
+                                        mapel: mapel,
+                                        tingkat: clean(row[1]) || '',
+                                        fase: clean(row[2]) || '',
+                                        semester: clean(row[3]) || '',
+                                        tp: clean(row[4]) || '',
                                         status: clean(row[5]) || 'Aktif'
-                                    }); 
-                                    importedCount++; 
+                                    });
+                                    importedCount++;
+                                } else if(t==='nilai' && row.length >= 4) {
+                                    const nisn = clean(row[0]);
+                                    const mapel = clean(row[1]);
+                                    const nilai = clean(row[2]);
+                                    const deskripsi = clean(row[3]);
+
+                                    if (!nisn || !mapel) { skippedCount++; continue; }
+
+                                    // Find student by NISN
+                                    const students = await db.get('students') || [];
+                                    const student = students.find(s => s.nisn === nisn);
+                                    if (!student) { skippedCount++; continue; }
+
+                                    const key = `${student.id}_${mapel}`;
+                                    await app.saveData('nilai', {
+                                        key: key,
+                                        student_id: student.id,
+                                        mapel: mapel,
+                                        nilai: nilai || '',
+                                        deskripsi: deskripsi || ''
+                                    });
+                                    importedCount++;
                                 } else {
                                     skippedCount++;
                                 }
@@ -2118,39 +2327,193 @@ window.onload = async () => {
             editAssignEkskul: async (id) => { const d=await db.get('student_ekskul',id); if(!d)return; await app.modalAssignEkskul(); document.getElementById('ae_id').value=d.id; document.getElementById('ae_siswa').value=d.nama_siswa; document.getElementById('ae_ekskul').value=d.nama_ekskul; },
 
             loadInputNilaiMapel: async () => {
-                const m = await db.get('mapel');
-                const teachers = await db.get('subject_teachers');
-                const util = await db.get('utility', 'main');
-                
+                const mapels = await db.get('mapel');
+
                 const el = document.getElementById('input_nilai_mapel');
                 if(!el) return;
 
                 let html = '<option value="">-- Pilih Mata Pelajaran --</option>';
 
-                if (m && m.length > 0) {
-                    const currentClass = util ? `${util.kelas}.${util.rombel}`.toUpperCase() : '';
-                    const assignedSubjects = [];
-                    
-                    if (teachers && teachers.length > 0 && currentClass) {
-                        teachers.forEach(t => {
-                            if (t.kelas && t.mapel) {
-                                const classes = t.kelas.split(',').map(c => c.trim().toUpperCase());
-                                if (classes.includes(currentClass)) {
-                                    assignedSubjects.push(t.mapel);
-                                }
-                            }
-                        });
-                    }
-                    
-                    m.forEach(x => {
-                        if (!assignedSubjects.includes(x.nama)) {
-                            html += `<option value="${x.nama}">${x.nama}</option>`;
-                        }
+                if (mapels && mapels.length > 0) {
+                    mapels.forEach(m => {
+                        html += `<option value="${m.nama}">${m.nama}</option>`;
                     });
                 }
                 el.innerHTML = html;
             },
-            renderInputNilaiForm: async () => { const m=document.getElementById('input_nilai_mapel').value; const s=await db.get('students'); const n=await db.get('nilai')||[]; if(!m||!s) return; document.getElementById('container-input-nilai').innerHTML = `<table class="table"><thead><tr><th>Nama</th><th>Nilai</th><th>Deskripsi</th></tr></thead><tbody>` + s.map(student=>{ const key=`${student.id}_${m}`; const existing=n.find(i=>i.key===key)||{nilai:'',deskripsi:''}; return `<tr><td>${student.nama}</td><td><input type="number" id="val_nilai_${student.id}" class="form-control" value="${existing.nilai}"></td><td><textarea id="val_desk_${student.id}" class="form-control">${existing.deskripsi}</textarea></td></tr>`; }).join('') + `</tbody></table><button class="btn btn-custom-save w-100" onclick="app.saveNilai()">Simpan</button>`; },
+
+            loadInputNilaiMapelKelas: async () => {
+                const subjectTeachers = await db.get('subject_teachers') || [];
+                const el = document.getElementById('input_nilai_mapel_kelas');
+                if(!el) return;
+
+                // Get unique classes from subject_teachers
+                const uniqueClasses = [...new Set(subjectTeachers.map(st => st.kelas).filter(k => k))].sort();
+
+                let html = '<option value="">Pilih Kelas</option>';
+                uniqueClasses.forEach(cls => {
+                    html += `<option value="${cls}">${cls}</option>`;
+                });
+                el.innerHTML = html;
+            },
+
+            loadInputNilaiMapelMapel: async () => {
+                const selectedClass = document.getElementById('input_nilai_mapel_kelas').value;
+                const subjectTeachers = await db.get('subject_teachers') || [];
+                const mapels = await db.get('mapel') || [];
+
+                const el = document.getElementById('input_nilai_mapel_select');
+                if(!el) return;
+
+                let html = '<option value="">-- Pilih Mata Pelajaran --</option>';
+
+                if (selectedClass && subjectTeachers.length > 0) {
+                    // Filter subjects taught in the selected class
+                    const classSubjects = subjectTeachers
+                        .filter(st => st.kelas === selectedClass)
+                        .map(st => st.mapel)
+                        .filter((m, index, arr) => arr.indexOf(m) === index); // unique
+
+                    classSubjects.forEach(subjectName => {
+                        const mapel = mapels.find(m => m.nama === subjectName);
+                        if (mapel) {
+                            html += `<option value="${mapel.nama}">${mapel.nama}</option>`;
+                        }
+                    });
+                } else {
+                    // If no class selected, show all subjects
+                    mapels.forEach(m => {
+                        html += `<option value="${m.nama}">${m.nama}</option>`;
+                    });
+                }
+                el.innerHTML = html;
+            },
+
+            loadRekap: async () => {
+                const utility = await db.get('utility', 'main');
+                const students = await db.get('students') || [];
+                const mapels = await db.get('mapel') || [];
+                const grades = await db.get('nilai') || [];
+
+                if (!utility || !utility.kelas || !utility.rombel) {
+                    document.getElementById('rekap-content').innerHTML = '<div class="alert alert-warning">Data utility rapor belum diatur. Silakan atur kelas dan rombel di menu Data Utility Rapor.</div>';
+                    return;
+                }
+
+                const currentClass = `${utility.kelas}.${utility.rombel}`;
+                const classStudents = students.filter(s => s.kelas_rombel === currentClass);
+
+                if (classStudents.length === 0) {
+                    document.getElementById('rekap-content').innerHTML = '<div class="alert alert-info">Tidak ada siswa di kelas ini.</div>';
+                    return;
+                }
+
+                if (mapels.length === 0) {
+                    document.getElementById('rekap-content').innerHTML = '<div class="alert alert-info">Belum ada data mata pelajaran.</div>';
+                    return;
+                }
+
+                // Build table header
+                let tableHtml = `<h5 class="mb-3">Rekap Penilaian Kelas ${currentClass}</h5>`;
+                tableHtml += '<div class="table-responsive"><table class="table table-striped table-bordered bg-white"><thead class="table-dark"><tr>';
+                tableHtml += '<th>No</th><th>Nama Siswa</th>';
+
+                mapels.forEach(m => {
+                    tableHtml += `<th>${m.nama}</th>`;
+                });
+
+                tableHtml += '<th>Rata-rata</th></tr></thead><tbody>';
+
+                // Build table rows
+                classStudents.forEach((student, index) => {
+                    tableHtml += `<tr><td>${index + 1}</td><td>${student.nama}</td>`;
+
+                    let totalGrade = 0;
+                    let gradeCount = 0;
+
+                    mapels.forEach(m => {
+                        const key = `${student.id}_${m.nama}`;
+                        const gradeRecord = grades.find(g => g.key === key);
+                        const grade = gradeRecord && gradeRecord.nilai ? parseFloat(gradeRecord.nilai) : '-';
+
+                        if (grade !== '-' && !isNaN(grade)) {
+                            totalGrade += grade;
+                            gradeCount++;
+                        }
+
+                        tableHtml += `<td class="text-center">${grade}</td>`;
+                    });
+
+                    // Calculate average
+                    const average = gradeCount > 0 ? (totalGrade / gradeCount).toFixed(2) : '-';
+                    tableHtml += `<td class="text-center fw-bold">${average}</td></tr>`;
+                });
+
+                tableHtml += '</tbody></table></div>';
+
+                document.getElementById('rekap-content').innerHTML = tableHtml;
+            },
+            renderInputNilaiForm: async () => {
+                const m = document.getElementById('input_nilai_mapel').value;
+                const utility = await db.get('utility', 'main');
+                const s = await db.get('students') || [];
+                const n = await db.get('nilai') || [];
+                if (!m || !s.length) return;
+
+                let filteredStudents = s;
+                let classHeader = '';
+
+                if (utility && utility.kelas && utility.rombel) {
+                    const currentClass = `${utility.kelas}.${utility.rombel}`;
+                    filteredStudents = s.filter(student => student.kelas_rombel === currentClass);
+                    classHeader = `<h5 class="mb-3">Kelas: ${currentClass}</h5>`;
+                } else {
+                    classHeader = `<div class="alert alert-warning">Data utility rapor belum diatur. Silakan atur kelas dan rombel di menu Data Utility Rapor.</div>`;
+                    filteredStudents = []; // Don't show students if utility not set
+                }
+
+                if (filteredStudents.length === 0) {
+                    document.getElementById('container-input-nilai').innerHTML = classHeader + '<div class="alert alert-info">Tidak ada siswa di kelas ini.</div>';
+                    return;
+                }
+
+                document.getElementById('container-input-nilai').innerHTML = classHeader + `<table class="table"><thead><tr><th>Nama</th><th>Nilai</th><th>Deskripsi</th></tr></thead><tbody>` + filteredStudents.map(student => {
+                    const key = `${student.id}_${m}`;
+                    const existing = n.find(i => i.key === key) || { nilai: '', deskripsi: '' };
+                    return `<tr><td>${student.nama}</td><td><input type="number" id="val_nilai_${student.id}" class="form-control" value="${existing.nilai}"></td><td><textarea id="val_desk_${student.id}" class="form-control">${existing.deskripsi}</textarea></td></tr>`;
+                }).join('') + `</tbody></table><button class="btn btn-custom-save w-100" onclick="app.saveNilai()">Simpan</button>`;
+            },
+
+            renderInputNilaiMapelForm: async () => {
+                const m = document.getElementById('input_nilai_mapel_select').value;
+                const utility = await db.get('utility', 'main');
+                const s = await db.get('students') || [];
+                const n = await db.get('nilai') || [];
+                if (!m || !s.length) return;
+
+                let filteredStudents = s;
+                let classHeader = '';
+
+                if (utility && utility.kelas && utility.rombel) {
+                    const currentClass = `${utility.kelas}.${utility.rombel}`;
+                    filteredStudents = s.filter(student => student.kelas_rombel === currentClass);
+                    classHeader = `<h5 class="mb-3">Kelas: ${currentClass}</h5>`;
+                } else {
+                    classHeader = `<div class="alert alert-warning">Data utility rapor belum diatur. Silakan atur kelas dan rombel di menu Data Utility Rapor.</div>`;
+                    filteredStudents = []; // Don't show students if utility not set
+                }
+
+                if (filteredStudents.length === 0) {
+                    document.getElementById('container-input-nilai-mapel').innerHTML = classHeader + '<div class="alert alert-info">Tidak ada siswa di kelas ini.</div>';
+                    return;
+                }
+
+                document.getElementById('container-input-nilai-mapel').innerHTML = classHeader + `<table class="table"><thead><tr><th>Nama</th><th>Nilai</th><th>Deskripsi</th></tr></thead><tbody>` + filteredStudents.map(student => {
+                    const key = `${student.id}_${m}`;
+                    const existing = n.find(i => i.key === key) || { nilai: '', deskripsi: '' };
+                    return `<tr><td>${student.nama}</td><td><input type="number" id="val_nilai_mapel_${student.id}" class="form-control" value="${existing.nilai}"></td><td><textarea id="val_desk_mapel_${student.id}" class="form-control">${existing.deskripsi}</textarea></td></tr>`;
+                }).join('') + `</tbody></table><button class="btn btn-custom-save w-100" onclick="app.saveNilaiMapel()">Simpan</button>`;
+            },
             saveNilai: async () => { const m=document.getElementById('input_nilai_mapel').value; const s=await db.get('students'); const n=await db.get('nilai')||[]; for(let st of s) { const val=document.getElementById(`val_nilai_${st.id}`).value; const desk=document.getElementById(`val_desk_${st.id}`).value; const key=`${st.id}_${m}`; const exIdx=n.findIndex(i=>i.key===key); const rec={key:key, student_id:st.id, mapel:m, nilai:val, deskripsi:desk}; if(exIdx>=0) rec.id=n[exIdx].id; await app.saveData('nilai',rec); } app.showAlert('Saved!','success'); },
             
             // --- KOKURIKULER LOGIC ---
@@ -2205,45 +2568,64 @@ window.onload = async () => {
                 }
             },
 
-            // --- CORE UI FUNCTIONS ---
-            nav: (target) => { 
+            // --- CORE UI FUNCTIONS (NAVIGATION & LOADERS) ---
+            // Fungsi navigasi yang diperbaiki untuk memanggil data
+            nav: async (target) => { 
+                // 1. Atur Tampilan Halaman
                 document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active')); 
                 const el = document.getElementById(target); 
                 if(el) el.classList.add('active'); 
+                
+                // 2. Atur Sidebar Active State
                 document.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('active')); 
                 const link = document.querySelector(`[onclick*="app.nav('${target}')"]`); 
                 if(link) link.classList.add('active'); 
                 
-                // Hide menu toggle on login page, show on all other pages
+                // 3. Hide menu toggle on login page (jika ada)
                 const menuToggle = document.getElementById('menu-toggle');
                 if (target === 'login') {
-                    menuToggle.style.display = 'none';
+                    if(menuToggle) menuToggle.style.display = 'none';
                 } else {
-                    menuToggle.style.display = 'block';
+                    if(menuToggle) menuToggle.style.display = 'block';
                 }
                 
-                // Load data for the target page immediately
+                // 4. LOAD DATA (PENTING: Memastikan data dipanggil saat menu diklik)
                 try {
-                    if(target === 'dashboard') { if(app.loadDashboard) app.loadDashboard(); }
-                    if(target === 'datasikap') { if(app.loadSikap) app.loadSikap(); }
-                    if(target === 'datasiswa') { if(app.loadSiswa) app.loadSiswa(); if(app.loadDataKelas) app.loadDataKelas(); }
-                    if(target === 'dataguru') { if(app.loadGuru) app.loadGuru(); if(app.loadGuruUsers) app.loadGuruUsers(); }
-                    if(target === 'datagurumatapelajaran') { if(app.loadGuruMapel) app.loadGuruMapel(); }
-                    if(target === 'datakelas') { if(app.loadDataKelas) app.loadDataKelas(); }
-                    if(target === 'datatp') { if(app.renderCPTP) app.renderCPTP(); if(app.loadCPTPFilters) app.loadCPTPFilters(); }
-                    if(target === 'datamapel') { if(app.loadMapel) app.loadMapel(); }
-                    if(target === 'nilaiakademik') { if(app.loadInputNilaiMapel) app.loadInputNilaiMapel(); }
-                    if(target === 'inputnilai') { if(app.loadInputNilaiMapel) app.loadInputNilaiMapel(); }
-                    if(target === 'dataekskul') { if(app.loadJenisEkskul) app.loadJenisEkskul(); if(app.loadEkskulFilter) app.loadEkskulFilter(); }
-                    if(target === 'siswappprogrambelajar') { if(app.renderSiswaEkskul) app.renderSiswaEkskul(); }
-                    if(target === 'pengaturan') { if(app.loadUtility) app.loadUtility(); if(app.loadSekolah) app.loadSekolah(); }
-                    if(target === 'dimensi') { if(app.loadDimensi) app.loadDimensi(); }
-                    if(target === 'kaih') { if(app.loadKaih) app.loadKaih(); }
-                    if(target === 'datapengguna') { if(app.loadAdminUsers) app.loadAdminUsers(); }
+                    // Dashboard & User
+                    if(target === 'dashboard') { if(app.loadDashboard) await app.loadDashboard(); }
+                    if(target === 'datapengguna') { if(app.loadAdminUsers) await app.loadAdminUsers(); }
+                    
+                    // Identitas Sekolah & Utility (FIXED)
+                    if(target === 'sekolah') { if(app.loadSekolah) await app.loadSekolah(); }
+                    if(target === 'utility') { if(app.loadUtility) await app.loadUtility(); }
+                    
+                    // Data Master
+                    if(target === 'siswa') { if(app.loadSiswa) await app.loadSiswa(); if(app.loadDataKelas) await app.loadDataKelas(); }
+                    if(target === 'guru') { if(app.loadGuru) await app.loadGuru(); }
+                    if(target === 'gurumapel') { if(app.loadGuruMapel) await app.loadGuruMapel(); }
+                    if(target === 'mapel') { if(app.loadMapel) await app.loadMapel(); }
+                    
+                    // Pembelajaran & Nilai
+                    if(target === 'cptp') { if(app.renderCPTP) await app.renderCPTP(); if(app.loadCPTPFilters) await app.loadCPTPFilters(); }
+                    if(target === 'datakelas') { if(app.loadDataKelas) await app.loadDataKelas(); }
+                    if(target === 'kokurikuler') { if(app.loadKokurikuler) await app.loadKokurikuler(); }
+                    if(target === 'ekskul') { if(app.loadJenisEkskul) await app.loadJenisEkskul(); if(app.loadEkskulFilter) await app.loadEkskulFilter(); }
+                    if(target === 'nilai') { if(app.loadInputNilaiMapel) await app.loadInputNilaiMapel(); }
+                    if(target === 'input_nilai_mapel') { if(app.loadInputNilaiMapelKelas) await app.loadInputNilaiMapelKelas(); if(app.loadInputNilaiMapelMapel) await app.loadInputNilaiMapelMapel(); }
+                    if(target === 'rekap') { if(app.loadRekap) await app.loadRekap(); }
+                    if(target === 'catatan') { if(app.loadCatatan) await app.loadCatatan(); }
+                    if(target === 'presensi') { if(app.loadPresensi) await app.loadPresensi(); }
+                    
+                    // Dimensi & KAIH
+                    if(target === 'dimensi') { if(app.loadDimensi) await app.loadDimensi(); }
+                    if(target === '7kaih') { if(app.loadKaih) await app.loadKaih(); }
+                    
                 } catch(e) { console.error('Error loading page data:', e); }
             },
+
             getModal: (id) => { 
                 const element = document.getElementById(id);
+                if (!element) return null;
                 let modal = bootstrap.Modal.getInstance(element);
                 if (!modal) modal = new bootstrap.Modal(element);
                 return modal;
@@ -2255,7 +2637,6 @@ window.onload = async () => {
                 alertDiv.style.display = 'block';
                 setTimeout(() => { alertDiv.style.display = 'none'; }, 3000);
                 
-                // Also show toast if auto-login
                 if (type === 'success' && msg.includes('Auto-login')) {
                     const toastEl = document.getElementById('autoLoginToast');
                     if (toastEl) {
