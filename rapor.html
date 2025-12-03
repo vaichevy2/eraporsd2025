@@ -307,7 +307,6 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('kokurikuler')"><i class="fas fa-project-diagram"></i> Kokurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('ekskul')"><i class="fas fa-futbol"></i> Ekstrakurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('nilai')"><i class="fas fa-edit"></i> Input Nilai</a>
-                <a class="list-group-item list-group-item-action" onclick="app.nav('input_nilai_mapel')"><i class="fas fa-edit"></i> Input Nilai Mapel</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('rekap')"><i class="fas fa-table"></i> Rekap Penilaian</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('deskripsi')"><i class="fas fa-comment-alt"></i> Deskripsi</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('catatan')"><i class="fas fa-sticky-note"></i> Catatan Guru</a>
@@ -750,22 +749,7 @@
                     </div>
                 </div>
 
-                <!-- INPUT NILAI MAPEL -->
-                <div id="input_nilai_mapel" class="page-section">
-                    <div class="content-header"><h2>Input Nilai Mapel</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('nilai')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('nilai')"><i class="fas fa-save"></i> Simpan</button></div>
-                    <div class="card card-glass p-3">
-                        <div class="mb-3">
-                            <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('nilai')"><i class="fas fa-file-excel"></i> Template</button>
-                            <button class="btn btn-info btn-sm text-white" onclick="app.exportData('nilai')"><i class="fas fa-file-export"></i> Export</button>
-                            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('nilai')"><i class="fas fa-file-import"></i> Import</button>
-                        </div>
-                        <p>Pilih Mata Pelajaran untuk menginput nilai.</p>
-                        <select id="input_nilai_mapel" class="form-select mb-3" onchange="app.renderInputNilaiForm()">
-                            <option value="">Pilih Mapel</option>
-                        </select>
-                        <div id="container-input-nilai" class="table-responsive"></div>
-                    </div>
-                </div>
+
                 
                 <div id="rekap" class="page-section">
                     <div class="content-header"><h2>Rekap Penilaian</h2></div>
@@ -2486,22 +2470,13 @@
 
             renderInputNilaiMapelForm: async () => {
                 const m = document.getElementById('input_nilai_mapel_select').value;
-                const utility = await db.get('utility', 'main');
+                const selectedClass = document.getElementById('input_nilai_mapel_kelas').value;
                 const s = await db.get('students') || [];
                 const n = await db.get('nilai') || [];
-                if (!m || !s.length) return;
+                if (!m || !selectedClass || !s.length) return;
 
-                let filteredStudents = s;
-                let classHeader = '';
-
-                if (utility && utility.kelas && utility.rombel) {
-                    const currentClass = `${utility.kelas}.${utility.rombel}`;
-                    filteredStudents = s.filter(student => student.kelas_rombel === currentClass);
-                    classHeader = `<h5 class="mb-3">Kelas: ${currentClass}</h5>`;
-                } else {
-                    classHeader = `<div class="alert alert-warning">Data utility rapor belum diatur. Silakan atur kelas dan rombel di menu Data Utility Rapor.</div>`;
-                    filteredStudents = []; // Don't show students if utility not set
-                }
+                let filteredStudents = s.filter(student => student.kelas_rombel === selectedClass);
+                let classHeader = `<h5 class="mb-3">Kelas: ${selectedClass}</h5>`;
 
                 if (filteredStudents.length === 0) {
                     document.getElementById('container-input-nilai-mapel').innerHTML = classHeader + '<div class="alert alert-info">Tidak ada siswa di kelas ini.</div>';
