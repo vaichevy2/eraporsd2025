@@ -321,7 +321,7 @@
                 <div class="collapse" id="kokurikulerCollapse">
                     <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('daftar_tema')">Daftar Tema</a>
                     <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kokurikuler')">Kegiatan Kokurikuler</a>
-                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kokurikuler')">Kelompok Kokurikuler</a>
+                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kelompok_kokurikuler')">Kelompok Kokurikuler</a>
                 </div>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('ekskul')"><i class="fas fa-futbol"></i> Ekstrakurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('nilai')"><i class="fas fa-edit"></i> Input Nilai</a>
@@ -1025,7 +1025,7 @@
     <script>
         /* --- JAVASCRIPT LOGIC --- */
         const DB_NAME = "RaporDeepLearningDB";
-        const DB_VERSION = 6; 
+        const DB_VERSION = 7;
         
         // STATE MANAGEMENT
         const appState = {
@@ -1073,7 +1073,8 @@
                         const stores = [
                             'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
                             'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
-                            'student_ekskul', 'kokurikuler', 'tema_ekskul', 'admins'
+                            'student_ekskul', 'kokurikuler', 'tema_ekskul', 'admins',
+                            'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
                         ];
 
                         stores.forEach(s => {
