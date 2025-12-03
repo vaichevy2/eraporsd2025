@@ -251,6 +251,19 @@
             margin-top: 10px;
         }
 
+        /* Editable cells styling */
+        .editable-cell {
+            border: 1px solid transparent;
+            padding: 4px;
+            min-height: 24px;
+        }
+
+        .editable-cell:focus {
+            border: 1px solid #007bff;
+            background-color: #f8f9fa;
+            outline: none;
+        }
+
         #sidebar-wrapper::-webkit-scrollbar { width: 8px; }
         #sidebar-wrapper::-webkit-scrollbar-track { background: #1a1a2e; }
         #sidebar-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
@@ -304,7 +317,15 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('mapel')"><i class="fas fa-book"></i> Data Mata Pelajaran</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('cptp')"><i class="fas fa-list"></i> CP / TP</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('datakelas')"><i class="fas fa-users"></i> Data Kelas</a>
-                <a class="list-group-item list-group-item-action" onclick="app.nav('kokurikuler')"><i class="fas fa-project-diagram"></i> Kokurikuler</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="collapse" href="#kokurikulerCollapse" role="button" aria-expanded="false" aria-controls="kokurikulerCollapse"><i class="fas fa-project-diagram"></i> Kokurikuler</a>
+                <div class="collapse" id="kokurikulerCollapse">
+                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kokurikuler')">Kegiatan Kokurikuler</a>
+                    <a class="list-group-item list-group-item-action ms-3" data-bs-toggle="collapse" href="#daftarTemaCollapse" role="button" aria-expanded="false" aria-controls="daftarTemaCollapse">Daftar Tema</a>
+                    <div class="collapse" id="daftarTemaCollapse">
+                        <a class="list-group-item list-group-item-action ms-5" onclick="app.nav('daftar_tema_ekskul')">Daftar Tema Kegiatan Ekstrakurikuler</a>
+                    </div>
+                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kokurikuler')">Kelompok Kokurikuler</a>
+                </div>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('ekskul')"><i class="fas fa-futbol"></i> Ekstrakurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('nilai')"><i class="fas fa-edit"></i> Input Nilai</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('rekap')"><i class="fas fa-table"></i> Rekap Penilaian</a>
@@ -670,7 +691,7 @@
 
                 <!-- KOKURIKULER -->
                 <div id="kokurikuler" class="page-section">
-                    <div class="content-header"><h2>Data Kokurikuler (P5)</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('kokurikuler')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('kokurikuler')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Kokurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('kokurikuler')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('kokurikuler')"><i class="fas fa-save"></i> Simpan</button></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-primary btn-sm" onclick="app.modalKokurikuler('add')"><i class="fas fa-plus"></i> Tambah Proyek</button>
@@ -692,6 +713,29 @@
                     </div>
                 </div>
 
+                <!-- DAFTAR TEMA EKSKUL -->
+                <div id="daftar_tema_ekskul" class="page-section">
+                    <div class="content-header"><h2>Daftar Tema Kegiatan Ekstrakurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('tema_ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('tema_ekskul')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="card card-glass p-3">
+                        <div class="mb-3">
+                            <button class="btn btn-primary btn-sm" onclick="app.modalTemaEkskul('add')"><i class="fas fa-plus"></i> Tambah Tema Ekskul</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped bg-white">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Tema</th>
+                                        <th>Deskripsi</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-tema-ekskul"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- EKSKUL -->
                 <div id="ekskul" class="page-section">
                     <div class="content-header"><h2>Ekstrakurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('ekskul')"><i class="fas fa-save"></i> Simpan</button></div>
@@ -702,6 +746,13 @@
                             <h5 class="mb-0">Data Jenis Ekstrakurikuler</h5>
                             <button class="btn btn-primary btn-sm" onclick="app.modalJenisEkskul('add')"><i class="fas fa-plus"></i> Tambah Jenis Ekskul</button>
                         </div>
+                        <div class="mb-3">
+                            <button class="btn btn-success btn-sm text-white" onclick="app.modalDownloadTemplate('ekskul')"><i class="fas fa-file-excel"></i> Template</button>
+                            <button class="btn btn-info btn-sm text-white" onclick="app.modalExportData('ekskul')"><i class="fas fa-file-export"></i> Export</button>
+                            <button class="btn btn-outline-secondary btn-sm ms-1" onclick="app.exportStoreToSQLite('ekskul')"><i class="fas fa-database"></i> SQLite</button>
+                            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('ekskul')"><i class="fas fa-file-import"></i> Import</button>
+                            <button class="btn btn-danger btn-sm" onclick="app.deleteAll('ekskul')"><i class="fas fa-trash"></i> Hapus Masal</button>
+                        </div>
                         <div class="table-responsive mb-4">
                             <table class="table table-white table-striped">
                                 <thead class="table-dark"><tr><th>No</th><th>Nama Ekskul</th><th>Kategori</th><th>Aksi</th></tr></thead>
@@ -710,11 +761,18 @@
                         </div>
                         <hr>
 
-                        <!-- Table: Data Siswa Ekskul -->
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0">Data Siswa Ekstrakurikuler</h5>
-                            <button class="btn btn-primary btn-sm" onclick="app.modalAssignEkskul()"><i class="fas fa-plus"></i> Tambah Anggota</button>
-                        </div>
+        <!-- Table: Data Siswa Ekskul -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Data Siswa Ekstrakurikuler</h5>
+            <button class="btn btn-primary btn-sm" onclick="app.modalAssignEkskul()"><i class="fas fa-plus"></i> Tambah Anggota</button>
+        </div>
+        <div class="mb-3">
+            <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('student_ekskul')"><i class="fas fa-file-excel"></i> Template</button>
+            <button class="btn btn-info btn-sm text-white" onclick="app.exportData('student_ekskul')"><i class="fas fa-file-export"></i> Export</button>
+            <button class="btn btn-outline-secondary btn-sm ms-1" onclick="app.exportStoreToSQLite('student_ekskul')"><i class="fas fa-database"></i> SQLite</button>
+            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('student_ekskul')"><i class="fas fa-file-import"></i> Import</button>
+            <button class="btn btn-danger btn-sm" onclick="app.deleteAll('student_ekskul')"><i class="fas fa-trash"></i> Hapus Masal</button>
+        </div>
                         <div class="row mb-2">
                             <div class="col-md-4">
                                 <select id="filter_siswa_ekskul" class="form-select" onchange="app.renderSiswaEkskul()">
@@ -863,7 +921,10 @@
     </div>
     
     <!-- Modal Kokurikuler -->
-    <div class="modal fade" id="modalKokurikuler" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Kokurikuler (P5)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-kokurikuler"><input type="hidden" id="k_id"><div class="mb-3"><label>Nama Proyek</label><input type="text" class="form-control" id="k_nama" required placeholder="Contoh: Gaya Hidup Berkelanjutan"></div><div class="mb-3"><label>Tema</label><input type="text" class="form-control" id="k_tema" placeholder="Contoh: Sampahku Tanggung Jawabku"></div><div class="mb-3"><label>Deskripsi</label><textarea id="k_deskripsi" class="form-control" rows="3" placeholder="Siswa mampu memilah sampah..."></textarea></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveKokurikuler()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalKokurikuler" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Kokurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-kokurikuler"><input type="hidden" id="k_id"><div class="mb-3"><label>Nama Proyek</label><input type="text" class="form-control" id="k_nama" required placeholder="Contoh: Gaya Hidup Berkelanjutan"></div><div class="mb-3"><label>Tema</label><input type="text" class="form-control" id="k_tema" placeholder="Contoh: Sampahku Tanggung Jawabku"></div><div class="mb-3"><label>Deskripsi</label><textarea id="k_deskripsi" class="form-control" rows="3" placeholder="Siswa mampu memilah sampah..."></textarea></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveKokurikuler()">Simpan</button></div></div></div></div>
+
+    <!-- Modal Tema Ekskul -->
+    <div class="modal fade" id="modalTemaEkskul" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Tema Ekstrakurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-tema-ekskul"><input type="hidden" id="te_id"><div class="mb-3"><label>Nama Tema</label><input type="text" class="form-control" id="te_nama" required placeholder="Contoh: Olahraga dan Kesehatan"></div><div class="mb-3"><label>Deskripsi</label><textarea id="te_deskripsi" class="form-control" rows="3" placeholder="Deskripsi tema kegiatan ekstrakurikuler..."></textarea></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveTemaEkskul()">Simpan</button></div></div></div></div>
 
     <!-- Modal Preview PDF -->
     <div class="modal fade" id="modalPreviewPdf" tabindex="-1" aria-hidden="true">
@@ -1015,7 +1076,7 @@
                         const stores = [
                             'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
                             'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
-                            'student_ekskul', 'kokurikuler', 'admins'
+                            'student_ekskul', 'kokurikuler', 'tema_ekskul', 'admins'
                         ];
 
                         stores.forEach(s => {
@@ -1330,7 +1391,7 @@
             persistAllData: async () => {
                 try {
                     // Pre-load all critical data into memory/cache on startup
-                    const allStores = ['students', 'teachers', 'admins', 'mapel', 'cptp', 'subject_teachers', 'utility', 'sekolah', 'dimensi', 'kaih', 'ekskul', 'student_ekskul', 'nilai', 'kokurikuler'];
+                    const allStores = ['students', 'teachers', 'admins', 'mapel', 'cptp', 'subject_teachers', 'utility', 'sekolah', 'dimensi', 'kaih', 'ekskul', 'student_ekskul', 'nilai', 'kokurikuler', 'tema_ekskul'];
                     const cached = {};
                     for (const store of allStores) {
                         try {
@@ -1653,7 +1714,8 @@
                 db.subscribe('utility', app.loadDashboard);
                 db.subscribe('utility', app.loadInputNilaiMapel); 
                 db.subscribe('kokurikuler', app.loadKokurikuler);
-                db.subscribe('subject_teachers', app.loadInputNilaiMapel); 
+                db.subscribe('tema_ekskul', app.loadTemaEkskul);
+                db.subscribe('subject_teachers', app.loadInputNilaiMapel);
 
                 // Directly Setup UI
                 app.setupUI();
@@ -1955,6 +2017,12 @@
                 } else if(type === 'nilai') {
                     headers = ['NISN','Mapel','Nilai','Deskripsi'];
                     data = [['E001','Matematika','85','Baik'],['E002','Matematika','90','Sangat Baik']];
+                } else if(type === 'ekskul') {
+                    headers = ['NamaEkskul','Kategori'];
+                    data = [['Pramuka','Wajib'],['Basket','Olahraga']];
+                } else if(type === 'student_ekskul') {
+                    headers = ['NamaSiswa','Ekskul'];
+                    data = [['Adi Pratama','Pramuka'],['Siti Nurhaliza','Basket']];
                 }
                 const wb = XLSX.utils.book_new();
                 const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
@@ -1998,7 +2066,69 @@
                     const ws = XLSX.utils.aoa_to_sheet([['NISN','Mapel','Nilai','Deskripsi'], ...data]);
                     XLSX.utils.book_append_sheet(wb, ws, 'Nilai');
                     XLSX.writeFile(wb, 'nilai_export.xlsx');
+                } else if(type === 'ekskul') {
+                    const d = await db.get('ekskul');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(e => [e.nama || '', e.kategori || '']);
+                    const ws = XLSX.utils.aoa_to_sheet([['NamaEkskul','Kategori'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Ekskul');
+                    XLSX.writeFile(wb, 'ekskul_export.xlsx');
+                } else if(type === 'student_ekskul') {
+                    const d = await db.get('student_ekskul');
+                    if(!d || d.length === 0) return alert('Tidak ada data untuk diexport');
+                    const data = d.map(se => [se.nama_siswa || '', se.nama_ekskul || '']);
+                    const ws = XLSX.utils.aoa_to_sheet([['NamaSiswa','Ekskul'], ...data]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Siswa Ekskul');
+                    XLSX.writeFile(wb, 'student_ekskul_export.xlsx');
                 }
+            },
+            modalDownloadTemplate: (type) => {
+                // Show a modal for download template confirmation
+                const modalHtml = `
+                    <div class="modal fade" id="modalDownloadTemplate" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Download Template</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Template Excel untuk data ${type} akan diunduh. Pastikan format kolom sesuai dengan template.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-success" onclick="app.downloadTemplate('${type}'); app.getModal('modalDownloadTemplate').hide();">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                app.getModal('modalDownloadTemplate').show();
+            },
+            modalExportData: (type) => {
+                // Show a modal for export data confirmation
+                const modalHtml = `
+                    <div class="modal fade" id="modalExportData" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Export Data</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Data ${type} akan diekspor ke file Excel. Pastikan data sudah tersimpan sebelum export.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-info" onclick="app.exportData('${type}'); app.getModal('modalExportData').hide();">Export</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                app.getModal('modalExportData').show();
             },
             modalImport: (t) => { document.getElementById('importType').value=t; document.getElementById('importTitle').innerText=t.toUpperCase(); document.getElementById('fileImport').value=''; app.getModal('modalImport').show(); },
             processImport: () => { 
@@ -2037,6 +2167,7 @@
                             if(t==='guru' && (header.includes('nuptk') || header.includes('nama'))) isValidFormat = true;
                             if(t==='gurumapel' && (header.includes('nuptk') || header.includes('mapel'))) isValidFormat = true;
                             if(t==='cptp' && (header.includes('mapel'))) isValidFormat = true;
+                            if(t==='student_ekskul' && (header.includes('namasiswa') || header.includes('ekskul'))) isValidFormat = true;
                             
                             if (!isValidFormat) {
                                 return alert(`Format file tidak sesuai untuk import ${t}. Silakan download template terlebih dahulu.`);
@@ -2169,6 +2300,28 @@
                                         deskripsi: deskripsi || ''
                                     });
                                     importedCount++;
+                                } else if(t==='ekskul' && row.length >= 2) {
+                                    const nama_ekskul = clean(row[0]);
+                                    const kategori = clean(row[1]);
+
+                                    if (!nama_ekskul) { skippedCount++; continue; }
+
+                                    await app.saveData('ekskul', {
+                                        nama: nama_ekskul,
+                                        kategori: kategori || 'Wajib'
+                                    });
+                                    importedCount++;
+                                } else if(t==='student_ekskul' && row.length >= 2) {
+                                    const nama_siswa = clean(row[0]);
+                                    const nama_ekskul = clean(row[1]);
+
+                                    if (!nama_siswa || !nama_ekskul) { skippedCount++; continue; }
+
+                                    await app.saveData('student_ekskul', {
+                                        nama_siswa: nama_siswa,
+                                        nama_ekskul: nama_ekskul
+                                    });
+                                    importedCount++;
                                 } else {
                                     skippedCount++;
                                 }
@@ -2206,9 +2359,36 @@
                 }
             },
 
-            loadMapel: async () => { const l=await db.get('mapel'); document.getElementById('tbody-mapel').innerHTML = l ? l.map((m,i)=>`<tr><td>${i+1}</td><td>${m.nama}</td><td>${m.singkat}</td><td>${m.skl}</td><td>${m.urut}</td><td><button class="btn btn-sm btn-danger" onclick="app.deleteItem('mapel',${m.id},'mapel')">Hapus</button></td></tr>`).join('') : ''; },
+            loadMapel: async () => {
+                const l = await db.get('mapel');
+                document.getElementById('tbody-mapel').innerHTML = l ? l.map((m,i)=>`
+                    <tr data-id="${m.id}">
+                        <td>${i+1}</td>
+                        <td contenteditable="true" class="editable-cell" data-field="nama">${m.nama}</td>
+                        <td contenteditable="true" class="editable-cell" data-field="singkat">${m.singkat}</td>
+                        <td contenteditable="true" class="editable-cell" data-field="skl">${m.skl}</td>
+                        <td contenteditable="true" class="editable-cell" data-field="urut">${m.urut}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" onclick="app.saveMapelEdit(${m.id})">Simpan</button>
+                            <button class="btn btn-sm btn-danger" onclick="app.deleteItem('mapel',${m.id},'mapel')">Hapus</button>
+                        </td>
+                    </tr>
+                `).join('') : '';
+            },
             modalMapel: (mode) => { document.getElementById('form-mapel').reset(); document.getElementById('m_id').value=''; app.getModal('modalMapel').show(); },
             saveMapel: async () => { const id=document.getElementById('m_id').value; const d={nama:document.getElementById('m_nama').value, singkat:document.getElementById('m_singkat').value, skl:document.getElementById('m_skl').value, urut:document.getElementById('m_urut').value}; if(id) d.id=parseInt(id); await app.saveData('mapel',d); app.getModal('modalMapel').hide(); app.showAlert('Saved!','success'); },
+            saveMapelEdit: async (id) => {
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                if (!row) return;
+                const nama = row.querySelector('td[data-field="nama"]').textContent.trim();
+                const singkat = row.querySelector('td[data-field="singkat"]').textContent.trim();
+                const skl = row.querySelector('td[data-field="skl"]').textContent.trim();
+                const urut = row.querySelector('td[data-field="urut"]').textContent.trim();
+                const data = { id: parseInt(id), nama, singkat, skl, urut };
+                await app.saveData('mapel', data);
+                app.showAlert('Data Mata Pelajaran Disimpan!', 'success');
+                await app.loadMapel(); // Reload to reflect changes
+            },
             loadDimensi: async () => { const d=await db.get('dimensi','main'); if(d) for(let i=1;i<=8;i++) document.getElementById(`dim_${i}`).value=d[`d${i}`]||''; },
             saveDimensi: async () => { let d={id:'main'}; for(let i=1;i<=8;i++) d[`d${i}`]=document.getElementById(`dim_${i}`).value; await app.saveData('dimensi',d); app.showAlert('Saved!','success'); },
             loadKaih: async () => { const k=await db.get('kaih','main'); if(k) for(let i=1;i<=7;i++) document.getElementById(`kaih_${i}`).value=k[`k${i}`]||''; },
@@ -2302,8 +2482,9 @@
             renderCPTP: async () => { const all=await db.get('cptp'); document.getElementById('tbody-cptp').innerHTML = all ? all.map((d,i)=>`<tr><td>${i+1}</td><td>${d.mapel}</td><td>${d.tingkat||'-'}</td><td>${d.fase}</td><td>${d.semester}</td><td>${d.tp}</td><td>${d.status}</td><td><button class="btn btn-sm btn-warning" onclick="app.editCPTP(${d.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="app.deleteItem('cptp',${d.id},'cptp')">Hapus</button></td></tr>`).join('') : ''; },
 
             modalJenisEkskul: () => { document.getElementById('form-jenis-ekskul').reset(); document.getElementById('je_id').value=''; app.getModal('modalJenisEkskul').show(); },
+            editJenisEkskul: async (id) => { const d=await db.get('ekskul',id); if(!d)return; document.getElementById('je_id').value=d.id; document.getElementById('je_nama').value=d.nama; document.getElementById('je_kategori').value=d.kategori; app.getModal('modalJenisEkskul').show(); },
             saveJenisEkskul: async () => { const id=document.getElementById('je_id').value; const d={nama:document.getElementById('je_nama').value, kategori:document.getElementById('je_kategori').value}; if(id) d.id=parseInt(id); await app.saveData('ekskul',d); app.getModal('modalJenisEkskul').hide(); app.showAlert('Saved!','success'); },
-            loadJenisEkskul: async () => { const l=await db.get('ekskul'); document.getElementById('tbody-jenis-ekskul').innerHTML = l ? l.map((d,i)=>`<tr><td>${i+1}</td><td>${d.nama}</td><td>${d.kategori}</td><td><button class="btn btn-sm btn-danger" onclick="app.deleteItem('ekskul',${d.id},'ekskul')">Hapus</button></td></tr>`).join('') : ''; },
+            loadJenisEkskul: async () => { const l=await db.get('ekskul'); document.getElementById('tbody-jenis-ekskul').innerHTML = l ? l.map((d,i)=>`<tr><td>${i+1}</td><td>${d.nama}</td><td>${d.kategori}</td><td><button class="btn btn-sm btn-warning me-1" onclick="app.editJenisEkskul(${d.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="app.deleteItem('ekskul',${d.id},'ekskul')">Hapus</button></td></tr>`).join('') : ''; },
             loadEkskulFilter: async () => { const l=await db.get('ekskul'); document.getElementById('filter_siswa_ekskul').innerHTML = '<option value="">Semua</option>'+(l?l.map(x=>`<option>${x.nama}</option>`).join(''):''); },
             modalAssignEkskul: async () => { const s=await db.get('students'); const e=await db.get('ekskul'); document.getElementById('ae_siswa').innerHTML='<option value="">-- Siswa --</option>'+(s?s.map(x=>`<option value="${x.nama}">${x.nama} (${x.kelas_rombel})</option>`).join(''):''); document.getElementById('ae_ekskul').innerHTML='<option value="">-- Ekskul --</option>'+(e?e.map(x=>`<option value="${x.nama}">${x.nama}</option>`).join(''):''); document.getElementById('form-assign-ekskul').reset(); document.getElementById('ae_id').value=''; app.getModal('modalAssignEkskul').show(); },
             saveAssignEkskul: async () => { const id=document.getElementById('ae_id').value; const d={nama_siswa:document.getElementById('ae_siswa').value, nama_ekskul:document.getElementById('ae_ekskul').value}; if(!d.nama_siswa) return alert('Pilih!'); if(id) d.id=parseInt(id); await app.saveData('student_ekskul',d); app.getModal('modalAssignEkskul').hide(); app.showAlert('Saved!','success'); },
