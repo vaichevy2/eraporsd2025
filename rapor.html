@@ -268,6 +268,15 @@
         #sidebar-wrapper::-webkit-scrollbar-track { background: #1a1a2e; }
         #sidebar-wrapper::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         #sidebar-wrapper::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Kokurikuler Icon Animation */
+        #kokurikuler-icon {
+            transition: transform 0.3s ease;
+        }
+
+        #kokurikuler-icon.move-down {
+            transform: translateY(20px);
+        }
     </style>
 </head>
 <body class="bg-animated">
@@ -317,12 +326,12 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('mapel')"><i class="fas fa-book"></i> Data Mata Pelajaran</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('cptp')"><i class="fas fa-list"></i> CP / TP</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('datakelas')"><i class="fas fa-users"></i> Data Kelas</a>
-                <a class="list-group-item list-group-item-action" data-bs-toggle="collapse" href="#kokurikulerCollapse" role="button" aria-expanded="false" aria-controls="kokurikulerCollapse"><i class="fas fa-project-diagram"></i> Kokurikuler</a>
-                <div class="collapse" id="kokurikulerCollapse">
-                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('daftar_tema')">Daftar Tema</a>
-                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kokurikuler')">Kegiatan Kokurikuler</a>
-                    <a class="list-group-item list-group-item-action ms-3" onclick="app.nav('kelompok_kokurikuler')">Kelompok Kokurikuler</a>
-                </div>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="collapse" href="#kokurikulerCollapse" role="button" aria-expanded="false" aria-controls="kokurikulerCollapse" onclick="toggleKokurikulerIcon()"><i class="fas fa-arrow-right" id="kokurikuler-icon"></i> Kokurikuler</a>
+                <ul class="collapse list-group list-group-flush" id="kokurikulerCollapse" style="list-style-type: disc; padding-left: 40px;">
+                    <li class="list-group-item list-group-item-action" onclick="app.nav('daftar_tema_ekskul')">Daftar Tema</li>
+                    <li class="list-group-item list-group-item-action" onclick="app.nav('kokurikuler')">Kegiatan Kokurikuler</li>
+                    <li class="list-group-item list-group-item-action" onclick="app.nav('kelompok_kokurikuler')">Kelompok Kokurikuler</li>
+                </ul>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('ekskul')"><i class="fas fa-futbol"></i> Ekstrakurikuler</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('nilai')"><i class="fas fa-edit"></i> Input Nilai</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('rekap')"><i class="fas fa-table"></i> Rekap Penilaian</a>
@@ -1073,7 +1082,7 @@
                         const stores = [
                             'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
                             'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
-                            'student_ekskul', 'kokurikuler', 'tema_ekskul', 'admins',
+                            'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
                             'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
                         ];
 
@@ -1389,7 +1398,7 @@
             persistAllData: async () => {
                 try {
                     // Pre-load all critical data into memory/cache on startup
-                    const allStores = ['students', 'teachers', 'admins', 'mapel', 'cptp', 'subject_teachers', 'utility', 'sekolah', 'dimensi', 'kaih', 'ekskul', 'student_ekskul', 'nilai', 'kokurikuler', 'tema_ekskul'];
+                    const allStores = ['students', 'teachers', 'admins', 'mapel', 'cptp', 'subject_teachers', 'utility', 'sekolah', 'dimensi', 'kaih', 'ekskul', 'student_ekskul', 'nilai', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler'];
                     const cached = {};
                     for (const store of allStores) {
                         try {
@@ -1692,11 +1701,11 @@
                 // Subscriptions
                 db.subscribe('students', app.loadSiswa);
                 db.subscribe('students', app.loadDashboard);
-                db.subscribe('students', app.loadDataKelas); 
+                db.subscribe('students', app.loadDataKelas);
                 db.subscribe('teachers', app.loadGuru);
-                db.subscribe('teachers', app.loadGuruUsers); 
+                db.subscribe('teachers', app.loadGuruUsers);
                 db.subscribe('teachers', app.loadDashboard);
-                db.subscribe('admins', app.loadAdminUsers); 
+                db.subscribe('admins', app.loadAdminUsers);
                 db.subscribe('subject_teachers', app.loadGuruMapel);
                 db.subscribe('mapel', app.loadMapel);
                 db.subscribe('mapel', app.loadDashboard);
@@ -1706,13 +1715,14 @@
                 db.subscribe('dimensi', app.loadDimensi);
                 db.subscribe('kaih', app.loadKaih);
                 db.subscribe('ekskul', app.loadJenisEkskul);
-                db.subscribe('ekskul', app.loadEkskulFilter); 
+                db.subscribe('ekskul', app.loadEkskulFilter);
                 db.subscribe('student_ekskul', app.renderSiswaEkskul);
                 db.subscribe('utility', app.loadUtility);
                 db.subscribe('utility', app.loadDashboard);
-                db.subscribe('utility', app.loadInputNilaiMapel); 
+                db.subscribe('utility', app.loadInputNilaiMapel);
                 db.subscribe('kokurikuler', app.loadKokurikuler);
                 db.subscribe('tema_ekskul', app.loadTemaEkskul);
+                db.subscribe('tema_kokurikuler', app.loadTemaKokurikuler);
                 db.subscribe('subject_teachers', app.loadInputNilaiMapel);
 
                 // Directly Setup UI
@@ -2968,6 +2978,16 @@
                 }
             }
         };
+
+        function toggleKokurikulerIcon() {
+            const icon = document.getElementById('kokurikuler-icon');
+            if (icon) {
+                icon.classList.add('move-down');
+                setTimeout(() => {
+                    icon.classList.remove('move-down');
+                }, 300); // Remove class after animation duration
+            }
+        }
 
         window.onload = app.init;
     </script>
