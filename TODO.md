@@ -1,12 +1,23 @@
-# TODO: Add Halaman Kelompok Kokurikuler
+# TODO: Fix Login Error on login.html
 
-## Steps to Complete
-- [ ] Update sidebar link for "Kelompok Kokurikuler" to navigate to 'kelompok_kokurikuler'
-- [ ] Add new IndexedDB stores: 'kelompok_kokurikuler' and 'siswa_kelompok_kokurikuler' in db.init
-- [ ] Increment DB_VERSION to 7
-- [ ] Add new page section div id="kelompok_kokurikuler" with tables for data kelompok and siswa kelompok
-- [ ] Add JS functions: modalKelompokKokurikuler, saveKelompokKokurikuler, loadKelompokKokurikuler, editKelompokKokurikuler, modalAssignKelompokKokurikuler, saveAssignKelompokKokurikuler, renderSiswaKelompokKokurikuler, editAssignKelompokKokurikuler
-- [ ] Add subscriptions for the new stores in db.init
-- [ ] Update nav function to load kelompok_kokurikuler data
-- [ ] Add modals for kelompok kokurikuler and assign siswa
-- [ ] Test navigation and CRUD operations
+## Issue Description
+- Error message: "Terjadi kesalahan saat login" appears when attempting to log in on login.html
+- Root cause: IndexedDB version mismatch between login.html (v6) and app.js (v7), causing database initialization failures
+
+## Tasks Completed
+- [x] Analyzed login.html and identified DB_VERSION mismatch
+- [x] Updated login.html DB_VERSION from 6 to 7
+- [x] Synchronized IndexedDB stores list with app.js
+- [x] Added browser support check for IndexedDB
+- [x] Improved error handling in initDB function
+- [x] Added SINGLE_ENTRY_STORES constant for proper autoIncrement logic
+
+## Next Steps
+- [ ] Test login functionality (requires browser access, currently disabled)
+- [ ] Verify auto-login works after successful login
+- [ ] Confirm no other version mismatches exist
+
+## Notes
+- The login uses IndexedDB for authentication with default admin user (username: admin, password: rapor123)
+- rapor.html has login checks that redirect to login.html if no valid session
+- Changes ensure consistency between login.html and app.js database schemas

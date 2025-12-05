@@ -329,3 +329,145 @@ const db = {
         }
     }
 }
+
+// ======================== APP OBJECT FOR UI INTERACTION ==========================
+
+const app = {
+    // Navigation function
+    nav: (page) => {
+        // Hide all page sections
+        const sections = document.querySelectorAll('.page-section');
+        sections.forEach(section => {
+            section.classList.remove('active');
+            section.style.display = 'none';
+        });
+
+        // Show selected page
+        const targetSection = document.getElementById(page);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            targetSection.style.display = 'block';
+        }
+
+        // Update sidebar active state
+        const sidebarLinks = document.querySelectorAll('.list-group-item');
+        sidebarLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+
+        // Find and activate the corresponding sidebar link
+        const activeLink = document.querySelector(`[onclick="app.nav('${page}')"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+
+        // Load data for specific pages
+        switch(page) {
+            case 'dashboard':
+                app.loadDashboard();
+                break;
+            case 'datapengguna':
+                app.loadAdminUsers();
+                break;
+            case 'sekolah':
+                app.loadSekolah();
+                break;
+            case 'utility':
+                app.loadUtility();
+                break;
+            case 'siswa':
+                app.loadSiswa();
+                break;
+            case 'guru':
+                app.loadGuru();
+                break;
+            case 'gurumapel':
+                app.loadGuruMapel();
+                break;
+            case 'dimensi':
+                app.loadDimensi();
+                break;
+            case '7kaih':
+                app.loadKaih();
+                break;
+            case 'mapel':
+                app.loadMapel();
+                break;
+            case 'cptp':
+                app.loadCPTP();
+                break;
+            case 'datakelas':
+                app.renderDataKelas();
+                break;
+            case 'kokurikuler':
+                app.loadKokurikuler();
+                break;
+            case 'daftar_tema_ekskul':
+                app.loadTemaEkskul();
+                break;
+            case 'ekskul':
+                app.loadEkskul();
+                break;
+            case 'nilai':
+                app.loadNilai();
+                break;
+            case 'rekap':
+                app.loadRekap();
+                break;
+            case 'rapor':
+                app.loadRapor();
+                break;
+            case 'deskripsi':
+                app.loadDeskripsi();
+                break;
+            case 'catatan':
+                app.loadCatatan();
+                break;
+            case 'presensi':
+                app.loadPresensi();
+                break;
+        }
+    },
+
+    // Logout function
+    logout: () => {
+        localStorage.removeItem('rapor_remember_user_id');
+        localStorage.removeItem('rapor_remember_user');
+        window.location.href = 'login.html';
+    },
+
+    // Dashboard functions
+    loadDashboard: async () => {
+        try {
+            await db.init();
+
+            // Load counts
+            const siswaCount = await db.get('students');
+            const guruCount = await db.get('teachers');
+            const mapelCount = await db.get('mapel');
+            const utility = await db.get('utility', 1);
+
+            document.getElementById('dash-siswa-count').textContent = Array.isArray(siswaCount) ? siswaCount.length : 0;
+            document.getElementById('dash-guru-count').textContent = Array.isArray(guruCount) ? guruCount.length : 0;
+            document.getElementById('dash-mapel-count').textContent = Array.isArray(mapelCount) ? mapelCount.length : 0;
+            document.getElementById('dash-kelas-val').textContent = utility ? utility.kelas : '-';
+
+            // Load progress chart
+            app.loadProgressChart();
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    },
+
+    loadProgressChart: () => {
+        // Simple progress chart implementation
+        const ctx = document.getElementById('progressChart');
+        if (!ctx) return;
+
+        const progressData = {
+            labels: ['Siswa', 'Guru', 'Mapel', 'Nilai'],
+            datasets: [{
+                label: 'Progress Pengisian',
+                data: [75, 60, 80, 45],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.6)',

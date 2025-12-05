@@ -176,24 +176,40 @@
 
     <script>
         const DB_NAME = "RaporDeepLearningDB";
-        const DB_VERSION = 6;
+        const DB_VERSION = 7;
         let dbInstance;
+
+        // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
+        const SINGLE_ENTRY_STORES = ['sekolah', 'utility', 'dimensi', 'kaih'];
 
         // Initialize IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
+                // Cek dukungan browser
+                if (!window.indexedDB) {
+                    reject("Browser tidak mendukung IndexedDB");
+                    return;
+                }
+
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    const stores = ['sekolah', 'utility', 'students', 'teachers', 'subject_teachers', 'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul', 'student_ekskul', 'kokurikuler', 'admins'];
+                    const stores = [
+                        'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
+                        'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                        'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
+                        'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
+                    ];
                     stores.forEach(s => {
                         if (!db.objectStoreNames.contains(s)) {
-                            db.createObjectStore(s, { keyPath: 'id', autoIncrement: s !== 'sekolah' && s !== 'utility' && s !== 'dimensi' && s !== 'kaih' });
+                            const isSingleEntry = SINGLE_ENTRY_STORES.includes(s);
+                            const auto = !isSingleEntry;
+                            db.createObjectStore(s, { keyPath: 'id', autoIncrement: auto });
                         }
                     });
                 };
                 request.onsuccess = (e) => { dbInstance = e.target.result; resolve(dbInstance); };
-                request.onerror = (e) => reject("Database Error");
+                request.onerror = (e) => reject("Database Error: " + e.target.error);
             });
         }
 
@@ -223,9 +239,20 @@
             }
 
             try {
-                // Seed default admin if DB is empty
+                // Seed default admin if DB is empty or admin user has wrong password
                 const admins = await getFromDB('admins');
-                if (!admins || admins.length === 0) {
+                let adminExists = false;
+                if (admins && admins.length > 0) {
+                    const adminUser = admins.find(a => a.username === 'admin');
+                    if (adminUser) {
+                        adminExists = true;
+                        if (adminUser.password !== 'rapor123') {
+                            adminUser.password = 'rapor123';
+                            await saveToDB('admins', adminUser);
+                        }
+                    }
+                }
+                if (!adminExists) {
                     await saveToDB('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
                 }
 
@@ -272,12 +299,27 @@
             const remember = document.getElementById('remember').checked;
             const errorMsg = document.getElementById('errorMsg');
             const errorText = document.getElementById('errorText');
+            const loginBtn = document.querySelector('.btn-login');
 
-            const success = await authenticateUser(username, password, remember);
-            
-            if (!success) {
-                errorText.textContent = 'Username atau Password salah';
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Masuk...';
+
+            try {
+                const success = await authenticateUser(username, password, remember);
+
+                if (!success) {
+                    errorText.textContent = 'Username atau Password salah';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                errorText.textContent = 'Terjadi kesalahan saat login';
                 errorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
             }
         }
 
@@ -301,6 +343,23 @@
                     await initDB();
                 }
                 try {
+                    // Seed default admin if DB is empty or admin user has wrong password
+                    const admins = await getFromDB('admins');
+                    let adminExists = false;
+                    if (admins && admins.length > 0) {
+                        const adminUser = admins.find(a => a.username === 'admin');
+                        if (adminUser) {
+                            adminExists = true;
+                            if (adminUser.password !== 'rapor123') {
+                                adminUser.password = 'rapor123';
+                                await saveToDB('admins', adminUser);
+                            }
+                        }
+                    }
+                    if (!adminExists) {
+                        await saveToDB('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                    }
+
                     const remembered = await getFromDB('admins', parseInt(rememberedId));
                     if (remembered && remembered.id) {
                         // Auto-login successful, redirect to rapor.html

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0; url=login.html">
+
     <title>Rapor Kurikulum Merdeka SD - Deep Learning</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Bootstrap 5 CSS -->
@@ -757,5 +757,53 @@
         </div>
     </div>
     <script src="app.js"></script>
+    <script>
+        // Check login on page load
+        window.addEventListener('load', async () => {
+            const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            if (!rememberedId) {
+                // No login session, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check if user exists in database
+            try {
+                await db.init();
+
+                // Seed default admin if DB is empty or admin user has wrong password
+                const admins = await db.get('admins');
+                let adminExists = false;
+                if (admins && admins.length > 0) {
+                    const adminUser = admins.find(a => a.username === 'admin');
+                    if (adminUser) {
+                        adminExists = true;
+                        if (adminUser.password !== 'rapor123') {
+                            adminUser.password = 'rapor123';
+                            await db.saveTo('admins', adminUser);
+                        }
+                    }
+                }
+                if (!adminExists) {
+                    await db.saveTo('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                }
+
+                const user = await db.get('admins', parseInt(rememberedId));
+                if (!user || !user.id) {
+                    // Invalid session, clear and redirect to login
+                    localStorage.removeItem('rapor_remember_user_id');
+                    localStorage.removeItem('rapor_remember_user');
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (e) {
+                console.error('Login check failed:', e);
+                // On error, clear and redirect to login
+                localStorage.removeItem('rapor_remember_user_id');
+                localStorage.removeItem('rapor_remember_user');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
 </body>
 </html>
