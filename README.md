@@ -44,7 +44,7 @@ Semua perubahan telah diterapkan untuk memastikan data persists setelah page rel
 
 ### Langkah 1: Verify System
 ```
-1. Buka: http://localhost/Aplikasi%20Rapor/wwwroot/rapor.html
+1. Buka: http://localhost/Aplikasi%20Rapor/wwwroot/
 2. Login dengan: admin / rapor123
 3. Buka DevTools (F12) → Console tab
 ```
@@ -302,6 +302,7 @@ indexedDB.databases()
 
 ```
 c:\xampp\htdocs\Aplikasi Rapor\wwwroot\
+├─ index.html                    [ROOT REDIRECT]
 ├─ rapor.html                    [MAIN FILE - 2181 lines]
 │  ├─ Lines 1145-1239: 6 wrapper functions
 │  ├─ Line 1244: persistAllData() in init()
@@ -355,7 +356,7 @@ c:\xampp\htdocs\Aplikasi Rapor\wwwroot\
 ## 📋 CHANGE SUMMARY
 
 ```
-Files Modified: 1 (rapor.html)
+Files Modified: 3 (rapor.html, index.html, README.md)
 Lines Added: ~200 (wrapper functions + calls)
 Functions Updated: 50+
 Stores Affected: 14
