@@ -2900,7 +2900,7 @@
                     return;
                 }
 
-                document.getElementById('container-input-nilai-mapel').innerHTML = classHeader + `<table class="table"><thead><tr><th>Nama</th><th>Nilai</th><th>Deskripsi</th></tr></thead><tbody>` + filteredStudents.map(student => {
+                document.getElementById('container-input-nilai-mapel').innerHTML = classHeader + `<table class="table"><thead
                     const key = `${student.id}_${m}`;
                     const existing = n.find(i => i.key === key) || { nilai: '', deskripsi: '' };
                     return `<tr><td>${student.nama}</td><td><input type="number" id="val_nilai_mapel_${student.id}" class="form-control" value="${existing.nilai}"></td><td><textarea id="val_desk_mapel_${student.id}" class="form-control">${existing.deskripsi}</textarea></td></tr>`;

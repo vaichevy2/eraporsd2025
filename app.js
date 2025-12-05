@@ -14,6 +14,135 @@ const appState = {
     }
 };
 
+// ======================== SQLITE INTEGRATION ==========================
+
+// SQLite database instances (in-memory)
+let sqliteDBs = {};
+
+// Test connection to SQLite files
+async function testSQLiteConnection() {
+    try {
+        const response = await fetch('sqlite/students.sqlite');
+        if (!response.ok) {
+            console.warn('SQLite file not found or not accessible');
+            return false;
+        }
+        const buffer = await response.arrayBuffer();
+        const SQL = await initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm' });
+        const db = new SQL.Database(new Uint8Array(buffer));
+        console.log('SQLite connection test successful');
+        return true;
+    } catch (e) {
+        console.error('SQLite connection test failed:', e);
+        return false;
+    }
+}
+
+// Load SQLite file into memory
+async function loadSQLiteFile(filename) {
+    try {
+        const response = await fetch(`sqlite/${filename}`);
+        if (!response.ok) {
+            console.warn(`SQLite file ${filename} not found`);
+            return null;
+        }
+        const buffer = await response.arrayBuffer();
+        const SQL = await initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm' });
+        const db = new SQL.Database(new Uint8Array(buffer));
+        sqliteDBs[filename] = db;
+        console.log(`Loaded SQLite file: ${filename}`);
+        return db;
+    } catch (e) {
+        console.error(`Failed to load SQLite file ${filename}:`, e);
+        return null;
+    }
+}
+
+// Save SQLite database back to server
+async function saveSQLiteFile(filename, db) {
+    try {
+        const binaryArray = db.export();
+        const blob = new Blob([binaryArray], { type: 'application/x-sqlite3' });
+
+        const formData = new FormData();
+        formData.append('file', blob, filename);
+        formData.append('filename', filename);
+
+        const response = await fetch('save_sqlite_to_folder.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log(`Saved SQLite file: ${filename}`);
+            return true;
+        } else {
+            console.error('Failed to save SQLite file:', result.error);
+            return false;
+        }
+    } catch (e) {
+        console.error(`Failed to save SQLite file ${filename}:`, e);
+        return false;
+    }
+}
+
+// Execute SQL query on SQLite database
+function executeSQLiteQuery(filename, sql, params = []) {
+    const db = sqliteDBs[filename];
+    if (!db) {
+        console.error(`SQLite database ${filename} not loaded`);
+        return null;
+    }
+    try {
+        const result = db.exec(sql, params);
+        return result;
+    } catch (e) {
+        console.error(`SQL execution error on ${filename}:`, e);
+        return null;
+    }
+}
+
+// Get all data from SQLite table
+function getSQLiteData(filename, tableName) {
+    const sql = `SELECT * FROM ${tableName}`;
+    const result = executeSQLiteQuery(filename, sql);
+    if (result && result.length > 0 && result[0].values) {
+        const columns = result[0].columns;
+        return result[0].values.map(row => {
+            const obj = {};
+            columns.forEach((col, i) => {
+                obj[col] = row[i];
+            });
+            return obj;
+        });
+    }
+    return [];
+}
+
+// Insert or update data in SQLite table
+function saveSQLiteData(filename, tableName, data) {
+    const db = sqliteDBs[filename];
+    if (!db) {
+        console.error(`SQLite database ${filename} not loaded`);
+        return false;
+    }
+
+    try {
+        // Get column names from data
+        const columns = Object.keys(data);
+        const values = columns.map(col => data[col]);
+        const placeholders = columns.map(() => '?').join(', ');
+        const sql = `INSERT OR REPLACE INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
+
+        db.run(sql, values);
+        return true;
+    } catch (e) {
+        console.error(`Failed to save data to ${filename}.${tableName}:`, e);
+        return false;
+    }
+}
+
 // ======================== FIXED INDEXEDDB STORAGE ==========================
 
 // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
@@ -176,37 +305,8 @@ const db = {
                 reject(err.message);
             }
         });
-    }
-};
-
-const app = {
-    currentUser: null,
-    // Date helpers: format to "dd mmmm yyyy" and normalize various inputs to ISO (yyyy-mm-dd)
-    formatDateLong: (isoOrVal) => {
-        if (!isoOrVal) return '';
-        try {
-            let d = isoOrVal;
-            if (typeof d === 'string') {
-                // If it's already ISO-like (yyyy-mm-dd), parse directly
-                if (/^\d{4}-\d{2}-\d{2}$/.test(d)) d = new Date(d + 'T00:00:00');
-                else {
-                    const parsed = Date.parse(d);
-                    if (!isNaN(parsed)) d = new Date(parsed);
-                    else return isoOrVal; // return original if cannot parse
-                }
-            }
-            if (d instanceof Date && !isNaN(d)) {
-                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                const day = d.getDate().toString().padStart(2, '0');
-                const month = months[d.getMonth()];
-                const year = d.getFullYear();
-                return `${day} ${month} ${year}`;
-            }
-            return isoOrVal;
-        } catch (err) {
-            return isoOrVal;
-        }
     },
+
     normalizeToISO: (dateInput) => {
         if (!dateInput) return '';
         try {
