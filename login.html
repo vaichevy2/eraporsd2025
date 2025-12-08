@@ -234,38 +234,59 @@
 
         // Authenticate user with username and password
         async function authenticateUser(username, password, remember = false) {
+            console.log('Starting authentication for user:', username);
+
             if (!dbInstance) {
+                console.log('Initializing database...');
                 await initDB();
             }
 
             try {
                 // Seed default admin if DB is empty or admin user has wrong password
+                console.log('Checking for default admin user...');
                 const admins = await getFromDB('admins');
+                console.log('Current admins:', admins);
+
                 let adminExists = false;
                 if (admins && admins.length > 0) {
                     const adminUser = admins.find(a => a.username === 'admin');
                     if (adminUser) {
                         adminExists = true;
+                        console.log('Admin user found, checking password...');
                         if (adminUser.password !== 'rapor123') {
+                            console.log('Updating admin password...');
                             adminUser.password = 'rapor123';
                             await saveToDB('admins', adminUser);
                         }
                     }
                 }
                 if (!adminExists) {
-                    await saveToDB('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                    console.log('Creating default admin user...');
+                    await saveToDB('admins', {
+                        username: 'admin',
+                        password: 'rapor123',
+                        level: 'Super Admin',
+                        aktif: true,
+                        last_login: null,
+                        online: false
+                    });
                 }
 
                 // Authenticate
+                console.log('Authenticating user...');
                 const allAdmins = await getFromDB('admins');
+                console.log('All admins for auth:', allAdmins);
+
                 const found = allAdmins.find(a => String(a.username) === username && String(a.password) === password);
+                console.log('Authentication result:', found ? 'SUCCESS' : 'FAILED');
 
                 if (found) {
                     // Save remember-me token with ID
                     if (found.id) {
+                        console.log('Saving user ID to localStorage:', found.id);
                         localStorage.setItem('rapor_remember_user_id', String(found.id));
                     }
-                    
+
                     // Store additional user data if remember is checked
                     if (remember) {
                         localStorage.setItem('rapor_remember_user', JSON.stringify({
@@ -277,15 +298,16 @@
 
                     // Small delay to ensure localStorage is written, then redirect
                     setTimeout(() => {
+                        console.log('Redirecting to rapor.html...');
                         window.location.href = 'rapor.html?page=datapengguna';
                     }, 100);
-                    
+
                     return true;
                 } else {
                     return false;
                 }
             } catch (e) {
-                console.error(e);
+                console.error('Authentication error:', e);
                 return false;
             }
         }

@@ -20,7 +20,8 @@
     <script src="https://unpkg.com/downloadjs@1.4.7/download.min.js"></script>
     <!-- SheetJS (For XLSX support) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-animated">
     <!-- MAIN APP WRAPPER -->
@@ -145,6 +146,7 @@
                             <div class="tab-pane fade" id="guru-content" role="tabpanel">
                                 <div class="alert alert-info small"><i class="fas fa-info-circle"></i> Data Guru disinkronisasi otomatis dari Data Guru (Wali). Username menggunakan NUPTK.</div>
                                 <div class="d-flex justify-content-end mb-2">
+                                    <button class="btn btn-primary btn-sm" onclick="app.modalGuruUser('add')"><i class="fas fa-plus"></i> Tambah Guru</button>
                                     <button class="btn btn-secondary btn-sm" onclick="app.modalSyncTeachers()"><i class="fas fa-sync"></i> Sinkronisasi NUPTK & Nama</button>
                                 </div>
                                 <div class="table-responsive">
@@ -572,6 +574,9 @@
 
     <!-- Modal Admin -->
     <div class="modal fade" id="modalAdmin" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Admin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-admin"><input type="hidden" id="adm_id"><div class="mb-3"><label>Username</label><input type="text" class="form-control" id="adm_user" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" id="adm_email"></div><div class="mb-3"><label>Level</label><select class="form-select" id="adm_level"><option>Admin</option><option>Super Admin</option></select></div><div class="mb-3" id="adm_pass_container"><label>Password</label><input type="password" class="form-control" id="adm_pass"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAdmin()">Simpan</button></div></div></div></div>
+
+    <!-- Modal Guru User -->
+    <div class="modal fade" id="modalGuruUser" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Guru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-guru-user"><input type="hidden" id="gu_id"><div class="mb-3"><label>Username (NUPTK)</label><input type="text" class="form-control" id="gu_user" required></div><div class="mb-3"><label>Nama Pengguna</label><input type="text" class="form-control" id="gu_nama" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" id="gu_email"></div><div class="mb-3" id="gu_pass_container"><label>Password</label><input type="password" class="form-control" id="gu_pass"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveGuruUser()">Simpan</button></div></div></div></div>
     
     <div class="modal fade" id="modalSiswa" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Siswa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-siswa"><input type="hidden" id="s_id"><div class="row g-2"><div class="col-6"><label>NISN</label><input type="text" class="form-control" id="s_nisn"></div><div class="col-6"><label>No Induk</label><input type="text" class="form-control" id="s_induk"></div><div class="col-12"><label>Nama Lengkap</label><input type="text" class="form-control" id="s_nama"></div><div class="col-6"><label>Kelas</label><select id="s_kelas_input" class="form-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div><div class="col-6"><label>Rombel</label><input type="text" class="form-control" id="s_rombel_input" placeholder="Contoh: A"></div><div class="col-6"><label>JK</label><select class="form-select" id="s_jk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div><div class="col-6"><label>Agama</label><select class="form-select" id="s_agama"><option>Islam</option><option>Kristen</option><option>Katholik</option><option>Hindu</option><option>Budha</option></select></div><div class="col-6"><label>Tempat Lahir</label><input type="text" class="form-control" id="s_tmp_lahir"></div><div class="col-6"><label>Tgl Lahir</label><input type="date" class="form-control" id="s_tgl_lahir"></div><div class="col-6"><label>Nama Ayah</label><input type="text" class="form-control" id="s_nama_ayah"></div><div class="col-6"><label>Nama Ibu</label><input type="text" class="form-control" id="s_nama_ibu"></div><div class="col-12"><label>Alamat (Jalan, Desa, Kec, Kab)</label><input type="text" class="form-control" id="s_alamat"></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveSiswa()">Simpan</button></div></div></div></div>
     
@@ -760,8 +765,12 @@
     <script>
         // Check login on page load
         window.addEventListener('load', async () => {
+            console.log('Rapor.html: Starting login check...');
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            console.log('Rapor.html: Remembered user ID:', rememberedId);
+
             if (!rememberedId) {
+                console.log('Rapor.html: No login session found, redirecting to login');
                 // No login session, redirect to login
                 window.location.href = 'login.html';
                 return;
@@ -769,35 +778,59 @@
 
             // Check if user exists in database
             try {
+                console.log('Rapor.html: Initializing database...');
                 await db.init();
 
+                console.log('Rapor.html: Checking for default admin user...');
                 // Seed default admin if DB is empty or admin user has wrong password
                 const admins = await db.get('admins');
+                console.log('Rapor.html: Current admins:', admins);
+
                 let adminExists = false;
                 if (admins && admins.length > 0) {
                     const adminUser = admins.find(a => a.username === 'admin');
                     if (adminUser) {
                         adminExists = true;
+                        console.log('Rapor.html: Admin user found, checking password...');
                         if (adminUser.password !== 'rapor123') {
+                            console.log('Rapor.html: Updating admin password...');
                             adminUser.password = 'rapor123';
                             await db.saveTo('admins', adminUser);
                         }
                     }
                 }
                 if (!adminExists) {
+                    console.log('Rapor.html: Creating default admin user...');
                     await db.saveTo('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
                 }
 
+                console.log('Rapor.html: Fetching user with ID:', rememberedId);
                 const user = await db.get('admins', parseInt(rememberedId));
+                console.log('Rapor.html: User found:', user);
+
                 if (!user || !user.id) {
+                    console.log('Rapor.html: Invalid session, clearing and redirecting to login');
                     // Invalid session, clear and redirect to login
                     localStorage.removeItem('rapor_remember_user_id');
                     localStorage.removeItem('rapor_remember_user');
                     window.location.href = 'login.html';
                     return;
                 }
+
+                console.log('Rapor.html: Login successful, showing application');
+                // Login successful, show the application
+                document.getElementById('wrapper').style.display = 'block';
+
+                // Get page parameter from URL or default to dashboard
+                const urlParams = new URLSearchParams(window.location.search);
+                const page = urlParams.get('page') || 'dashboard';
+                console.log('Rapor.html: Navigating to page:', page);
+
+                // Navigate to the requested page
+                app.nav(page);
+
             } catch (e) {
-                console.error('Login check failed:', e);
+                console.error('Rapor.html: Login check failed:', e);
                 // On error, clear and redirect to login
                 localStorage.removeItem('rapor_remember_user_id');
                 localStorage.removeItem('rapor_remember_user');
