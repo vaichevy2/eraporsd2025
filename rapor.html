@@ -631,6 +631,25 @@
     <div class="modal fade" id="modalJenisEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Jenis Ekstrakurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-jenis-ekskul"><input type="hidden" id="je_id"><div class="mb-3"><label>Nama Ekstrakurikuler</label><input type="text" class="form-control" id="je_nama" required placeholder="Contoh: Pramuka"></div><div class="mb-3"><label>Kategori</label><select id="je_kategori" class="form-select"><option value="Wajib">Wajib</option><option value="Pilihan">Pilihan</option><option value="Olahraga">Olahraga</option><option value="Seni">Seni</option><option value="Lainnya">Lainnya</option></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveJenisEkskul()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalAssignEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Anggota Ekskul</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-assign-ekskul"><input type="hidden" id="ae_id"><div class="mb-3"><label>Pilih Siswa</label><select id="ae_siswa" class="form-select" required></select></div><div class="mb-3"><label>Pilih Ekstrakurikuler</label><select id="ae_ekskul" class="form-select" required></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAssignEkskul()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalImport" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Import Data <span id="importTitle"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p class="small text-muted">Format file: CSV (.csv) atau Excel (.xlsx)</p><input type="file" id="fileImport" class="form-control" accept=".csv,.xlsx"><input type="hidden" id="importType"></div><div class="modal-footer"><button id="btnProcessImport" class="btn btn-primary" onclick="app.processImport()">Upload & Proses</button></div></div></div></div>
+
+    <!-- Modal Import Guru -->
+    <div class="modal fade" id="modalImportGuru" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Data Guru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Format file: Excel (.xlsx)</p>
+                    <input type="file" id="importFileGuru" class="form-control" accept=".xlsx">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="app.processImportGuru()">Upload & Proses</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Loading modal shown during long operations -->
     <div class="modal fade" id="modalLoading" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">

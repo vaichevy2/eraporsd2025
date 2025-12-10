@@ -812,6 +812,10 @@ const app = {
                             <td>${s.jk || ''}</td>
                             <td>${s.kelas || ''}${s.rombel ? s.rombel : ''}</td>
                             <td>${s.agama || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalSiswa('edit', ${s.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteSiswa(${s.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
                         </tr>
 `;
                     tbody.innerHTML += row;
@@ -1075,8 +1079,92 @@ const app = {
             app.loadSiswa();
         }
     },
-    modalSiswa: (action) => { console.log(`modalSiswa called with ${action}`); },
-    saveSiswa: async () => { console.log('saveSiswa called'); },
+    modalSiswa: (action, id = null) => {
+        const modal = document.getElementById('modalSiswa');
+        const form = document.getElementById('form-siswa');
+
+        if (action === 'add') {
+            document.getElementById('s_id').value = '';
+            document.getElementById('s_nisn').value = '';
+            document.getElementById('s_induk').value = '';
+            document.getElementById('s_nama').value = '';
+            document.getElementById('s_kelas_input').value = '1';
+            document.getElementById('s_rombel_input').value = '';
+            document.getElementById('s_jk').value = 'L';
+            document.getElementById('s_agama').value = 'Islam';
+            document.getElementById('s_tmp_lahir').value = '';
+            document.getElementById('s_tgl_lahir').value = '';
+            document.getElementById('s_nama_ayah').value = '';
+            document.getElementById('s_nama_ibu').value = '';
+            document.getElementById('s_alamat').value = '';
+        } else if (action === 'edit' && id) {
+            // Load existing data
+            db.get('students', id).then(siswa => {
+                if (siswa) {
+                    document.getElementById('s_id').value = siswa.id || '';
+                    document.getElementById('s_nisn').value = siswa.nisn || '';
+                    document.getElementById('s_induk').value = siswa.induk || '';
+                    document.getElementById('s_nama').value = siswa.nama || '';
+                    document.getElementById('s_kelas_input').value = siswa.kelas || '1';
+                    document.getElementById('s_rombel_input').value = siswa.rombel || '';
+                    document.getElementById('s_jk').value = siswa.jk || 'L';
+                    document.getElementById('s_agama').value = siswa.agama || 'Islam';
+                    document.getElementById('s_tmp_lahir').value = siswa.tmp_lahir || '';
+                    document.getElementById('s_tgl_lahir').value = siswa.tgl_lahir || '';
+                    document.getElementById('s_nama_ayah').value = siswa.nama_ayah || '';
+                    document.getElementById('s_nama_ibu').value = siswa.nama_ibu || '';
+                    document.getElementById('s_alamat').value = siswa.alamat || '';
+                }
+            });
+        }
+
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    },
+    saveSiswa: async () => {
+        try {
+            const id = document.getElementById('s_id').value;
+            const nisn = document.getElementById('s_nisn').value;
+            const induk = document.getElementById('s_induk').value;
+            const nama = document.getElementById('s_nama').value;
+            const kelas = document.getElementById('s_kelas_input').value;
+            const rombel = document.getElementById('s_rombel_input').value;
+            const jk = document.getElementById('s_jk').value;
+            const agama = document.getElementById('s_agama').value;
+            const tmp_lahir = document.getElementById('s_tmp_lahir').value;
+            const tgl_lahir = document.getElementById('s_tgl_lahir').value;
+            const nama_ayah = document.getElementById('s_nama_ayah').value;
+            const nama_ibu = document.getElementById('s_nama_ibu').value;
+            const alamat = document.getElementById('s_alamat').value;
+
+            const data = {
+                nisn,
+                induk,
+                nama,
+                kelas,
+                rombel,
+                jk,
+                agama,
+                tmp_lahir,
+                tgl_lahir,
+                nama_ayah,
+                nama_ibu,
+                alamat
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            await db.saveTo('students', data);
+            app.showAlert('Siswa berhasil disimpan', 'success');
+            app.loadSiswa();
+            bootstrap.Modal.getInstance(document.getElementById('modalSiswa')).hide();
+        } catch (error) {
+            console.error('Error saving siswa:', error);
+            app.showAlert('Gagal menyimpan siswa', 'danger');
+        }
+    },
     modalGuru: (action, id = null) => {
         const modal = document.getElementById('modalGuru');
         const form = document.getElementById('form-guru');
@@ -1165,12 +1253,264 @@ const app = {
     modalAssignEkskul: () => { console.log('modalAssignEkskul called'); },
     saveAssignEkskul: async () => { console.log('saveAssignEkskul called'); },
     downloadTemplate: (type) => { console.log(`downloadTemplate called for ${type}`); },
-    exportData: (type) => { console.log(`exportData called for ${type}`); },
-    modalImport: (type) => { console.log(`modalImport called for ${type}`); },
-    processImport: async () => { console.log('processImport called'); },
-    deleteAll: (store) => { console.log(`deleteAll called for ${store}`); },
-    modalDownloadTemplate: (type) => { console.log(`modalDownloadTemplate called for ${type}`); },
-    modalExportData: (type) => { console.log(`modalExportData called for ${type}`); },
+    exportData: (type) => {
+        if (type === 'siswa') {
+            db.get('students').then(siswa => {
+                if (Array.isArray(siswa) && siswa.length > 0) {
+                    // Convert data to export format
+                    const exportData = siswa.map(s => ({
+                        NISN: s.nisn || '',
+                        INDUK: s.induk || '',
+                        NAMA: s.nama || '',
+                        KELAS: s.kelas || '',
+                        ROMBEL: s.rombel || '',
+                        JK: s.jk || '',
+                        AGAMA: s.agama || '',
+                        'TEMPAT LAHIR': s.tmp_lahir || '',
+                        'TANGGAL LAHIR': s.tgl_lahir || '',
+                        'NAMA AYAH': s.nama_ayah || '',
+                        'NAMA IBU': s.nama_ibu || '',
+                        ALAMAT: s.alamat || ''
+                    }));
+
+                    // Create workbook and worksheet
+                    const workbook = XLSX.utils.book_new();
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Siswa');
+
+                    // Generate and download file
+                    const filename = `data_siswa_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    XLSX.writeFile(workbook, filename);
+
+                    app.showAlert('Data siswa berhasil diekspor', 'success');
+                } else {
+                    app.showAlert('Tidak ada data siswa untuk diekspor', 'warning');
+                }
+            }).catch(error => {
+                console.error('Error exporting data:', error);
+                app.showAlert('Gagal mengekspor data', 'danger');
+            });
+        } else if (type === 'guru') {
+            db.get('teachers').then(guru => {
+                if (Array.isArray(guru) && guru.length > 0) {
+                    // Convert data to export format
+                    const exportData = guru.map(g => ({
+                        NUPTK: g.nuptk || '',
+                        NIP: g.nip || '',
+                        NAMA: g.nama || '',
+                        JK: g.jk || '',
+                        KELAS: g.kelas || ''
+                    }));
+
+                    // Create workbook and worksheet
+                    const workbook = XLSX.utils.book_new();
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Guru');
+
+                    // Generate and download file
+                    const filename = `data_guru_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    XLSX.writeFile(workbook, filename);
+
+                    app.showAlert('Data guru berhasil diekspor', 'success');
+                } else {
+                    app.showAlert('Tidak ada data guru untuk diekspor', 'warning');
+                }
+            }).catch(error => {
+                console.error('Error exporting data:', error);
+                app.showAlert('Gagal mengekspor data', 'danger');
+            });
+        }
+    },
+    modalImport: (type) => {
+        if (type === 'siswa') {
+            const modal = document.getElementById('modalImportSiswa');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+        } else if (type === 'guru') {
+            const modal = document.getElementById('modalImportGuru');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+        }
+    },
+    processImport: async () => {
+        const fileInput = document.getElementById('importFileSiswa');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            app.showAlert('Pilih file Excel terlebih dahulu', 'warning');
+            return;
+        }
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if (jsonData.length === 0) {
+                app.showAlert('File Excel kosong atau tidak valid', 'warning');
+                return;
+            }
+
+            // Process each row
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const row of jsonData) {
+                try {
+                    // Map Excel columns to database fields
+                    const studentData = {
+                        nisn: row.NISN || row.nisn || '',
+                        induk: row.INDUK || row.induk || '',
+                        nama: row.NAMA || row.nama || '',
+                        kelas: row.KELAS || row.kelas || '1',
+                        rombel: row.ROMBEL || row.rombel || '',
+                        jk: row.JK || row.jk || 'L',
+                        agama: row.AGAMA || row.agama || 'Islam',
+                        tmp_lahir: row['TEMPAT LAHIR'] || row.tmp_lahir || '',
+                        tgl_lahir: row['TANGGAL LAHIR'] || row.tgl_lahir || '',
+                        nama_ayah: row['NAMA AYAH'] || row.nama_ayah || '',
+                        nama_ibu: row['NAMA IBU'] || row.nama_ibu || '',
+                        alamat: row.ALAMAT || row.alamat || ''
+                    };
+
+                    // Validate required fields
+                    if (!studentData.nama || !studentData.nisn) {
+                        errorCount++;
+                        continue;
+                    }
+
+                    await db.saveTo('students', studentData);
+                    successCount++;
+                } catch (error) {
+                    console.error('Error importing row:', error);
+                    errorCount++;
+                }
+            }
+
+            // Close modal and show results
+            bootstrap.Modal.getInstance(document.getElementById('modalImportSiswa')).hide();
+            app.loadSiswa();
+
+            if (successCount > 0) {
+                app.showAlert(`Import berhasil: ${successCount} data siswa diimpor${errorCount > 0 ? `, ${errorCount} gagal` : ''}`, 'success');
+            } else {
+                app.showAlert('Tidak ada data yang berhasil diimpor', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error processing import:', error);
+            app.showAlert('Gagal memproses file import', 'danger');
+        }
+    },
+
+    processImportGuru: async () => {
+        const fileInput = document.getElementById('importFileGuru');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            app.showAlert('Pilih file Excel terlebih dahulu', 'warning');
+            return;
+        }
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if (jsonData.length === 0) {
+                app.showAlert('File Excel kosong atau tidak valid', 'warning');
+                return;
+            }
+
+            // Process each row
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const row of jsonData) {
+                try {
+                    // Map Excel columns to database fields
+                    const teacherData = {
+                        nuptk: row.NUPTK || row.nuptk || '',
+                        nip: row.NIP || row.nip || '',
+                        nama: row.NAMA || row.nama || '',
+                        jk: row.JK || row.jk || 'L',
+                        kelas: row.KELAS || row.kelas || ''
+                    };
+
+                    // Validate required fields
+                    if (!teacherData.nama) {
+                        errorCount++;
+                        continue;
+                    }
+
+                    await db.saveTo('teachers', teacherData);
+                    successCount++;
+                } catch (error) {
+                    console.error('Error importing row:', error);
+                    errorCount++;
+                }
+            }
+
+            // Close modal and show results
+            bootstrap.Modal.getInstance(document.getElementById('modalImportGuru')).hide();
+            app.loadGuru();
+
+            if (successCount > 0) {
+                app.showAlert(`Import berhasil: ${successCount} data guru diimpor${errorCount > 0 ? `, ${errorCount} gagal` : ''}`, 'success');
+            } else {
+                app.showAlert('Tidak ada data yang berhasil diimpor', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error processing import:', error);
+            app.showAlert('Gagal memproses file import', 'danger');
+        }
+    },
+    deleteAll: async (store) => {
+        if (confirm(`Apakah Anda yakin ingin menghapus semua data ${store}? Tindakan ini tidak dapat dibatalkan.`)) {
+            try {
+                await db.init();
+                await db.clear(store);
+                app.showAlert(`Semua data ${store} berhasil dihapus`, 'success');
+
+                // Reload the appropriate data based on store
+                if (store === 'students') {
+                    app.loadSiswa();
+                } else if (store === 'teachers') {
+                    app.loadGuru();
+                }
+            } catch (error) {
+                console.error('Error deleting all data:', error);
+                app.showAlert('Gagal menghapus data', 'danger');
+            }
+        }
+    },
+    modalDownloadTemplate: (type) => {
+        if (type === 'siswa') {
+            app.downloadTemplate('siswa');
+        } else if (type === 'guru') {
+            app.downloadTemplate('guru');
+        }
+    },
+    modalExportData: (type) => {
+        if (type === 'siswa') {
+            app.exportData('siswa');
+        } else if (type === 'guru') {
+            app.exportData('guru');
+        }
+    },
     previewRaporPDF: () => { console.log('previewRaporPDF called'); },
     modalResetPass: (id, type) => { console.log(`modalResetPass called for ${type} ${id}`); },
     saveResetPassword: async () => { console.log('saveResetPassword called'); },
