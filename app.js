@@ -1236,6 +1236,19 @@ const app = {
             }
         }
     },
+    deleteSiswa: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus siswa ini?')) {
+            try {
+                await db.init();
+                await db.delete('students', id);
+                app.showAlert('Siswa berhasil dihapus', 'success');
+                app.loadSiswa();
+            } catch (error) {
+                console.error('Error deleting siswa:', error);
+                app.showAlert('Gagal menghapus siswa', 'danger');
+            }
+        }
+    },
     modalGuruMapel: (action) => { console.log(`modalGuruMapel called with ${action}`); },
     saveGuruMapel: async () => { console.log('saveGuruMapel called'); },
     saveDimensi: async () => { console.log('saveDimensi called'); },
