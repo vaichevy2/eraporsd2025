@@ -625,8 +625,62 @@
         </div>
     </div>
     
-    <div class="modal fade" id="modalGuruMapel" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Guru Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-gurumapel"><input type="hidden" id="gm_id"><div class="row g-3"><div class="col-md-6"><label class="form-label">NUPTK</label><input type="text" class="form-control" id="gm_nuptk"></div><div class="col-md-6"><label class="form-label">Nama Guru</label><input type="text" class="form-control" id="gm_nama"></div><div class="col-md-6"><label class="form-label">Jenis Kelamin</label><select class="form-select" id="gm_jk"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div><div class="col-md-6"><label class="form-label">Agama</label><select class="form-select" id="gm_agama"><option>Islam</option><option>Kristen</option><option>Katholik</option><option>Hindu</option><option>Budha</option></select></div><div class="col-md-6"><label class="form-label">Mata Pelajaran</label><select class="form-select" id="gm_mapel" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-md-12"><label class="form-label">Kelas Mengajar</label><input type="text" class="form-control" id="gm_kelas" placeholder="Contoh: 1.A, 2.B (Pisahkan koma)"></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveGuruMapel()">Simpan</button></div></div></div></div>
-    <div class="modal fade" id="modalMapel" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-mapel"><input type="hidden" id="m_id"><div class="mb-3"><label>Nama Mata Pelajaran</label><input type="text" class="form-control" id="m_nama" required></div><div class="mb-3"><label>Singkatan</label><input type="text" class="form-control" id="m_singkat"></div><div class="mb-3"><label>Termasuk SKL?</label><select class="form-select" id="m_skl"><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></div><div class="mb-3"><label>Nomor Urut</label><input type="number" class="form-control" id="m_urut" value="1"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveMapel()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalGuruMapel" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Data Guru Mata Pelajaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-gurumapel">
+                        <input type="hidden" id="gm_id">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">NUPTK</label>
+                                <input type="text" class="form-control" id="gm_nuptk">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nama Guru</label>
+                                <input type="text" class="form-control" id="gm_nama">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Jenis Kelamin</label>
+                                <select class="form-select" id="gm_jk">
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Agama</label>
+                                <select class="form-select" id="gm_agama">
+                                    <option>Islam</option>
+                                    <option>Kristen</option>
+                                    <option>Katholik</option>
+                                    <option>Hindu</option>
+                                    <option>Budha</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mata Pelajaran</label>
+                                <select class="form-select" id="gm_mapel" required>
+                                    <option value="">-- Pilih Mapel --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Kelas Mengajar</label>
+                                <input type="text" class="form-control" id="gm_kelas" placeholder="Contoh: 1.A, 2.B (Pisahkan koma)">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-custom-save" onclick="app.saveGuruMapel()">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalMapel" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-mapel"><input type="hidden" id="m_id"><div class="mb-3"><label>Nama Mata Pelajaran</label><select class="form-select" id="m_nama" required><option value="">-- Pilih Mata Pelajaran --</option></select></div><div class="mb-3"><label>Singkatan</label><input type="text" class="form-control" id="m_singkat"></div><div class="mb-3"><label>Termasuk SKL?</label><select class="form-select" id="m_skl"><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></div><div class="mb-3"><label>Nomor Urut</label><input type="number" class="form-control" id="m_urut" value="1"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveMapel()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalCPTP" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Tujuan Pembelajaran (TP)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-cptp"><input type="hidden" id="c_id"><div class="row g-2"><div class="col-12 mb-2"><label>Mata Pelajaran</label><select id="c_mapel" class="form-select" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-4 mb-2"><label>Tingkat (Kelas)</label><select id="c_tingkat" class="form-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div><div class="col-4 mb-2"><label>Fase</label><select id="c_fase" class="form-select"><option value="A">A (Kelas 1-2)</option><option value="B">B (Kelas 3-4)</option><option value="C">C (Kelas 5-6)</option></select></div><div class="col-4 mb-2"><label>Semester</label><select id="c_semester" class="form-select"><option value="1">1</option><option value="2">2</option></select></div><div class="col-12 mb-2"><label>Tujuan Pembelajaran (TP)</label><textarea id="c_tp" class="form-control" rows="3" placeholder="Isi narasi TP..."></textarea></div><div class="col-12 mb-2"><label>Status</label><select id="c_status" class="form-select"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option></select></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveCPTP()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalJenisEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Jenis Ekstrakurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-jenis-ekskul"><input type="hidden" id="je_id"><div class="mb-3"><label>Nama Ekstrakurikuler</label><input type="text" class="form-control" id="je_nama" required placeholder="Contoh: Pramuka"></div><div class="mb-3"><label>Kategori</label><select id="je_kategori" class="form-select"><option value="Wajib">Wajib</option><option value="Pilihan">Pilihan</option><option value="Olahraga">Olahraga</option><option value="Seni">Seni</option><option value="Lainnya">Lainnya</option></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveJenisEkskul()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalAssignEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Anggota Ekskul</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-assign-ekskul"><input type="hidden" id="ae_id"><div class="mb-3"><label>Pilih Siswa</label><select id="ae_siswa" class="form-select" required></select></div><div class="mb-3"><label>Pilih Ekstrakurikuler</label><select id="ae_ekskul" class="form-select" required></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAssignEkskul()">Simpan</button></div></div></div></div>
@@ -650,6 +704,45 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Import Siswa -->
+    <div class="modal fade" id="modalImportSiswa" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Data Siswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Format file: Excel (.xlsx)</p>
+                    <input type="file" id="importFileSiswa" class="form-control" accept=".xlsx">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="app.processImportSiswa()">Upload & Proses</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Guru Mapel -->
+<div class="modal fade" id="modalImportGuruMapel" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Data Guru Mapel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Format file: Excel (.xlsx)</p>
+                <input type="file" id="importFileGuruMapel" class="form-control" accept=".xlsx">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="app.processImportGuruMapel()">Upload & Proses</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Loading modal shown during long operations -->
     <div class="modal fade" id="modalLoading" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">

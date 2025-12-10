@@ -1045,10 +1045,68 @@ const app = {
             console.error('Error loading guru:', error);
         }
     },
-    loadGuruMapel: async () => { console.log('loadGuruMapel called'); },
+    loadGuruMapel: async () => {
+        try {
+            await db.init();
+            const gurumapel = await db.get('subject_teachers');
+            const tbody = document.getElementById('tbody-gurumapel');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(gurumapel)) {
+                gurumapel.forEach((gm, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${gm.nuptk || ''}</td>
+                            <td>${gm.nama || ''}</td>
+                            <td>${gm.jk || ''}</td>
+                            <td>${gm.agama || ''}</td>
+                            <td>${gm.mapel || ''}</td>
+                            <td>${gm.kelas || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalGuruMapel('edit', ${gm.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteGuruMapel(${gm.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading guru mapel:', error);
+        }
+    },
     loadDimensi: async () => { console.log('loadDimensi called'); },
     loadKaih: async () => { console.log('loadKaih called'); },
-    loadMapel: async () => { console.log('loadMapel called'); },
+    loadMapel: async () => {
+        try {
+            await db.init();
+            const mapel = await db.get('mapel');
+            const tbody = document.getElementById('tbody-mapel');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(mapel)) {
+                mapel.forEach((m, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${m.nama || ''}</td>
+                            <td>${m.singkat || ''}</td>
+                            <td>${m.skl || ''}</td>
+                            <td>${m.urut || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalMapel('edit', ${m.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteMapel(${m.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading mapel:', error);
+        }
+    },
     loadCPTP: async () => { console.log('loadCPTP called'); },
     renderDataKelas: async () => { console.log('renderDataKelas called'); },
     loadKokurikuler: async () => { console.log('loadKokurikuler called'); },
@@ -1249,12 +1307,201 @@ const app = {
             }
         }
     },
-    modalGuruMapel: (action) => { console.log(`modalGuruMapel called with ${action}`); },
-    saveGuruMapel: async () => { console.log('saveGuruMapel called'); },
+    modalGuruMapel: async (action, id = null) => {
+        try {
+            const modal = document.getElementById('modalGuruMapel');
+            const form = document.getElementById('form-guru-mapel');
+
+            // Load mapel options for dropdown
+            await db.init();
+            const mapel = await db.get('mapel');
+            const mapelSelect = document.getElementById('gm_mapel');
+            mapelSelect.innerHTML = '<option value="">Pilih Mata Pelajaran</option>';
+
+            if (Array.isArray(mapel)) {
+                mapel.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.nama || '';
+                    option.textContent = m.nama || '';
+                    mapelSelect.appendChild(option);
+                });
+            }
+
+            if (action === 'add') {
+                document.getElementById('gm_id').value = '';
+                document.getElementById('gm_nuptk').value = '';
+                document.getElementById('gm_nama').value = '';
+                document.getElementById('gm_jk').value = 'L';
+                document.getElementById('gm_agama').value = 'Islam';
+                document.getElementById('gm_mapel').value = '';
+                document.getElementById('gm_kelas').value = '';
+            } else if (action === 'edit' && id) {
+                // Load existing data
+                const gurumapel = await db.get('subject_teachers', id);
+                if (gurumapel) {
+                    document.getElementById('gm_id').value = gurumapel.id || '';
+                    document.getElementById('gm_nuptk').value = gurumapel.nuptk || '';
+                    document.getElementById('gm_nama').value = gurumapel.nama || '';
+                    document.getElementById('gm_jk').value = gurumapel.jk || 'L';
+                    document.getElementById('gm_agama').value = gurumapel.agama || 'Islam';
+                    document.getElementById('gm_mapel').value = gurumapel.mapel || '';
+                    document.getElementById('gm_kelas').value = gurumapel.kelas || '';
+                }
+            }
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } catch (error) {
+            console.error('Error opening modal guru mapel:', error);
+            app.showAlert('Gagal membuka modal', 'danger');
+        }
+    },
+    saveGuruMapel: async () => {
+        try {
+            const id = document.getElementById('gm_id').value;
+            const nuptk = document.getElementById('gm_nuptk').value;
+            const nama = document.getElementById('gm_nama').value;
+            const jk = document.getElementById('gm_jk').value;
+            const agama = document.getElementById('gm_agama').value;
+            const mapel = document.getElementById('gm_mapel').value;
+            const kelas = document.getElementById('gm_kelas').value;
+
+            const data = {
+                nuptk,
+                nama,
+                jk,
+                agama,
+                mapel,
+                kelas
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            await db.saveTo('subject_teachers', data);
+            app.showAlert('Guru Mapel berhasil disimpan', 'success');
+            app.loadGuruMapel();
+            bootstrap.Modal.getInstance(document.getElementById('modalGuruMapel')).hide();
+        } catch (error) {
+            console.error('Error saving guru mapel:', error);
+            app.showAlert('Gagal menyimpan guru mapel', 'danger');
+        }
+    },
     saveDimensi: async () => { console.log('saveDimensi called'); },
     saveKaih: async () => { console.log('saveKaih called'); },
-    modalMapel: (action) => { console.log(`modalMapel called with ${action}`); },
-    saveMapel: async () => { console.log('saveMapel called'); },
+    modalMapel: async (action, id = null) => {
+        try {
+            const modal = document.getElementById('modalMapel');
+            const form = document.getElementById('form-mapel');
+            const namaSelect = document.getElementById('m_nama');
+
+            // Define the auto-fill subjects
+            const subjects = [
+                "Pendidikan Agama Islam Budi Pekerti",
+                "Pendidikan Agama Kristen Budi Pekerti",
+                "Pendidikan Agama Katholik Budi Pekerti",
+                "Pendidikan Agama Budha Budi Pekerti",
+                "Pendidikan Agama Hindu Budi Pekerti",
+                "Pendidikan Agama Konghuchu Budi Pekerti",
+                "Pendidikan Agama dan Kepercayaan Terhadap Tuhan Yang Maha Esa Budi Pekerti",
+                "Pendidikan Pancasila dan Kewarganegaraan",
+                "Bahasa Indonesia",
+                "Matematika",
+                "IPAS",
+                "Seni Budaya",
+                "Pendidikan Jasmani Olahraga dan Kesehatan",
+                "Pendidikan Lingkungan Hidup",
+                "Bahasa Sunda",
+                "Bahasa Inggris",
+                "Koding dan Kecerdasan Artifisial",
+                "Angklung"
+            ];
+
+            // Clear existing options except the first one
+            namaSelect.innerHTML = '<option value="">-- Pilih Mata Pelajaran --</option>';
+
+            // Add subject options
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                namaSelect.appendChild(option);
+            });
+
+            if (action === 'add') {
+                document.getElementById('m_id').value = '';
+                document.getElementById('m_nama').value = '';
+                document.getElementById('m_singkat').value = '';
+                document.getElementById('m_skl').value = 'Ya';
+                document.getElementById('m_urut').value = '1';
+            } else if (action === 'edit' && id) {
+                // Load existing data
+                await db.init();
+                const mapel = await db.get('mapel', id);
+                if (mapel) {
+                    document.getElementById('m_id').value = mapel.id || '';
+                    document.getElementById('m_nama').value = mapel.nama || '';
+                    document.getElementById('m_singkat').value = mapel.singkat || '';
+                    document.getElementById('m_skl').value = mapel.skl || 'Ya';
+                    document.getElementById('m_urut').value = mapel.urut || '1';
+                }
+            }
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } catch (error) {
+            console.error('Error opening modal mapel:', error);
+            app.showAlert('Gagal membuka modal', 'danger');
+        }
+    },
+    saveMapel: async () => {
+        try {
+            const id = document.getElementById('m_id').value;
+            const nama = document.getElementById('m_nama').value.trim();
+            const singkat = document.getElementById('m_singkat').value.trim();
+            const skl = document.getElementById('m_skl').value;
+            const urut = parseInt(document.getElementById('m_urut').value) || 1;
+
+            // Validate required fields
+            if (!nama) {
+                app.showAlert('Nama mata pelajaran harus diisi', 'warning');
+                return;
+            }
+
+            const data = {
+                nama,
+                singkat,
+                skl,
+                urut
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            await db.saveTo('mapel', data);
+            app.showAlert('Mata pelajaran berhasil disimpan', 'success');
+            app.loadMapel();
+            bootstrap.Modal.getInstance(document.getElementById('modalMapel')).hide();
+        } catch (error) {
+            console.error('Error saving mapel:', error);
+            app.showAlert('Gagal menyimpan mata pelajaran', 'danger');
+        }
+    },
+    deleteMapel: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus mata pelajaran ini?')) {
+            try {
+                await db.init();
+                await db.delete('mapel', id);
+                app.showAlert('Mata pelajaran berhasil dihapus', 'success');
+                app.loadMapel();
+            } catch (error) {
+                console.error('Error deleting mapel:', error);
+                app.showAlert('Gagal menghapus mata pelajaran', 'danger');
+            }
+        }
+    },
     modalCPTP: (action) => { console.log(`modalCPTP called with ${action}`); },
     saveCPTP: async () => { console.log('saveCPTP called'); },
     modalKokurikuler: (action) => { console.log(`modalKokurikuler called with ${action}`); },
@@ -1265,19 +1512,114 @@ const app = {
     saveJenisEkskul: async () => { console.log('saveJenisEkskul called'); },
     modalAssignEkskul: () => { console.log('modalAssignEkskul called'); },
     saveAssignEkskul: async () => { console.log('saveAssignEkskul called'); },
-    downloadTemplate: (type) => { console.log(`downloadTemplate called for ${type}`); },
+    downloadTemplate: (type) => {
+        if (type === 'siswa') {
+            // Create template data with headers for siswa
+            const templateData = [{
+                NISN: '',
+                INDUK: '',
+                NAMA: '',
+                KELAS: '',
+                ROMBEL: '',
+                JK: '',
+                AGAMA: '',
+                'TEMPAT LAHIR': '',
+                'TANGGAL LAHIR': '',
+                'NAMA AYAH': '',
+                'NAMA IBU': '',
+                ALAMAT: ''
+            }];
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Siswa');
+
+            // Generate and download file
+            const filename = `template_siswa.xlsx`;
+            XLSX.writeFile(workbook, filename);
+
+            app.showAlert('Template siswa berhasil didownload', 'success');
+        } else if (type === 'guru') {
+            // Create template data with headers for guru
+            const templateData = [{
+                NUPTK: '',
+                NIP: '',
+                NAMA: '',
+                JK: '',
+                KELAS: ''
+            }];
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Guru');
+
+            // Generate and download file
+            const filename = `template_guru.xlsx`;
+            XLSX.writeFile(workbook, filename);
+
+            app.showAlert('Template guru berhasil didownload', 'success');
+        } else if (type === 'gurumapel') {
+            // Create template data with headers for guru mapel
+            const templateData = [{
+                NUPTK: '',
+                NAMA: '',
+                JK: '',
+                AGAMA: '',
+                'MATA PELAJARAN': '',
+                'KELAS MENGAJAR': ''
+            }];
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Guru Mapel');
+
+            // Generate and download file
+            const filename = `template_guru_mapel.xlsx`;
+            XLSX.writeFile(workbook, filename);
+
+            app.showAlert('Template guru mapel berhasil didownload', 'success');
+        } else if (type === 'cptp') {
+            // Create template data with headers for CP/TP
+            const templateData = [{
+                'MATA PELAJARAN': '',
+                TINGKAT: '',
+                FASE: '',
+                SEMESTER: '',
+                TP: '',
+                STATUS: ''
+            }];
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template CP TP');
+
+            // Generate and download file
+            const filename = `template_cptp.xlsx`;
+            XLSX.writeFile(workbook, filename);
+
+            app.showAlert('Template CP/TP berhasil didownload', 'success');
+        } else {
+            app.showAlert('Template untuk tipe ini belum tersedia', 'warning');
+        }
+    },
     exportData: (type) => {
         if (type === 'siswa') {
             db.get('students').then(siswa => {
                 if (Array.isArray(siswa) && siswa.length > 0) {
                     // Convert data to export format
                     const exportData = siswa.map(s => ({
-                        NISN: s.nisn || '',
-                        INDUK: s.induk || '',
-                        NAMA: s.nama || '',
-                        KELAS: s.kelas || '',
-                        ROMBEL: s.rombel || '',
-                        JK: s.jk || '',
                         AGAMA: s.agama || '',
                         'TEMPAT LAHIR': s.tmp_lahir || '',
                         'TANGGAL LAHIR': s.tgl_lahir || '',
@@ -1336,6 +1678,38 @@ const app = {
                 console.error('Error exporting data:', error);
                 app.showAlert('Gagal mengekspor data', 'danger');
             });
+        } else if (type === 'gurumapel') {
+            db.get('subject_teachers').then(gurumapel => {
+                if (Array.isArray(gurumapel) && gurumapel.length > 0) {
+                    // Convert data to export format
+                    const exportData = gurumapel.map(gm => ({
+                        NUPTK: gm.nuptk || '',
+                        NAMA: gm.nama || '',
+                        JK: gm.jk || '',
+                        AGAMA: gm.agama || '',
+                        'MATA PELAJARAN': gm.mapel || '',
+                        'KELAS MENGAJAR': gm.kelas || ''
+                    }));
+
+                    // Create workbook and worksheet
+                    const workbook = XLSX.utils.book_new();
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Guru Mapel');
+
+                    // Generate and download file
+                    const filename = `data_guru_mapel_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    XLSX.writeFile(workbook, filename);
+
+                    app.showAlert('Data guru mapel berhasil diekspor', 'success');
+                } else {
+                    app.showAlert('Tidak ada data guru mapel untuk diekspor', 'warning');
+                }
+            }).catch(error => {
+                console.error('Error exporting data:', error);
+                app.showAlert('Gagal mengekspor data', 'danger');
+            });
         }
     },
     modalImport: (type) => {
@@ -1347,6 +1721,12 @@ const app = {
             }
         } else if (type === 'guru') {
             const modal = document.getElementById('modalImportGuru');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+        } else if (type === 'gurumapel') {
+            const modal = document.getElementById('modalImportGuruMapel');
             if (modal) {
                 const bsModal = new bootstrap.Modal(modal);
                 bsModal.show();
@@ -1491,6 +1871,146 @@ const app = {
             app.showAlert('Gagal memproses file import', 'danger');
         }
     },
+
+    processImportGuruMapel: async () => {
+        const fileInput = document.getElementById('importFileGuruMapel');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            app.showAlert('Pilih file Excel terlebih dahulu', 'warning');
+            return;
+        }
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if (jsonData.length === 0) {
+                app.showAlert('File Excel kosong atau tidak valid', 'warning');
+                return;
+            }
+
+            // Process each row
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const row of jsonData) {
+                try {
+                    // Map Excel columns to database fields
+                    const gurumapelData = {
+                        nuptk: row.NUPTK || row.nuptk || '',
+                        nama: row.NAMA || row.nama || '',
+                        jk: row.JK || row.jk || 'L',
+                        agama: row.AGAMA || row.agama || 'Islam',
+                        mapel: row['MATA PELAJARAN'] || row.mapel || '',
+                        kelas: row['KELAS MENGAJAR'] || row.kelas || ''
+                    };
+
+                    // Validate required fields
+                    if (!gurumapelData.nama) {
+                        errorCount++;
+                        continue;
+                    }
+
+                    await db.saveTo('subject_teachers', gurumapelData);
+                    successCount++;
+                } catch (error) {
+                    console.error('Error importing row:', error);
+                    errorCount++;
+                }
+            }
+
+            // Close modal and show results
+            bootstrap.Modal.getInstance(document.getElementById('modalImportGuruMapel')).hide();
+            app.loadGuruMapel();
+
+            if (successCount > 0) {
+                app.showAlert(`Import berhasil: ${successCount} data guru mapel diimpor${errorCount > 0 ? `, ${errorCount} gagal` : ''}`, 'success');
+            } else {
+                app.showAlert('Tidak ada data yang berhasil diimpor', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error processing import:', error);
+            app.showAlert('Gagal memproses file import', 'danger');
+        }
+    },
+
+    processImportSiswa: async () => {
+        const fileInput = document.getElementById('importFileSiswa');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            app.showAlert('Pilih file Excel terlebih dahulu', 'warning');
+            return;
+        }
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if (jsonData.length === 0) {
+                app.showAlert('File Excel kosong atau tidak valid', 'warning');
+                return;
+            }
+
+            // Process each row
+            let successCount = 0;
+            let errorCount = 0;
+
+            for (const row of jsonData) {
+                try {
+                    // Map Excel columns to database fields
+                    const studentData = {
+                        nisn: row.NISN || row.nisn || '',
+                        induk: row.INDUK || row.induk || '',
+                        nama: row.NAMA || row.nama || '',
+                        kelas: row.KELAS || row.kelas || '1',
+                        rombel: row.ROMBEL || row.rombel || '',
+                        jk: row.JK || row.jk || 'L',
+                        agama: row.AGAMA || row.agama || 'Islam',
+                        tmp_lahir: row['TEMPAT LAHIR'] || row.tmp_lahir || '',
+                        tgl_lahir: row['TANGGAL LAHIR'] || row.tgl_lahir || '',
+                        nama_ayah: row['NAMA AYAH'] || row.nama_ayah || '',
+                        nama_ibu: row['NAMA IBU'] || row.nama_ibu || '',
+                        alamat: row.ALAMAT || row.alamat || ''
+                    };
+
+                    // Validate required fields
+                    if (!studentData.nama || !studentData.nisn) {
+                        errorCount++;
+                        continue;
+                    }
+
+                    await db.saveTo('students', studentData);
+                    successCount++;
+                } catch (error) {
+                    console.error('Error importing row:', error);
+                    errorCount++;
+                }
+            }
+
+            // Close modal and show results
+            bootstrap.Modal.getInstance(document.getElementById('modalImportSiswa')).hide();
+            app.loadSiswa();
+
+            if (successCount > 0) {
+                app.showAlert(`Import berhasil: ${successCount} data siswa diimpor${errorCount > 0 ? `, ${errorCount} gagal` : ''}`, 'success');
+            } else {
+                app.showAlert('Tidak ada data yang berhasil diimpor', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error processing import:', error);
+            app.showAlert('Gagal memproses file import', 'danger');
+        }
+    },
     deleteAll: async (store) => {
         if (confirm(`Apakah Anda yakin ingin menghapus semua data ${store}? Tindakan ini tidak dapat dibatalkan.`)) {
             try {
@@ -1510,11 +2030,13 @@ const app = {
             }
         }
     },
-    modalDownloadTemplate: (type) => {
+       modalDownloadTemplate: (type) => {
         if (type === 'siswa') {
             app.downloadTemplate('siswa');
         } else if (type === 'guru') {
             app.downloadTemplate('guru');
+        } else if (type === 'gurumapel') {
+            app.downloadTemplate('gurumapel');
         }
     },
     modalExportData: (type) => {
@@ -1541,6 +2063,19 @@ const app = {
             } catch (error) {
                 console.error('Error deleting user:', error);
                 app.showAlert('Gagal menghapus pengguna', 'danger');
+            }
+        }
+    },
+    deleteGuruMapel: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus guru mapel ini?')) {
+            try {
+                await db.init();
+                await db.delete('subject_teachers', id);
+                app.showAlert('Guru Mapel berhasil dihapus', 'success');
+                app.loadGuruMapel();
+            } catch (error) {
+                console.error('Error deleting guru mapel:', error);
+                app.showAlert('Gagal menghapus guru mapel', 'danger');
             }
         }
     }
