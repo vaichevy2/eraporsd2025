@@ -70,7 +70,28 @@
         <!-- Page Content -->
         <div id="page-content-wrapper">
             <button id="menu-toggle" class="btn btn-dark"><i class="fas fa-bars"></i></button>
-            <button id="headerLogout" class="btn btn-outline-light" onclick="app.logout()" style="position: fixed; top: 15px; right: 15px; z-index:1001; display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+
+            <!-- User Profile Section -->
+            <div id="user-profile" class="user-profile-section" style="position: fixed; top: 15px; right: 15px; z-index:1001; display:none;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-end">
+                        <div class="user-name fw-bold text-white" id="user-name">Nama Pengguna</div>
+                        <div class="user-level small text-light" id="user-level">Level</div>
+                    </div>
+                    <div class="me-3">
+                        <div class="profile-photo-container">
+                            <img id="user-profile-photo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2MzY2ZjEiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAxNUMyNSAxMi4yMzg2IDIyLjc2MTQgMTAgMjAgMTBDMTcuMjM4NiAxMCAxNSAxMi4yMzg2IDE1IDE1QzE1IDE3Ljc2MTQgMTcgMjAgMjBaIiBmaWxsPSIjOWNhM2FmIi8+Cjwvc3ZnPgo=" alt="Profile Photo" class="profile-photo">
+                            <input type="file" id="profile-photo-input" accept="image/*" style="display: none;">
+                            <div class="photo-overlay" onclick="document.getElementById('profile-photo-input').click()">
+                                <i class="fas fa-camera text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm" onclick="app.logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
 
             <div class="container-fluid">
                 
