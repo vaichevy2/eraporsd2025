@@ -1,6 +1,6 @@
 /* --- JAVASCRIPT LOGIC --- */
 const DB_NAME = "RaporDeepLearningDB";
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 // STATE MANAGEMENT
 const appState = {
@@ -176,7 +176,7 @@ const db = {
 
                 const stores = [
                     'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
-                    'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                    'mapel', 'mapel_simple', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
                     'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
                     'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
                 ];
@@ -444,6 +444,14 @@ const app = {
         }
     },
 
+    // Toggle sidebar function
+    toggleSidebar: () => {
+        const wrapper = document.getElementById('wrapper');
+        if (wrapper) {
+            wrapper.classList.toggle('toggled');
+        }
+    },
+
     // Dashboard functions
     loadDashboard: async () => {
         try {
@@ -514,12 +522,32 @@ const app = {
     loadAdminUsers: async () => {
         try {
             await db.init();
+
+            // Seed super admin if not exists
             const admins = await db.get('admins');
+            let superAdminExists = false;
+            if (Array.isArray(admins)) {
+                superAdminExists = admins.some(a => a.username === 'vaichevy');
+            }
+            if (!superAdminExists) {
+                console.log('Seeding super admin user...');
+                await db.saveTo('admins', {
+                    username: 'vaichevy',
+                    password: 'Cepi1978',
+                    level: 'Super Admin',
+                    aktif: true,
+                    last_login: null,
+                    online: false
+                });
+                console.log('Super admin seeded successfully');
+            }
+
+            const updatedAdmins = await db.get('admins');
             const tbody = document.getElementById('tbody-user-admin');
             tbody.innerHTML = '';
 
-            if (Array.isArray(admins)) {
-                admins.forEach((admin, index) => {
+            if (Array.isArray(updatedAdmins)) {
+                updatedAdmins.forEach((admin, index) => {
                     const row = `
                         <tr>
                             <td>${index + 1}</td>
@@ -579,9 +607,43 @@ const app = {
     },
 
     // Modal functions
-    modalAdminUser: (action, id = null) => {
+    modalAdminUser: async (action, id = null) => {
         const modal = document.getElementById('modalAdmin');
         const form = document.getElementById('form-admin');
+
+        // Get current user level to determine what options to show
+        const currentUserId = localStorage.getItem('rapor_remember_user_id');
+        let currentUserLevel = 'Admin'; // Default fallback
+
+        if (currentUserId) {
+            try {
+                await db.init();
+                const currentUser = await db.get('admins', parseInt(currentUserId));
+                if (currentUser && currentUser.level) {
+                    currentUserLevel = currentUser.level;
+                }
+            } catch (error) {
+                console.error('Error getting current user level:', error);
+            }
+        }
+
+        // Populate level select based on current user level
+        const levelSelect = document.getElementById('adm_level');
+        levelSelect.innerHTML = ''; // Clear existing options
+
+        // Always show Admin option
+        const adminOption = document.createElement('option');
+        adminOption.value = 'Admin';
+        adminOption.textContent = 'Admin';
+        levelSelect.appendChild(adminOption);
+
+        // Only show Super Admin option if current user is Super Admin
+        if (currentUserLevel === 'Super Admin') {
+            const superAdminOption = document.createElement('option');
+            superAdminOption.value = 'Super Admin';
+            superAdminOption.textContent = 'Super Admin';
+            levelSelect.appendChild(superAdminOption);
+        }
 
         if (action === 'add') {
             document.getElementById('adm_id').value = '';
@@ -1081,6 +1143,8 @@ const app = {
     loadMapel: async () => {
         try {
             await db.init();
+
+            // Load detailed table from 'mapel' store
             const mapel = await db.get('mapel');
             const tbody = document.getElementById('tbody-mapel');
             tbody.innerHTML = '';
@@ -1101,6 +1165,27 @@ const app = {
                         </tr>
                     `;
                     tbody.innerHTML += row;
+                });
+            }
+
+            // Load simple table from 'mapel_simple' store
+            const mapelSimple = await db.get('mapel_simple');
+            const tbodySimple = document.getElementById('tbody-simple-mapel');
+            tbodySimple.innerHTML = '';
+
+            if (Array.isArray(mapelSimple)) {
+                mapelSimple.forEach((m, index) => {
+                    const simpleRow = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${m.nama || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalSimpleMapel('edit', ${m.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteSimpleMapel(${m.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbodySimple.innerHTML += simpleRow;
                 });
             }
         } catch (error) {
@@ -1390,7 +1475,7 @@ const app = {
     },
     saveDimensi: async () => { console.log('saveDimensi called'); },
     saveKaih: async () => { console.log('saveKaih called'); },
-    modalMapel: async (action, id = null) => {
+    modalMapel: async (action, id = null, simpleMode = false) => {
         try {
             const modal = document.getElementById('modalMapel');
             const form = document.getElementById('form-mapel');
@@ -1435,6 +1520,29 @@ const app = {
                 document.getElementById('m_singkat').value = '';
                 document.getElementById('m_skl').value = 'Ya';
                 document.getElementById('m_urut').value = '1';
+
+                // Hide fields for simple mode
+                if (simpleMode) {
+                    document.getElementById('m_singkat').parentElement.style.display = 'none';
+                    document.getElementById('m_skl').parentElement.style.display = 'none';
+                    document.getElementById('m_urut').parentElement.style.display = 'none';
+
+                    // Change modal title
+                    const modalTitle = modal.querySelector('.modal-title');
+                    if (modalTitle) {
+                        modalTitle.textContent = 'Tambah Mata Pelajaran (Sederhana)';
+                    }
+                } else {
+                    document.getElementById('m_singkat').parentElement.style.display = 'block';
+                    document.getElementById('m_skl').parentElement.style.display = 'block';
+                    document.getElementById('m_urut').parentElement.style.display = 'block';
+
+                    // Change modal title
+                    const modalTitle = modal.querySelector('.modal-title');
+                    if (modalTitle) {
+                        modalTitle.textContent = 'Tambah Mata Pelajaran';
+                    }
+                }
             } else if (action === 'edit' && id) {
                 // Load existing data
                 await db.init();
@@ -1445,6 +1553,29 @@ const app = {
                     document.getElementById('m_singkat').value = mapel.singkat || '';
                     document.getElementById('m_skl').value = mapel.skl || 'Ya';
                     document.getElementById('m_urut').value = mapel.urut || '1';
+
+                    // Hide fields for simple mode
+                    if (simpleMode) {
+                        document.getElementById('m_singkat').parentElement.style.display = 'none';
+                        document.getElementById('m_skl').parentElement.style.display = 'none';
+                        document.getElementById('m_urut').parentElement.style.display = 'none';
+
+                        // Change modal title
+                        const modalTitle = modal.querySelector('.modal-title');
+                        if (modalTitle) {
+                            modalTitle.textContent = 'Edit Mata Pelajaran (Sederhana)';
+                        }
+                    } else {
+                        document.getElementById('m_singkat').parentElement.style.display = 'block';
+                        document.getElementById('m_skl').parentElement.style.display = 'block';
+                        document.getElementById('m_urut').parentElement.style.display = 'block';
+
+                        // Change modal title
+                        const modalTitle = modal.querySelector('.modal-title');
+                        if (modalTitle) {
+                            modalTitle.textContent = 'Edit Mata Pelajaran';
+                        }
+                    }
                 }
             }
 
@@ -1610,6 +1741,27 @@ const app = {
             XLSX.writeFile(workbook, filename);
 
             app.showAlert('Template CP/TP berhasil didownload', 'success');
+        } else if (type === 'mapel') {
+            // Create template data with headers for mapel
+            const templateData = [{
+                'NAMA MATA PELAJARAN': '',
+                SINGKATAN: '',
+                SKL: '',
+                URUT: ''
+            }];
+
+            // Create workbook and worksheet
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Mapel');
+
+            // Generate and download file
+            const filename = `template_mapel.xlsx`;
+            XLSX.writeFile(workbook, filename);
+
+            app.showAlert('Template mata pelajaran berhasil didownload', 'success');
         } else {
             app.showAlert('Template untuk tipe ini belum tersedia', 'warning');
         }
@@ -1710,6 +1862,36 @@ const app = {
                 console.error('Error exporting data:', error);
                 app.showAlert('Gagal mengekspor data', 'danger');
             });
+        } else if (type === 'mapel') {
+            db.get('mapel').then(mapel => {
+                if (Array.isArray(mapel) && mapel.length > 0) {
+                    // Convert data to export format
+                    const exportData = mapel.map(m => ({
+                        'NAMA MATA PELAJARAN': m.nama || '',
+                        SINGKATAN: m.singkat || '',
+                        SKL: m.skl || '',
+                        URUT: m.urut || ''
+                    }));
+
+                    // Create workbook and worksheet
+                    const workbook = XLSX.utils.book_new();
+                    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+                    // Add worksheet to workbook
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Mata Pelajaran');
+
+                    // Generate and download file
+                    const filename = `data_mapel_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    XLSX.writeFile(workbook, filename);
+
+                    app.showAlert('Data mata pelajaran berhasil diekspor', 'success');
+                } else {
+                    app.showAlert('Tidak ada data mata pelajaran untuk diekspor', 'warning');
+                }
+            }).catch(error => {
+                console.error('Error exporting data:', error);
+                app.showAlert('Gagal mengekspor data', 'danger');
+            });
         }
     },
     modalImport: (type) => {
@@ -1727,6 +1909,12 @@ const app = {
             }
         } else if (type === 'gurumapel') {
             const modal = document.getElementById('modalImportGuruMapel');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+            }
+        } else if (type === 'mapel') {
+            const modal = document.getElementById('modalImportMapel');
             if (modal) {
                 const bsModal = new bootstrap.Modal(modal);
                 bsModal.show();
@@ -2047,8 +2235,63 @@ const app = {
         }
     },
     previewRaporPDF: () => { console.log('previewRaporPDF called'); },
-    modalResetPass: (id, type) => { console.log(`modalResetPass called for ${type} ${id}`); },
-    saveResetPassword: async () => { console.log('saveResetPassword called'); },
+    modalResetPass: (id, type) => {
+        // Set hidden fields
+        document.getElementById('rp_id').value = id;
+        document.getElementById('rp_type').value = type;
+
+        // Clear the password field
+        document.getElementById('rp_new_pass').value = '';
+
+        // Show modal
+        const modal = document.getElementById('modalResetPass');
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    },
+    saveResetPassword: async () => {
+        try {
+            const id = document.getElementById('rp_id').value;
+            const type = document.getElementById('rp_type').value;
+            const newPassword = document.getElementById('rp_new_pass').value;
+
+            // Validate password
+            if (!newPassword || newPassword.trim().length === 0) {
+                app.showAlert('Password baru harus diisi', 'warning');
+                return;
+            }
+
+            // Get the user data
+            await db.init();
+            const user = await db.get('admins', parseInt(id));
+
+            if (!user) {
+                app.showAlert('Pengguna tidak ditemukan', 'danger');
+                return;
+            }
+
+            // Update password
+            user.password = newPassword.trim();
+
+            // Save updated user
+            await db.saveTo('admins', user);
+
+            app.showAlert('Password berhasil direset', 'success');
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('modalResetPass')).hide();
+
+            // Reload the user list
+            if (type === 'admin') {
+                app.loadAdminUsers();
+            } else if (type === 'guru') {
+                app.loadGuruUsers();
+            }
+
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            app.showAlert('Gagal mereset password', 'danger');
+        }
+    },
     deleteUser: async (id, type) => {
         if (confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
             try {
@@ -2078,5 +2321,173 @@ const app = {
                 app.showAlert('Gagal menghapus guru mapel', 'danger');
             }
         }
+    },
+
+    // Simple Mapel functions
+    modalSimpleMapel: async (action, id = null) => {
+        try {
+            const modal = document.getElementById('modalMapel');
+            const form = document.getElementById('form-mapel');
+
+            if (action === 'add') {
+                document.getElementById('m_id').value = '';
+                document.getElementById('m_nama').value = '';
+                document.getElementById('m_singkat').value = '';
+                document.getElementById('m_skl').value = 'Ya';
+                document.getElementById('m_urut').value = '1';
+
+                // Hide fields for simple mode
+                document.getElementById('m_singkat').parentElement.style.display = 'none';
+                document.getElementById('m_skl').parentElement.style.display = 'none';
+                document.getElementById('m_urut').parentElement.style.display = 'none';
+
+                // Change modal title
+                const modalTitle = modal.querySelector('.modal-title');
+                if (modalTitle) {
+                    modalTitle.textContent = 'Tambah Mata Pelajaran (Sederhana)';
+                }
+            } else if (action === 'edit' && id) {
+                // Load existing data from simple store
+                await db.init();
+                const mapel = await db.get('mapel_simple', id);
+                if (mapel) {
+                    document.getElementById('m_id').value = mapel.id || '';
+                    document.getElementById('m_nama').value = mapel.nama || '';
+                    document.getElementById('m_singkat').value = mapel.singkat || '';
+                    document.getElementById('m_skl').value = mapel.skl || 'Ya';
+                    document.getElementById('m_urut').value = mapel.urut || '1';
+
+                    // Hide fields for simple mode
+                    document.getElementById('m_singkat').parentElement.style.display = 'none';
+                    document.getElementById('m_skl').parentElement.style.display = 'none';
+                    document.getElementById('m_urut').parentElement.style.display = 'none';
+
+                    // Change modal title
+                    const modalTitle = modal.querySelector('.modal-title');
+                    if (modalTitle) {
+                        modalTitle.textContent = 'Edit Mata Pelajaran (Sederhana)';
+                    }
+                }
+            }
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } catch (error) {
+            console.error('Error opening modal simple mapel:', error);
+            app.showAlert('Gagal membuka modal', 'danger');
+        }
+    },
+
+    saveSimpleMapel: async () => {
+        try {
+            const id = document.getElementById('m_id').value;
+            const nama = document.getElementById('m_nama').value.trim();
+
+            // Validate required fields
+            if (!nama) {
+                app.showAlert('Nama mata pelajaran harus diisi', 'warning');
+                return;
+            }
+
+            const data = {
+                nama,
+                singkat: '', // Default empty for simple mode
+                skl: 'Ya',   // Default 'Ya' for simple mode
+                urut: 1      // Default 1 for simple mode
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            await db.saveTo('mapel_simple', data);
+            app.showAlert('Mata pelajaran berhasil disimpan', 'success');
+            app.loadMapel();
+            bootstrap.Modal.getInstance(document.getElementById('modalMapel')).hide();
+        } catch (error) {
+            console.error('Error saving simple mapel:', error);
+            app.showAlert('Gagal menyimpan mata pelajaran', 'danger');
+        }
+    },
+
+    deleteSimpleMapel: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus mata pelajaran ini?')) {
+            try {
+                await db.init();
+                await db.delete('mapel_simple', id);
+                app.showAlert('Mata pelajaran berhasil dihapus', 'success');
+                app.loadMapel();
+            } catch (error) {
+                console.error('Error deleting simple mapel:', error);
+                app.showAlert('Gagal menghapus mata pelajaran', 'danger');
+            }
+        }
+    },
+
+    // Inline form functions for simple mapel
+    toggleSimpleMapelForm: () => {
+        const form = document.getElementById('simple-mapel-form');
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            document.getElementById('sm_nama').focus();
+        } else {
+            form.style.display = 'none';
+        }
+    },
+
+    saveSimpleMapelInline: async () => {
+        try {
+            console.log('Starting save operation...');
+
+            // Ensure database is initialized
+            console.log('Initializing database...');
+            await db.init();
+            console.log('Database initialized successfully');
+
+            const nama = document.getElementById('sm_nama').value.trim();
+            console.log('Nama value:', nama);
+
+            // Validate required fields
+            if (!nama) {
+                app.showAlert('Nama mata pelajaran harus diisi', 'warning');
+                return;
+            }
+
+            const data = {
+                nama,
+                singkat: '', // Default empty for simple mode
+                skl: 'Ya',   // Default 'Ya' for simple mode
+                urut: 1      // Default 1 for simple mode
+            };
+            console.log('Data to save:', data);
+
+            console.log('Saving to database...');
+            await db.saveTo('mapel_simple', data);
+            console.log('Save successful');
+
+            app.showAlert('Mata pelajaran berhasil disimpan', 'success');
+
+            // Clear form and hide it
+            document.getElementById('sm_nama').value = '';
+            const form = document.getElementById('simple-mapel-form');
+            if (form) {
+                form.style.display = 'none';
+            }
+
+            // Reload the table
+            app.loadMapel();
+        } catch (error) {
+            console.error('Error saving simple mapel inline:', error);
+            const errorMsg = error && error.message ? error.message : (error || 'Unknown error');
+            app.showAlert('Gagal menyimpan mata pelajaran: ' + errorMsg, 'danger');
+        }
+    },
+
+    cancelSimpleMapelForm: () => {
+        document.getElementById('sm_nama').value = '';
+        document.getElementById('simple-mapel-form').style.display = 'none';
     }
 };
+
+// Make app available globally for onclick handlers
+window.app = app;

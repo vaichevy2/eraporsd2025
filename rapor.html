@@ -119,7 +119,7 @@
 
                 <!-- DATA PENGGUNA -->
                 <div id="datapengguna" class="page-section">
-                    <div class="content-header"><h2>Data Pengguna</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('admins')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('admins')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Pengguna</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('admins')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('admins')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-4">
                         <div class="d-flex justify-content-end mb-3">
                             <button class="btn btn-danger btn-sm me-2" onclick="app.modalDeleteAllUsers()"><i class="fas fa-trash-alt"></i> Hapus Semua Pengguna</button>
@@ -162,7 +162,7 @@
                 
                 <!-- DATA IDENTITAS SEKOLAH -->
                 <div id="sekolah" class="page-section">
-                    <div class="content-header"><h2>Data Identitas Sekolah</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('sekolah')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('sekolah')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Identitas Sekolah</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('sekolah')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('sekolah')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-4">
                         <form id="form-sekolah">
                             <div class="row mb-3"><label class="col-sm-3 col-form-label">Nama Sekolah</label><div class="col-sm-9"><input type="text" class="form-control" id="sekolah_nama"></div></div>
@@ -181,7 +181,7 @@
 
                 <!-- DATA UTILITY -->
                 <div id="utility" class="page-section">
-                    <div class="content-header"><h2>Data Utility Rapor</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('utility')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('utility')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Utility Rapor</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('utility')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('utility')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-4">
                         <form id="form-utility">
                              <div class="row">
@@ -209,7 +209,7 @@
 
                 <!-- DATA SISWA -->
                 <div id="siswa" class="page-section">
-                    <div class="content-header"><h2>Data Siswa</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('students')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('students')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Siswa</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('students')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('students')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-primary btn-sm" onclick="app.modalSiswa('add')"><i class="fas fa-plus"></i> Tambah Siswa</button>
@@ -236,7 +236,7 @@
 
                 <!-- DATA GURU -->
                 <div id="guru" class="page-section">
-                    <div class="content-header"><h2>Data Guru</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('teachers')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('teachers')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Guru</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('teachers')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('teachers')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-primary btn-sm" onclick="app.modalGuru('add')"><i class="fas fa-plus"></i> Tambah Guru</button>
@@ -260,7 +260,7 @@
 
                 <!-- DATA GURU MAPEL -->
                 <div id="gurumapel" class="page-section">
-                    <div class="content-header"><h2>Data Guru Mata Pelajaran</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('subject_teachers')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('subject_teachers')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Guru Mata Pelajaran</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('subject_teachers')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('subject_teachers')"><i class="fas fa-save"></i> Simpan</button></div></div>
                 <!-- Confirmation modal for bulk actions (save/upload/clear) -->
                 <div class="modal fade" id="modalConfirmSave" tabindex="-1">
                     <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -345,11 +345,50 @@
 
                 <!-- MAPEL -->
                 <div id="mapel" class="page-section">
-                    <div class="content-header"><h2>Data Mata Pelajaran</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('mapel')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('mapel')"><i class="fas fa-save"></i> Simpan</button></div>
-                    <div class="card card-glass p-3">
-                        <button class="btn btn-primary btn-sm mb-2" onclick="app.modalMapel('add')"><i class="fas fa-plus"></i> Tambah Mapel</button>
+                    <div class="content-header"><h2>Daftar Mata Pelajaran</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('mapel')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('mapel')"><i class="fas fa-save"></i> Simpan</button></div></div>
+
+                    <!-- Simplified Mata Pelajaran Table -->
+                    <div class="card card-glass p-3 mb-4">
+                        <h5 class="mb-3">Daftar Mata Pelajaran (Sederhana)</h5>
+                        <div class="mb-3">
+                            <button class="btn btn-primary btn-sm" onclick="app.toggleSimpleMapelForm()"><i class="fas fa-plus"></i> Tambah Mata Pelajaran</button>
+                        </div>
+                        <!-- Inline Form for Simple Mapel -->
+                        <div id="simple-mapel-form" class="mb-3" style="display: none;">
+                            <form id="form-simple-mapel">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <label class="form-label">Nama Mata Pelajaran</label>
+                                        <input type="text" class="form-control" id="sm_nama" required placeholder="Masukkan nama mata pelajaran">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="app.saveSimpleMapelInline()">Simpan</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.cancelSimpleMapelForm()">Batal</button>
+                                </div>
+                            </form>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table table-white">
+                            <table class="table table-striped bg-white">
+                                <thead class="table-dark"><tr><th>No</th><th>Mata Pelajaran</th><th>Aksi</th></tr></thead>
+                                <tbody id="tbody-simple-mapel"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Mata Pelajaran Table -->
+                    <div class="card card-glass p-3">
+                        <h5 class="mb-3">Daftar Mata Pelajaran (Detail)</h5>
+                        <div class="mb-3">
+                            <button class="btn btn-primary btn-sm" onclick="app.modalMapel('add')"><i class="fas fa-plus"></i> Tambah Mapel</button>
+                            <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('mapel')"><i class="fas fa-file-excel"></i> Template</button>
+                            <button class="btn btn-info btn-sm text-white" onclick="app.exportData('mapel')"><i class="fas fa-file-export"></i> Export</button>
+                            <button class="btn btn-outline-secondary btn-sm ms-1" onclick="app.exportStoreToSQLite('mapel')"><i class="fas fa-database"></i> SQLite</button>
+                            <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('mapel')"><i class="fas fa-file-import"></i> Import</button>
+                            <button class="btn btn-danger btn-sm" onclick="app.deleteAll('mapel')"><i class="fas fa-trash"></i> Hapus Masal</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped bg-white">
                                 <thead class="table-dark"><tr><th>No</th><th>Nama Mapel</th><th>Singkatan</th><th>SKL</th><th>Urut</th><th>Aksi</th></tr></thead>
                                 <tbody id="tbody-mapel"></tbody>
                             </table>
@@ -359,7 +398,7 @@
                 
                 <!-- CP/TP -->
                 <div id="cptp" class="page-section">
-                    <div class="content-header"><h2>Data CP / TP</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('cptp')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('cptp')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data CP / TP</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('cptp')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('cptp')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3 text-end">
                             <button class="btn btn-primary btn-sm" onclick="app.modalCPTP('add')"><i class="fas fa-plus"></i> Tambah TP</button>
@@ -391,7 +430,7 @@
 
                 <!-- DATA KELAS -->
                 <div id="datakelas" class="page-section">
-                    <div class="content-header"><h2>Data Kelas</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('students')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('students')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Kelas</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('students')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('students')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="row mb-3">
                             <div class="col-md-4">
@@ -419,7 +458,7 @@
 
                 <!-- KOKURIKULER -->
                 <div id="kokurikuler" class="page-section">
-                    <div class="content-header"><h2>Data Kokurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('kokurikuler')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('kokurikuler')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Data Kokurikuler</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('kokurikuler')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('kokurikuler')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-primary btn-sm" onclick="app.modalKokurikuler('add')"><i class="fas fa-plus"></i> Tambah Proyek</button>
@@ -443,7 +482,7 @@
 
                 <!-- DAFTAR TEMA EKSKUL -->
                 <div id="daftar_tema_ekskul" class="page-section">
-                    <div class="content-header"><h2>Daftar Tema Kegiatan Kokurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('tema_ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('tema_ekskul')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Daftar Tema Kegiatan Kokurikuler</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('tema_ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('tema_ekskul')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-primary btn-sm" onclick="app.modalTemaEkskul('add')"><i class="fas fa-plus"></i> Tambah Tema Kokurikuler</button>
@@ -466,7 +505,7 @@
 
                 <!-- EKSKUL -->
                 <div id="ekskul" class="page-section">
-                    <div class="content-header"><h2>Ekstrakurikuler</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('ekskul')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Ekstrakurikuler</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('ekskul')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('ekskul')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         
                         <!-- Table: Data Jenis Ekskul (Master) -->
@@ -520,7 +559,7 @@
 
                 <!-- INPUT NILAI -->
                 <div id="nilai" class="page-section">
-                    <div class="content-header"><h2>Input Nilai</h2><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('nilai')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('nilai')"><i class="fas fa-save"></i> Simpan</button></div>
+                    <div class="content-header"><h2>Input Nilai</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('nilai')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('nilai')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-3">
                         <div class="mb-3">
                             <button class="btn btn-success btn-sm text-white" onclick="app.downloadTemplate('nilai')"><i class="fas fa-file-excel"></i> Template</button>
@@ -573,7 +612,7 @@
     <div class="modal fade" id="modalResetPass" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reset Password</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-reset-pass"><input type="hidden" id="rp_id"><input type="hidden" id="rp_type"><div class="mb-3"><label>Password Baru</label><input type="text" class="form-control" id="rp_new_pass" required></div></form></div><div class="modal-footer"><button class="btn btn-primary" onclick="app.saveResetPassword()">Simpan</button></div></div></div></div>
 
     <!-- Modal Admin -->
-    <div class="modal fade" id="modalAdmin" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Admin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-admin"><input type="hidden" id="adm_id"><div class="mb-3"><label>Username</label><input type="text" class="form-control" id="adm_user" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" id="adm_email"></div><div class="mb-3"><label>Level</label><select class="form-select" id="adm_level"><option>Admin</option><option>Super Admin</option></select></div><div class="mb-3" id="adm_pass_container"><label>Password</label><input type="password" class="form-control" id="adm_pass"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAdmin()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalAdmin" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Admin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-admin"><input type="hidden" id="adm_id"><div class="mb-3"><label>Username</label><input type="text" class="form-control" id="adm_user" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" id="adm_email"></div><div class="mb-3"><label>Level</label><select class="form-select" id="adm_level"></select></div><div class="mb-3" id="adm_pass_container"><label>Password</label><input type="password" class="form-control" id="adm_pass"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAdmin()">Simpan</button></div></div></div></div>
 
     <!-- Modal Guru User -->
     <div class="modal fade" id="modalGuruUser" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Guru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-guru-user"><input type="hidden" id="gu_id"><div class="mb-3"><label>Username (NUPTK)</label><input type="text" class="form-control" id="gu_user" required></div><div class="mb-3"><label>Nama Pengguna</label><input type="text" class="form-control" id="gu_nama" required></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" id="gu_email"></div><div class="mb-3" id="gu_pass_container"><label>Password</label><input type="password" class="form-control" id="gu_pass"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveGuruUser()">Simpan</button></div></div></div></div>
@@ -680,7 +719,7 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalMapel" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-mapel"><input type="hidden" id="m_id"><div class="mb-3"><label>Nama Mata Pelajaran</label><select class="form-select" id="m_nama" required><option value="">-- Pilih Mata Pelajaran --</option></select></div><div class="mb-3"><label>Singkatan</label><input type="text" class="form-control" id="m_singkat"></div><div class="mb-3"><label>Termasuk SKL?</label><select class="form-select" id="m_skl"><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></div><div class="mb-3"><label>Nomor Urut</label><input type="number" class="form-control" id="m_urut" value="1"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveMapel()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalMapel" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Mata Pelajaran</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-mapel"><input type="hidden" id="m_id"><div class="mb-3"><label>Nama Mata Pelajaran</label><input type="text" class="form-control" id="m_nama" list="m_nama_list" required placeholder="-- Pilih atau ketik manual --"><datalist id="m_nama_list"></datalist></div><div class="mb-3"><label>Singkatan</label><input type="text" class="form-control" id="m_singkat"></div><div class="mb-3"><label>Termasuk SKL?</label><select class="form-select" id="m_skl"><option value="Ya">Ya</option><option value="Tidak">Tidak</option></select></div><div class="mb-3"><label>Nomor Urut</label><input type="number" class="form-control" id="m_urut" value="1"></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveMapel()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalCPTP" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Tujuan Pembelajaran (TP)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-cptp"><input type="hidden" id="c_id"><div class="row g-2"><div class="col-12 mb-2"><label>Mata Pelajaran</label><select id="c_mapel" class="form-select" required><option value="">-- Pilih Mapel --</option></select></div><div class="col-4 mb-2"><label>Tingkat (Kelas)</label><select id="c_tingkat" class="form-select"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div><div class="col-4 mb-2"><label>Fase</label><select id="c_fase" class="form-select"><option value="A">A (Kelas 1-2)</option><option value="B">B (Kelas 3-4)</option><option value="C">C (Kelas 5-6)</option></select></div><div class="col-4 mb-2"><label>Semester</label><select id="c_semester" class="form-select"><option value="1">1</option><option value="2">2</option></select></div><div class="col-12 mb-2"><label>Tujuan Pembelajaran (TP)</label><textarea id="c_tp" class="form-control" rows="3" placeholder="Isi narasi TP..."></textarea></div><div class="col-12 mb-2"><label>Status</label><select id="c_status" class="form-select"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option></select></div></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveCPTP()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalJenisEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Jenis Ekstrakurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-jenis-ekskul"><input type="hidden" id="je_id"><div class="mb-3"><label>Nama Ekstrakurikuler</label><input type="text" class="form-control" id="je_nama" required placeholder="Contoh: Pramuka"></div><div class="mb-3"><label>Kategori</label><select id="je_kategori" class="form-select"><option value="Wajib">Wajib</option><option value="Pilihan">Pilihan</option><option value="Olahraga">Olahraga</option><option value="Seni">Seni</option><option value="Lainnya">Lainnya</option></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveJenisEkskul()">Simpan</button></div></div></div></div>
     <div class="modal fade" id="modalAssignEkskul" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Anggota Ekskul</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-assign-ekskul"><input type="hidden" id="ae_id"><div class="mb-3"><label>Pilih Siswa</label><select id="ae_siswa" class="form-select" required></select></div><div class="mb-3"><label>Pilih Ekstrakurikuler</label><select id="ae_ekskul" class="form-select" required></select></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveAssignEkskul()">Simpan</button></div></div></div></div>
@@ -878,6 +917,30 @@
         // Check login on page load
         window.addEventListener('load', async () => {
             console.log('Rapor.html: Starting login check...');
+
+            // Check for demo mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const isDemo = urlParams.get('demo') === 'true';
+            console.log('Rapor.html: Demo mode:', isDemo);
+
+            if (isDemo) {
+                console.log('Rapor.html: Demo mode enabled, bypassing login check');
+                // Demo mode - show the application directly
+                document.getElementById('wrapper').style.display = 'block';
+
+                // Add event listener for sidebar toggle
+                const menuToggle = document.getElementById('menu-toggle');
+                if (menuToggle) {
+                    menuToggle.addEventListener('click', app.toggleSidebar);
+                }
+
+                // Navigate to the requested page or default to dashboard
+                const page = urlParams.get('page') || 'dashboard';
+                console.log('Rapor.html: Navigating to page:', page);
+                app.nav(page);
+                return;
+            }
+
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
             console.log('Rapor.html: Remembered user ID:', rememberedId);
 
@@ -904,16 +967,16 @@
                     if (adminUser) {
                         adminExists = true;
                         console.log('Rapor.html: Admin user found, checking password...');
-                        if (adminUser.password !== 'rapor123') {
+                        if (adminUser.password !== 'admin') {
                             console.log('Rapor.html: Updating admin password...');
-                            adminUser.password = 'rapor123';
+                            adminUser.password = 'admin';
                             await db.saveTo('admins', adminUser);
                         }
                     }
                 }
                 if (!adminExists) {
                     console.log('Rapor.html: Creating default admin user...');
-                    await db.saveTo('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                    await db.saveTo('admins', { username: 'admin', password: 'admin', level: 'Admin' });
                 }
 
                 console.log('Rapor.html: Fetching user with ID:', rememberedId);
@@ -932,6 +995,12 @@
                 console.log('Rapor.html: Login successful, showing application');
                 // Login successful, show the application
                 document.getElementById('wrapper').style.display = 'block';
+
+                // Add event listener for sidebar toggle
+                const menuToggle = document.getElementById('menu-toggle');
+                if (menuToggle) {
+                    menuToggle.addEventListener('click', app.toggleSidebar);
+                }
 
                 // Get page parameter from URL or default to dashboard
                 const urlParams = new URLSearchParams(window.location.search);

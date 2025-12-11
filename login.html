@@ -165,18 +165,23 @@
                 <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="quickLogin()">
                     <i class="fas fa-key"></i> Demo Login (admin)
                 </button>
+
+                <button type="button" class="btn btn-outline-warning w-100 mt-2" onclick="demoAccess()">
+                    <i class="fas fa-eye"></i> Demo Access (View App)
+                </button>
             </form>
 
             <div class="footer-text">
                 <small>Gunakan akun admin untuk masuk</small><br>
-                <small>Username: <strong>admin</strong> | Password: <strong>rapor123</strong></small>
+                <small>Username: <strong>admin</strong> | Password: <strong>admin</strong></small><br>
+                <small>Super Admin: <strong>vaichevy</strong> | Password: <strong>Cepi1978</strong></small>
             </div>
         </div>
     </div>
 
     <script>
         const DB_NAME = "RaporDeepLearningDB";
-        const DB_VERSION = 7;
+        const DB_VERSION = 8;
         let dbInstance;
 
         // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
@@ -242,29 +247,50 @@
             }
 
             try {
-                // Seed default admin if DB is empty or admin user has wrong password
+                // Seed default admin and super admin if not exists
                 console.log('Checking for default admin user...');
                 const admins = await getFromDB('admins');
                 console.log('Current admins:', admins);
 
                 let adminExists = false;
+                let superAdminExists = false;
                 if (admins && admins.length > 0) {
                     const adminUser = admins.find(a => a.username === 'admin');
+                    const superAdminUser = admins.find(a => a.username === 'vaichevy');
+
                     if (adminUser) {
                         adminExists = true;
                         console.log('Admin user found, checking password...');
-                        if (adminUser.password !== 'rapor123') {
+                        if (adminUser.password !== 'admin') {
                             console.log('Updating admin password...');
-                            adminUser.password = 'rapor123';
+                            adminUser.password = 'admin';
                             await saveToDB('admins', adminUser);
                         }
                     }
+
+                    if (superAdminUser) {
+                        superAdminExists = true;
+                        console.log('Super admin user found');
+                    }
                 }
+
                 if (!adminExists) {
                     console.log('Creating default admin user...');
                     await saveToDB('admins', {
                         username: 'admin',
-                        password: 'rapor123',
+                        password: 'admin',
+                        level: 'Admin',
+                        aktif: true,
+                        last_login: null,
+                        online: false
+                    });
+                }
+
+                if (!superAdminExists) {
+                    console.log('Creating default super admin user...');
+                    await saveToDB('admins', {
+                        username: 'vaichevy',
+                        password: 'Cepi1978',
                         level: 'Super Admin',
                         aktif: true,
                         last_login: null,
@@ -347,14 +373,24 @@
 
         // Quick login with demo credentials
         async function quickLogin() {
-            const success = await authenticateUser('admin', 'rapor123', true);
-            
+            const success = await authenticateUser('admin', 'admin', true);
+
             if (!success) {
                 const errorMsg = document.getElementById('errorMsg');
                 const errorText = document.getElementById('errorText');
                 errorText.textContent = 'Demo login gagal. Silakan coba manual.';
                 errorMsg.style.display = 'block';
             }
+        }
+
+        // Demo access - direct navigation to rapor.html without authentication
+        function demoAccess() {
+            // Clear any existing session
+            localStorage.removeItem('rapor_remember_user_id');
+            localStorage.removeItem('rapor_remember_user');
+
+            // Redirect to rapor.html with demo flag
+            window.location.href = 'rapor.html?page=dashboard&demo=true';
         }
 
         // Check for auto-login on page load
@@ -365,21 +401,47 @@
                     await initDB();
                 }
                 try {
-                    // Seed default admin if DB is empty or admin user has wrong password
+                    // Seed default admin and super admin if not exists
                     const admins = await getFromDB('admins');
                     let adminExists = false;
+                    let superAdminExists = false;
                     if (admins && admins.length > 0) {
                         const adminUser = admins.find(a => a.username === 'admin');
+                        const superAdminUser = admins.find(a => a.username === 'vaichevy');
+
                         if (adminUser) {
                             adminExists = true;
-                            if (adminUser.password !== 'rapor123') {
-                                adminUser.password = 'rapor123';
+                            if (adminUser.password !== 'admin') {
+                                adminUser.password = 'admin';
                                 await saveToDB('admins', adminUser);
                             }
                         }
+
+                        if (superAdminUser) {
+                            superAdminExists = true;
+                        }
                     }
+
                     if (!adminExists) {
-                        await saveToDB('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                        await saveToDB('admins', {
+                            username: 'admin',
+                            password: 'admin',
+                            level: 'Admin',
+                            aktif: true,
+                            last_login: null,
+                            online: false
+                        });
+                    }
+
+                    if (!superAdminExists) {
+                        await saveToDB('admins', {
+                            username: 'vaichevy',
+                            password: 'Cepi1978',
+                            level: 'Super Admin',
+                            aktif: true,
+                            last_login: null,
+                            online: false
+                        });
                     }
 
                     const remembered = await getFromDB('admins', parseInt(rememberedId));
