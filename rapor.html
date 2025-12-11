@@ -35,7 +35,8 @@
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action active" onclick="app.nav('dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('datapengguna')"><i class="fas fa-users-cog"></i> Data Pengguna</a>
-                
+                <a class="list-group-item list-group-item-action" onclick="app.nav('profil')"><i class="fas fa-user"></i> Profil Pengguna</a>
+
                 <a class="list-group-item list-group-item-action" onclick="app.nav('sekolah')"><i class="fas fa-school"></i> Data Identitas Sekolah</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('utility')"><i class="fas fa-cogs"></i> Data Utility Rapor</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('siswa')"><i class="fas fa-user-graduate"></i> Data Siswa</a>
@@ -72,7 +73,7 @@
             <button id="menu-toggle" class="btn btn-dark"><i class="fas fa-bars"></i></button>
 
             <!-- User Profile Section -->
-            <div id="user-profile" class="user-profile-section" style="position: fixed; top: 15px; right: 15px; z-index:1001; display:none;">
+            <div id="user-profile" class="user-profile-section" style="position: fixed; top: 15px; right: 15px; z-index:1001;">
                 <div class="d-flex align-items-center">
                     <div class="me-3 text-end">
                         <div class="user-name fw-bold text-white" id="user-name">Nama Pengguna</div>
@@ -180,7 +181,57 @@
                         </div>
                     </div>
                 </div>
-                
+
+                <!-- PROFIL PENGGUNA -->
+                <div id="profil" class="page-section">
+                    <div class="content-header"><h2>Profil Pengguna</h2></div>
+                    <div class="card card-glass p-4">
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="profile-photo-container mb-3">
+                                    <img id="profile-photo-display" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjYwIiBmaWxsPSIjNjM2NmYxIi8+CjxwYXRoIGQ9Ik02MCA2MEM3Mi43NjE0IDYwIDgwIDU3Ljc2MTQgODAgNTVDODAgNTIyLjIzODYgNzIuNzYxNCA1MCA2MCA1MEM0Ny4yMzg2IDUwIDQwIDUyLjIzODYgNDAgNTVDNDAgNTcuNzYxNCA0Ny4yMzg2IDYwIDYwIDYwWiIgZmlsbD0iIzlhYTNhZiIvPgo8L3N2Zz4K" alt="Profile Photo" class="profile-photo-large">
+                                    <input type="file" id="profile-photo-input-edit" accept="image/*" style="display: none;">
+                                    <div class="photo-overlay" onclick="document.getElementById('profile-photo-input-edit').click()">
+                                        <i class="fas fa-camera text-white"></i>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm" onclick="app.resetProfilePhoto()">Reset Foto</button>
+                            </div>
+                            <div class="col-md-8">
+                                <form id="form-profil">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="profil_username" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Level</label>
+                                            <input type="text" class="form-control" id="profil_level" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nama Pengguna</label>
+                                        <input type="text" class="form-control" id="profil_nama">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="profil_email">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Password Baru (Opsional)</label>
+                                        <input type="password" class="form-control" id="profil_password" placeholder="Kosongkan jika tidak ingin mengubah">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Konfirmasi Password Baru</label>
+                                        <input type="password" class="form-control" id="profil_password_confirm" placeholder="Konfirmasi password baru">
+                                    </div>
+                                    <button type="button" class="btn btn-custom-save" onclick="app.saveProfil()">Simpan Perubahan</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- DATA IDENTITAS SEKOLAH -->
                 <div id="sekolah" class="page-section">
                     <div class="content-header"><h2>Data Identitas Sekolah</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('sekolah')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('sekolah')"><i class="fas fa-save"></i> Simpan</button></div></div>
@@ -1027,6 +1078,9 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const page = urlParams.get('page') || 'dashboard';
                 console.log('Rapor.html: Navigating to page:', page);
+
+                // Update user profile display
+                app.updateUserProfileDisplay(user);
 
                 // Navigate to the requested page
                 app.nav(page);

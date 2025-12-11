@@ -1203,6 +1203,116 @@ const app = {
     loadDeskripsi: async () => { console.log('loadDeskripsi called'); },
     loadCatatan: async () => { console.log('loadCatatan called'); },
     loadPresensi: async () => { console.log('loadPresensi called'); },
+
+    // Profil functions
+    loadProfil: async () => {
+        try {
+            await db.init();
+            const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            if (!rememberedId) {
+                app.showAlert('Sesi login tidak valid', 'danger');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = await db.get('admins', parseInt(rememberedId));
+            if (!user) {
+                app.showAlert('Data pengguna tidak ditemukan', 'danger');
+                return;
+            }
+
+            // Fill form fields
+            document.getElementById('profil_username').value = user.username || '';
+            document.getElementById('profil_nama').value = user.nama_pengguna || '';
+            document.getElementById('profil_email').value = user.email || '';
+            document.getElementById('profil_level').value = user.level || 'Admin';
+
+            // Load profile photo if exists
+            if (user.profile_photo) {
+                document.getElementById('profile-photo-display').src = user.profile_photo;
+            }
+
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            app.showAlert('Gagal memuat data profil', 'danger');
+        }
+    },
+
+    saveProfil: async () => {
+        try {
+            const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            if (!rememberedId) {
+                app.showAlert('Sesi login tidak valid', 'danger');
+                return;
+            }
+
+            const nama = document.getElementById('profil_nama').value.trim();
+            const email = document.getElementById('profil_email').value.trim();
+            const password = document.getElementById('profil_password').value;
+            const passwordConfirm = document.getElementById('profil_password_confirm').value;
+
+            // Validate required fields
+            if (!nama) {
+                app.showAlert('Nama pengguna harus diisi', 'warning');
+                return;
+            }
+
+            // Validate password confirmation
+            if (password && password !== passwordConfirm) {
+                app.showAlert('Konfirmasi password tidak cocok', 'warning');
+                return;
+            }
+
+            // Get current user data
+            const user = await db.get('admins', parseInt(rememberedId));
+            if (!user) {
+                app.showAlert('Data pengguna tidak ditemukan', 'danger');
+                return;
+            }
+
+            // Update user data
+            user.nama_pengguna = nama;
+            user.email = email;
+
+            // Update password if provided
+            if (password) {
+                user.password = password;
+            }
+
+            // Save updated user
+            await db.saveTo('admins', user);
+
+            // Update header display
+            app.updateUserProfileDisplay(user);
+
+            app.showAlert('Profil berhasil disimpan', 'success');
+
+            // Clear password fields
+            document.getElementById('profil_password').value = '';
+            document.getElementById('profil_password_confirm').value = '';
+
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            app.showAlert('Gagal menyimpan profil', 'danger');
+        }
+    },
+
+    updateUserProfileDisplay: (user) => {
+        const userNameEl = document.getElementById('user-name');
+        const userLevelEl = document.getElementById('user-level');
+
+        if (userNameEl) {
+            userNameEl.textContent = user.nama_pengguna || user.username || 'Nama Pengguna';
+        }
+        if (userLevelEl) {
+            userLevelEl.textContent = user.level || 'Level';
+        }
+    },
+
+    resetProfilePhoto: () => {
+        document.getElementById('profile-photo-display').src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjYwIiBmaWxsPSIjNjM2NmYxIi8+CjxwYXRoIGQ9Ik02MCA2MEM3Mi43NjE0IDYwIDgwIDU3Ljc2MTQgODAgNTVDODAgNTIyLjIzODYgNzIuNzYxNCA1MCA2MCA1MEM0Ny4yMzg2IDUwIDQwIDUyLjIzODYgNDAgNTVDNDAgNTcuNzYxNCA0Ny4yMzg2IDYwIDYwIDYwWiIgZmlsbD0iIzlhYTNhZiIvPgo8L3N2Zz4K";
+        app.showAlert('Foto profil berhasil direset', 'success');
+    },
     renderPagination: (type, total) => { console.log(`renderPagination called for ${type} with ${total} items`); },
     prevPage: (type) => {
         if (type === 'guru' && appState.guru.currentPage > 1) {

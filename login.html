@@ -127,6 +127,22 @@
             margin-top: 5px;
             display: none;
         }
+
+        /* Fade-in animation for password fields */
+        .fade-in-fields {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,14 +160,25 @@
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-check mb-4">
+                <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="remember" value="">
                     <label class="form-check-label" for="remember">
                         Ingat saya
                     </label>
+                </div>
+
+                <div class="text-end mb-3">
+                    <a href="#" class="text-decoration-none" onclick="showForgotPasswordModal()">
+                        <small>Lupa Password?</small>
+                    </a>
                 </div>
 
                 <div id="errorMsg" class="error-message">
@@ -175,6 +202,72 @@
                 <small>Gunakan akun admin untuk masuk</small><br>
                 <small>Username: <strong>admin</strong> | Password: <strong>admin</strong></small><br>
                 <small>Super Admin: <strong>vaichevy</strong> | Password: <strong>Cepi1978</strong></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">
+                        <i class="fas fa-key"></i> Lupa Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Masukkan username dan email Anda untuk mereset password. Sistem akan memverifikasi data dengan data pengguna guru.</p>
+
+                    <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                        <div class="mb-3">
+                            <label for="fp_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="fp_username" placeholder="Masukkan username Anda" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fp_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="fp_email" placeholder="Masukkan email Anda" required>
+                        </div>
+
+                        <div id="fp_errorMsg" class="error-message" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i> <span id="fp_errorText"></span>
+                        </div>
+
+                        <div id="fp_successMsg" class="success-message" style="display: none;">
+                            <i class="fas fa-check-circle"></i> <span id="fp_successText"></span>
+                        </div>
+
+                        <!-- New Password Fields (Hidden initially) -->
+                        <div id="newPasswordFields" class="fade-in-fields" style="display: none;">
+                            <hr>
+                            <h6 class="text-success mb-3"><i class="fas fa-check-circle"></i> Data ditemukan! Masukkan password baru</h6>
+
+                            <div class="mb-3">
+                                <label for="fp_new_password" class="form-label">Password Baru</label>
+                                <input type="password" class="form-control" id="fp_new_password" placeholder="Masukkan password baru" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fp_confirm_password" class="form-label">Konfirmasi Password Baru</label>
+                                <input type="password" class="form-control" id="fp_confirm_password" placeholder="Konfirmasi password baru" required>
+                            </div>
+
+                            <div id="fp_password_errorMsg" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i> <span id="fp_password_errorText"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" form="forgotPasswordForm" class="btn btn-primary" id="fp_submitBtn">
+                        <i class="fas fa-paper-plane"></i> Kirim Permintaan Reset
+                    </button>
+                    <button type="button" class="btn btn-success" id="fp_resetBtn" style="display: none;" onclick="handleResetPassword()">
+                        <i class="fas fa-save"></i> Reset Password
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -464,6 +557,191 @@
         // Focus on first input
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('username').focus();
+        });
+
+        // Show forgot password modal
+        function showForgotPasswordModal() {
+            // Clear any previous messages
+            document.getElementById('fp_errorMsg').style.display = 'none';
+            document.getElementById('fp_successMsg').style.display = 'none';
+            document.getElementById('fp_password_errorMsg').style.display = 'none';
+
+            // Clear form fields
+            document.getElementById('fp_username').value = '';
+            document.getElementById('fp_email').value = '';
+            document.getElementById('fp_new_password').value = '';
+            document.getElementById('fp_confirm_password').value = '';
+
+            // Hide password fields and reset buttons
+            document.getElementById('newPasswordFields').style.display = 'none';
+            document.getElementById('fp_submitBtn').style.display = 'inline-block';
+            document.getElementById('fp_resetBtn').style.display = 'none';
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+        }
+
+        // Handle forgot password form submission
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('fp_username').value.trim();
+            const email = document.getElementById('fp_email').value.trim();
+            const errorMsg = document.getElementById('fp_errorMsg');
+            const errorText = document.getElementById('fp_errorText');
+            const successMsg = document.getElementById('fp_successMsg');
+            const successText = document.getElementById('fp_successText');
+            const submitBtn = document.querySelector('#forgotPasswordModal .btn-primary');
+
+            // Hide previous messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            // Validate inputs
+            if (!username || !email) {
+                errorText.textContent = 'Username dan email harus diisi';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+            try {
+                // Initialize database if not already done
+                if (!dbInstance) {
+                    await initDB();
+                }
+
+                // Get all admin users and filter for teachers (level = 'Guru')
+                const allAdmins = await getFromDB('admins');
+                const guruUsers = Array.isArray(allAdmins) ? allAdmins.filter(admin => admin.level === 'Guru') : [];
+
+                // Find matching teacher user
+                const matchingUser = guruUsers.find(guru =>
+                    String(guru.username).toLowerCase() === username.toLowerCase() &&
+                    String(guru.email).toLowerCase() === email.toLowerCase()
+                );
+
+                if (matchingUser) {
+                    // Success - user found in teacher data
+                    successText.textContent = 'Permintaan reset password berhasil dikirim. Silakan periksa email Anda untuk instruksi selanjutnya.';
+                    successMsg.style.display = 'block';
+
+                    // In a real application, you would send an email here
+                    // For demo purposes, we'll just show success message
+                    console.log('Password reset requested for teacher:', matchingUser.nama_pengguna || matchingUser.username);
+
+                    // Auto-close modal after 3 seconds
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+                    }, 3000);
+                } else {
+                    // User not found in teacher data
+                    errorText.textContent = 'Username dan email tidak ditemukan dalam data pengguna guru. Silakan periksa kembali data Anda.';
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error processing forgot password:', error);
+                errorText.textContent = 'Terjadi kesalahan saat memproses permintaan. Silakan coba lagi.';
+                errorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Permintaan Reset';
+            }
+        }
+
+        // Handle password reset
+        async function handleResetPassword() {
+            const newPassword = document.getElementById('fp_new_password').value;
+            const confirmPassword = document.getElementById('fp_confirm_password').value;
+            const passwordErrorMsg = document.getElementById('fp_password_errorMsg');
+            const passwordErrorText = document.getElementById('fp_password_errorText');
+            const resetBtn = document.getElementById('fp_resetBtn');
+
+            // Hide previous password error messages
+            passwordErrorMsg.style.display = 'none';
+
+            // Validate passwords
+            if (!newPassword || !confirmPassword) {
+                passwordErrorText.textContent = 'Password baru dan konfirmasi harus diisi';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                passwordErrorText.textContent = 'Password baru dan konfirmasi tidak cocok';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                passwordErrorText.textContent = 'Password baru harus minimal 6 karakter';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            // Disable button and show loading
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                // Update the user's password
+                const userToUpdate = window.matchingUserForReset;
+                if (!userToUpdate) {
+                    passwordErrorText.textContent = 'Data pengguna tidak ditemukan. Silakan coba lagi.';
+                    passwordErrorMsg.style.display = 'block';
+                    return;
+                }
+
+                userToUpdate.password = newPassword;
+                await saveToDB('admins', userToUpdate);
+
+                // Success - show success message and close modal
+                const successMsg = document.getElementById('fp_successMsg');
+                const successText = document.getElementById('fp_successText');
+                successText.textContent = 'Password berhasil direset! Anda dapat login dengan password baru.';
+                successMsg.style.display = 'block';
+
+                // Hide password fields
+                document.getElementById('newPasswordFields').style.display = 'none';
+
+                console.log('Password reset successful for teacher:', userToUpdate.nama_pengguna || userToUpdate.username);
+
+                // Auto-close modal after 3 seconds
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                passwordErrorText.textContent = 'Terjadi kesalahan saat mereset password. Silakan coba lagi.';
+                passwordErrorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = '<i class="fas fa-save"></i> Reset Password';
+            }
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
         });
     </script>
 
