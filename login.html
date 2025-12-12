@@ -189,11 +189,11 @@
                     <i class="fas fa-sign-in-alt"></i> Masuk
                 </button>
 
-                <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="quickLogin()">
+                <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="quickLogin()" style="display: none;">
                     <i class="fas fa-key"></i> Demo Login (admin)
                 </button>
 
-                <button type="button" class="btn btn-outline-warning w-100 mt-2" onclick="demoAccess()">
+                <button type="button" class="btn btn-outline-warning w-100 mt-2" onclick="demoAccess()" style="display: none;">
                     <i class="fas fa-eye"></i> Demo Access (View App)
                 </button>
             </form>
@@ -201,7 +201,8 @@
             <div class="footer-text">
                 <small>Gunakan akun admin untuk masuk</small><br>
                 <small>Username: <strong>admin</strong> | Password: <strong>admin</strong></small><br>
-                <small>Super Admin: <strong>vaichevy</strong> | Password: <strong>Cepi1978</strong></small>
+                <small>Super Admin: <strong>vaichevy</strong> | Password: <strong>Cepi1978</strong></small><br>
+                <small>@2025.Cepi Kunaefi</small>
             </div>
         </div>
     </div>
@@ -228,6 +229,7 @@
                         <div class="mb-3">
                             <label for="fp_email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="fp_email" placeholder="Masukkan email Anda" required>
+                            <small class="text-muted">klik di luar area setelah input</small>
                         </div>
 
                         <div id="fp_errorMsg" class="error-message" style="display: none;">
@@ -245,12 +247,22 @@
 
                             <div class="mb-3">
                                 <label for="fp_new_password" class="form-label">Password Baru</label>
-                                <input type="password" class="form-control" id="fp_new_password" placeholder="Masukkan password baru" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="fp_new_password" placeholder="Masukkan password baru" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="fp_confirm_password" class="form-label">Konfirmasi Password Baru</label>
-                                <input type="password" class="form-control" id="fp_confirm_password" placeholder="Konfirmasi password baru" required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="fp_confirm_password" placeholder="Konfirmasi password baru" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div id="fp_password_errorMsg" class="error-message" style="display: none;">
@@ -577,9 +589,89 @@
             document.getElementById('fp_submitBtn').style.display = 'inline-block';
             document.getElementById('fp_resetBtn').style.display = 'none';
 
+            // Reset verification status
+            window.isVerified = false;
+            window.matchingUserForReset = null;
+
             // Show the modal
             const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
             modal.show();
+
+            // Add blur event listeners for automatic verification
+            document.getElementById('fp_username').addEventListener('blur', checkAndVerifyUser);
+            document.getElementById('fp_email').addEventListener('blur', checkAndVerifyUser);
+        }
+
+        // Check and verify user automatically when both fields are filled
+        async function checkAndVerifyUser() {
+            const username = document.getElementById('fp_username').value.trim();
+            const email = document.getElementById('fp_email').value.trim();
+
+            // Only proceed if both fields are filled and not already verified
+            if (!username || !email || window.isVerified) {
+                return;
+            }
+
+            // Hide previous messages
+            document.getElementById('fp_errorMsg').style.display = 'none';
+            document.getElementById('fp_successMsg').style.display = 'none';
+
+            try {
+                // Initialize database if not already done
+                if (!dbInstance) {
+                    await initDB();
+                }
+
+                // Get all admin users and filter for teachers (level = 'Guru')
+                const allAdmins = await getFromDB('admins');
+                const guruUsers = Array.isArray(allAdmins) ? allAdmins.filter(admin => admin.level === 'Guru') : [];
+
+                // Find matching teacher user
+                const matchingUser = guruUsers.find(guru =>
+                    String(guru.username).toLowerCase() === username.toLowerCase() &&
+                    String(guru.email).toLowerCase() === email.toLowerCase()
+                );
+
+                if (matchingUser) {
+                    // Success - user found in teacher data, show password fields with animation
+                    window.isVerified = true;
+                    window.matchingUserForReset = matchingUser;
+
+                    // Show success message
+                    const successMsg = document.getElementById('fp_successMsg');
+                    const successText = document.getElementById('fp_successText');
+                    successText.textContent = 'Data ditemukan! Silakan masukkan password baru.';
+                    successMsg.style.display = 'block';
+
+                    // Hide the submit button and show reset button
+                    document.getElementById('fp_submitBtn').style.display = 'none';
+                    document.getElementById('fp_resetBtn').style.display = 'inline-block';
+
+                    // Show password fields with fade animation
+                    const passwordFields = document.getElementById('newPasswordFields');
+                    passwordFields.style.display = 'block';
+
+                    // Focus on the new password field
+                    setTimeout(() => {
+                        document.getElementById('fp_new_password').focus();
+                    }, 600); // Wait for animation to complete
+
+                    console.log('Teacher data found for password reset:', matchingUser.nama_pengguna || matchingUser.username);
+                } else {
+                    // User not found in teacher data - show error but don't prevent retry
+                    const errorMsg = document.getElementById('fp_errorMsg');
+                    const errorText = document.getElementById('fp_errorText');
+                    errorText.textContent = 'Username dan email tidak ditemukan dalam data pengguna guru. Silakan periksa kembali data Anda.';
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error verifying user:', error);
+                const errorMsg = document.getElementById('fp_errorMsg');
+                const errorText = document.getElementById('fp_errorText');
+                errorText.textContent = 'Terjadi kesalahan saat memverifikasi data. Silakan coba lagi.';
+                errorMsg.style.display = 'block';
+            }
         }
 
         // Handle forgot password form submission
@@ -626,18 +718,27 @@
                 );
 
                 if (matchingUser) {
-                    // Success - user found in teacher data
-                    successText.textContent = 'Permintaan reset password berhasil dikirim. Silakan periksa email Anda untuk instruksi selanjutnya.';
+                    // Success - user found in teacher data, show password fields with animation
+                    successText.textContent = 'Data ditemukan! Silakan masukkan password baru.';
                     successMsg.style.display = 'block';
 
-                    // In a real application, you would send an email here
-                    // For demo purposes, we'll just show success message
-                    console.log('Password reset requested for teacher:', matchingUser.nama_pengguna || matchingUser.username);
+                    // Store the matching user for password reset
+                    window.matchingUserForReset = matchingUser;
 
-                    // Auto-close modal after 3 seconds
+                    // Hide the submit button and show reset button
+                    document.getElementById('fp_submitBtn').style.display = 'none';
+                    document.getElementById('fp_resetBtn').style.display = 'inline-block';
+
+                    // Show password fields with fade animation
+                    const passwordFields = document.getElementById('newPasswordFields');
+                    passwordFields.style.display = 'block';
+
+                    // Focus on the new password field
                     setTimeout(() => {
-                        bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
-                    }, 3000);
+                        document.getElementById('fp_new_password').focus();
+                    }, 600); // Wait for animation to complete
+
+                    console.log('Teacher data found for password reset:', matchingUser.nama_pengguna || matchingUser.username);
                 } else {
                     // User not found in teacher data
                     errorText.textContent = 'Username dan email tidak ditemukan dalam data pengguna guru. Silakan periksa kembali data Anda.';
@@ -731,6 +832,38 @@
         // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Toggle new password visibility in forgot password modal
+        document.getElementById('toggleNewPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('fp_new_password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Toggle confirm password visibility in forgot password modal
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('fp_confirm_password');
             const toggleIcon = this.querySelector('i');
 
             if (passwordInput.type === 'password') {
