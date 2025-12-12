@@ -1227,16 +1227,7 @@ const app = {
             document.getElementById('profil_email').value = user.email || '';
             document.getElementById('profil_level').value = user.level || 'Admin';
 
-            // Load profile photo if exists
-            if (user.profile_photo) {
-                document.getElementById('profile-photo-display').src = user.profile_photo;
-            }
 
-            // Add event listener for profile photo upload
-            const profilePhotoInput = document.getElementById('profile-photo-input-edit');
-            if (profilePhotoInput) {
-                profilePhotoInput.addEventListener('change', app.handleProfilePhotoUpload);
-            }
 
         } catch (error) {
             console.error('Error loading profile:', error);
@@ -1322,68 +1313,7 @@ const app = {
         }
     },
 
-    // Handle profile photo upload
-    handleProfilePhotoUpload: (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                app.showAlert('File harus berupa gambar', 'warning');
-                return;
-            }
 
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                app.showAlert('Ukuran file maksimal 5MB', 'warning');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imageDataUrl = e.target.result;
-
-                // Update both profile photo displays
-                const profileDisplay = document.getElementById('profile-photo-display');
-                const userProfilePhoto = document.getElementById('user-profile-photo');
-
-                if (profileDisplay) {
-                    profileDisplay.src = imageDataUrl;
-                }
-                if (userProfilePhoto) {
-                    userProfilePhoto.src = imageDataUrl;
-                }
-
-                // Store the image data temporarily for saving
-                localStorage.setItem('temp-profile-photo', imageDataUrl);
-                app.showAlert('Foto profil berhasil dipilih', 'success');
-            };
-            reader.onerror = () => {
-                app.showAlert('Gagal membaca file gambar', 'danger');
-            };
-            reader.readAsDataURL(file);
-        }
-    },
-
-    // Initialize profile photo upload listeners
-    initProfilePhotoUpload: () => {
-        // Add event listener for the top profile photo input (sidebar)
-        const topProfileInput = document.getElementById('profile-photo-input');
-        if (topProfileInput) {
-            topProfileInput.addEventListener('change', app.handleProfilePhotoUpload);
-        }
-
-        // Add event listener for the profile edit page input
-        const editProfileInput = document.getElementById('profile-photo-input-edit');
-        if (editProfileInput) {
-            editProfileInput.addEventListener('change', app.handleProfilePhotoUpload);
-        }
-    },
-
-    resetProfilePhoto: () => {
-        document.getElementById('profile-photo-display').src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjYwIiBmaWxsPSIjMWYyOTM3Ii8+CjxwYXRoIGQ9Ik02MCA2MEM3Mi43NjE0IDYwIDgwIDU3Ljc2MTQgODAgNTVDODAgNTIyLjIzODYgNzIuNzYxNCA1MCA2MCA1MEM0Ny4yMzg2IDUwIDQwIDUyLjIzODYgNDAgNTVDNDAgNTcuNzYxNCA0Ny4yMzg2IDYwIDYwIDYwWiIgZmlsbD0iI2ZmZmZmYi8+Cjwvc3ZnPgo=";
-        localStorage.removeItem('temp-profile-photo');
-        app.showAlert('Foto profil berhasil direset', 'success');
-    },
     renderPagination: (type, total) => { console.log(`renderPagination called for ${type} with ${total} items`); },
     prevPage: (type) => {
         if (type === 'guru' && appState.guru.currentPage > 1) {
