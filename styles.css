@@ -279,3 +279,19 @@ body {
 #kokurikuler-icon.move-down {
     transform: translateY(20px);
 }
+
+/* Profile Picture Responsive Size */
+.profile-picture {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 4/6;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    .profile-picture {
+        max-width: 150px;
+    }
+}

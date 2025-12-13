@@ -177,7 +177,23 @@
                     <div class="content-header"><h2>Profil Pengguna</h2></div>
                     <div class="card card-glass p-4">
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-4">
+                                <!-- Profile Picture Section -->
+                                <div class="profile-picture-container text-center mb-4">
+                                    <div class="profile-picture-wrapper profile_person">
+                                        <img id="profil_picture_preview" src="src/img/logo ankid.png" alt="Foto Profil" class="profile-picture">
+                                        <div class="profile-picture-overlay" onclick="app.modalUbahFoto()">
+                                            <i class="fas fa-camera"></i>
+                                            <span>Ubah Foto</span>
+                                        </div>
+                                        <input type="file" id="profil_picture_input" accept="image/*" style="display: none;">
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="app.removeProfilePicture()">
+                                        <i class="fas fa-trash"></i> Hapus Foto
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
                                 <form id="form-profil">
                                     <div class="row mb-3">
                                         <div class="col-md-6">
@@ -953,6 +969,51 @@
         </div>
     </div>
 
+    <!-- Modal: Ubah Foto Profil -->
+    <div class="modal fade" id="modalUbahFoto" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ubah Foto Profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <img id="modal_foto_preview" src="src/img/logo ankid.png" alt="Preview Foto" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #ddd;">
+                    </div>
+                    <div class="mb-3">
+                        <input type="file" id="modal_foto_input" accept="image/*" class="form-control" onchange="app.previewModalFoto(this)">
+                    </div>
+                    <p class="text-muted small">Pilih file gambar (JPG, PNG, GIF) dengan ukuran maksimal 5MB</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveModalFoto()">Simpan Foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Hapus Foto Profil -->
+    <div class="modal fade" id="modalHapusFoto" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hapus Foto Profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Apakah Anda yakin ingin menghapus foto profil?</p>
+                    <p class="text-muted small">Foto akan kembali ke gambar default.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger" onclick="app.confirmHapusFoto()">Hapus Foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="customAlert" class="position-fixed top-50 start-50 translate-middle p-3 rounded shadow text-white" style="display:none; z-index: 2000; min-width: 200px; text-align: center;"></div>
 
     <!-- Auto-login Toast -->
@@ -1063,6 +1124,14 @@
 
                 // Update user profile display
                 app.updateUserProfileDisplay(user);
+
+                // Hide data pengguna menu for guru level
+                if (user.level === 'Guru') {
+                    const dataPenggunaMenu = document.querySelector('[onclick="app.nav(\'datapengguna\')"]');
+                    if (dataPenggunaMenu) {
+                        dataPenggunaMenu.style.display = 'none';
+                    }
+                }
 
                 // Navigate to the requested page
                 app.nav(page);

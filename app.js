@@ -143,6 +143,76 @@ function saveSQLiteData(filename, tableName, data) {
     }
 }
 
+// Initialize profile photos SQLite database
+async function initProfilePhotosSQLite() {
+    try {
+        // Try to load existing database
+        let db = await loadSQLiteFile('profile_photos.sqlite');
+
+        // If database doesn't exist, create new one
+        if (!db) {
+            const SQL = await initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm' });
+            db = new SQL.Database();
+            sqliteDBs['profile_photos.sqlite'] = db;
+            console.log('Created new profile photos SQLite database');
+        }
+
+        // Create table if it doesn't exist
+        const createTableSQL = `
+            CREATE TABLE IF NOT EXISTS profile_photos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                photo_data TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id)
+            )
+        `;
+
+        db.run(createTableSQL);
+        console.log('Profile photos table initialized');
+
+        // Save the database to server
+        await saveSQLiteFile('profile_photos.sqlite', db);
+
+        return db;
+    } catch (e) {
+        console.error('Failed to initialize profile photos SQLite database:', e);
+        return null;
+    }
+}
+
+// Save profile photo to SQLite
+async function saveProfilePhotoToSQLite(userId, photoData) {
+    try {
+        const db = await initProfilePhotosSQLite();
+        if (!db) {
+            console.error('Failed to initialize SQLite database for profile photos');
+            return false;
+        }
+
+        // Insert or update profile photo
+        const sql = `
+            INSERT OR REPLACE INTO profile_photos (user_id, photo_data, updated_at)
+            VALUES (?, ?, datetime('now'))
+        `;
+
+        db.run(sql, [userId, photoData]);
+
+        // Save database to server
+        const success = await saveSQLiteFile('profile_photos.sqlite', db);
+        if (success) {
+            console.log('Profile photo saved to SQLite successfully');
+            return true;
+        } else {
+            console.error('Failed to save SQLite database to server');
+            return false;
+        }
+    } catch (e) {
+        console.error('Failed to save profile photo to SQLite:', e);
+        return false;
+    }
+}
+
 // ======================== FIXED INDEXEDDB STORAGE ==========================
 
 // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
@@ -1279,6 +1349,137 @@ const app = {
         }
     },
 
+    // Modal Ubah Foto functions
+    modalUbahFoto: () => {
+        // Get current user profile picture
+        const currentImg = document.getElementById('profil_picture_preview');
+        const modalImg = document.getElementById('modal_foto_preview');
+
+        if (currentImg && modalImg) {
+            modalImg.src = currentImg.src;
+        }
+
+        // Clear file input
+        const fileInput = document.getElementById('modal_foto_input');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        // Show modal
+        const modal = document.getElementById('modalUbahFoto');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
+    },
+
+    previewModalFoto: (input) => {
+        const file = input.files[0];
+        if (file) {
+            // Validate file size (5MB max)
+            const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+            if (file.size > maxSize) {
+                app.showAlert('Ukuran file maksimal 5MB', 'warning');
+                input.value = '';
+                return;
+            }
+
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                app.showAlert('Format file harus JPG, PNG, atau GIF', 'warning');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const modalImg = document.getElementById('modal_foto_preview');
+                if (modalImg) {
+                    modalImg.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    },
+
+    saveModalFoto: async () => {
+        try {
+            const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            if (!rememberedId) {
+                app.showAlert('Sesi login tidak valid', 'danger');
+                return;
+            }
+
+            const fileInput = document.getElementById('modal_foto_input');
+            if (!fileInput || !fileInput.files[0]) {
+                app.showAlert('Pilih file gambar terlebih dahulu', 'warning');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async (e) => {
+                try {
+                    // Get current user data
+                    const user = await db.get('admins', parseInt(rememberedId));
+                    if (!user) {
+                        app.showAlert('Data pengguna tidak ditemukan', 'danger');
+                        return;
+                    }
+
+                    // Update profile photo
+                    user.profile_photo = e.target.result;
+
+                    // Save updated user to IndexedDB
+                    await db.saveTo('admins', user);
+
+                    // Also save to SQLite for persistence
+                    try {
+                        const sqliteSuccess = await saveProfilePhotoToSQLite(parseInt(rememberedId), e.target.result);
+                        if (!sqliteSuccess) {
+                            console.warn('Failed to save profile photo to SQLite, but IndexedDB save was successful');
+                        }
+                    } catch (sqliteError) {
+                        console.error('SQLite save error:', sqliteError);
+                        // Don't fail the whole operation if SQLite fails
+                    }
+
+                    // Update profile picture display
+                    const profileImg = document.getElementById('profil_picture_preview');
+                    if (profileImg) {
+                        profileImg.src = e.target.result;
+                    }
+
+                    // Update header display if needed
+                    app.updateUserProfileDisplay(user);
+
+                    app.showAlert('Foto profil berhasil diperbarui', 'success');
+
+                    // Close modal
+                    const modal = document.getElementById('modalUbahFoto');
+                    if (modal) {
+                        const bsModal = bootstrap.Modal.getInstance(modal);
+                        if (bsModal) {
+                            bsModal.hide();
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error saving profile photo:', error);
+                    app.showAlert('Gagal menyimpan foto profil', 'danger');
+                }
+            };
+
+            reader.readAsDataURL(file);
+
+        } catch (error) {
+            console.error('Error in saveModalFoto:', error);
+            app.showAlert('Gagal memproses foto profil', 'danger');
+        }
+    },
+
     saveProfil: async () => {
         try {
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
@@ -1354,6 +1555,63 @@ const app = {
         }
         if (userLevelEl) {
             userLevelEl.textContent = user.level || 'Level';
+        }
+    },
+
+    // Remove Profile Picture functions
+    removeProfilePicture: () => {
+        // Show confirmation modal
+        const modal = document.getElementById('modalHapusFoto');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
+    },
+
+    confirmHapusFoto: async () => {
+        try {
+            const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            if (!rememberedId) {
+                app.showAlert('Sesi login tidak valid', 'danger');
+                return;
+            }
+
+            // Get current user data
+            const user = await db.get('admins', parseInt(rememberedId));
+            if (!user) {
+                app.showAlert('Data pengguna tidak ditemukan', 'danger');
+                return;
+            }
+
+            // Remove profile photo (set to default)
+            user.profile_photo = null;
+
+            // Save updated user
+            await db.saveTo('admins', user);
+
+            // Update profile picture display to default
+            const profileImg = document.getElementById('profil_picture_preview');
+            if (profileImg) {
+                profileImg.src = 'src/img/logo ankid.png';
+            }
+
+            // Update header display if needed
+            app.updateUserProfileDisplay(user);
+
+            app.showAlert('Foto profil berhasil dihapus', 'success');
+
+            // Close modal
+            const modal = document.getElementById('modalHapusFoto');
+            if (modal) {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            }
+
+        } catch (error) {
+            console.error('Error removing profile photo:', error);
+            app.showAlert('Gagal menghapus foto profil', 'danger');
         }
     },
 
