@@ -24,6 +24,20 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-animated">
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <h4 class="loading-text">Memuat Aplikasi Rapor...</h4>
+            <p class="loading-subtitle">Mohon tunggu sebentar</p>
+        </div>
+    </div>
+
     <!-- MAIN APP WRAPPER -->
     <div id="wrapper">
         <!-- Sidebar -->
@@ -1032,41 +1046,47 @@
         window.addEventListener('load', async () => {
             console.log('Rapor.html: Starting login check...');
 
-            // Check for demo mode
-            const urlParams = new URLSearchParams(window.location.search);
-            const isDemo = urlParams.get('demo') === 'true';
-            console.log('Rapor.html: Demo mode:', isDemo);
+            // Show loading overlay immediately
+            app.showPageLoading();
 
-            if (isDemo) {
-                console.log('Rapor.html: Demo mode enabled, bypassing login check');
-                // Demo mode - show the application directly
-                document.getElementById('wrapper').style.display = 'block';
+            try {
+                // Check for demo mode
+                const urlParams = new URLSearchParams(window.location.search);
+                const isDemo = urlParams.get('demo') === 'true';
+                console.log('Rapor.html: Demo mode:', isDemo);
 
-                // Add event listener for sidebar toggle
-                const menuToggle = document.getElementById('menu-toggle');
-                if (menuToggle) {
-                    menuToggle.addEventListener('click', app.toggleSidebar);
+                if (isDemo) {
+                    console.log('Rapor.html: Demo mode enabled, bypassing login check');
+                    // Demo mode - show the application directly
+                    document.getElementById('wrapper').style.display = 'block';
+
+                    // Add event listener for sidebar toggle
+                    const menuToggle = document.getElementById('menu-toggle');
+                    if (menuToggle) {
+                        menuToggle.addEventListener('click', app.toggleSidebar);
+                    }
+
+                    // Navigate to the requested page or default to dashboard
+                    const page = urlParams.get('page') || 'dashboard';
+                    console.log('Rapor.html: Navigating to page:', page);
+                    await app.nav(page);
+
+                    // Hide loading overlay after navigation
+                    app.hidePageLoading();
+                    return;
                 }
 
-                // Navigate to the requested page or default to dashboard
-                const page = urlParams.get('page') || 'dashboard';
-                console.log('Rapor.html: Navigating to page:', page);
-                app.nav(page);
-                return;
-            }
+                const rememberedId = localStorage.getItem('rapor_remember_user_id');
+                console.log('Rapor.html: Remembered user ID:', rememberedId);
 
-            const rememberedId = localStorage.getItem('rapor_remember_user_id');
-            console.log('Rapor.html: Remembered user ID:', rememberedId);
+                if (!rememberedId) {
+                    console.log('Rapor.html: No login session found, redirecting to login');
+                    // No login session, redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-            if (!rememberedId) {
-                console.log('Rapor.html: No login session found, redirecting to login');
-                // No login session, redirect to login
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Check if user exists in database
-            try {
+                // Check if user exists in database
                 console.log('Rapor.html: Initializing database...');
                 await db.init();
 
@@ -1116,10 +1136,7 @@
                     menuToggle.addEventListener('click', app.toggleSidebar);
                 }
 
-
-
                 // Get page parameter from URL, localStorage, or default to dashboard
-                const urlParams = new URLSearchParams(window.location.search);
                 const urlPage = urlParams.get('page');
                 const storedPage = localStorage.getItem('rapor_current_page');
                 const page = urlPage || storedPage || 'dashboard';
@@ -1130,7 +1147,6 @@
 
                 // Hide data pengguna menu for guru level
                 if (user.level === 'Guru') {
-
                     const dataPenggunaMenu = document.querySelector('[onclick="app.nav(\'datapengguna\')"]');
                     if (dataPenggunaMenu) {
                         dataPenggunaMenu.style.display = 'none';
@@ -1170,7 +1186,10 @@
                 }
 
                 // Navigate to the requested page
-                app.nav(page);
+                await app.nav(page);
+
+                // Hide loading overlay after all initialization is complete
+                app.hidePageLoading();
 
             } catch (e) {
                 console.error('Rapor.html: Login check failed:', e);

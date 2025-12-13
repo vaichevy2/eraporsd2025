@@ -844,6 +844,7 @@ const app = {
 
     saveAdmin: async () => {
         try {
+            app.showLoading('Menyimpan data admin...');
             const id = document.getElementById('adm_id').value;
             const username = document.getElementById('adm_user').value;
             const email = document.getElementById('adm_email').value;
@@ -874,6 +875,8 @@ const app = {
         } catch (error) {
             console.error('Error saving admin:', error);
             app.showAlert('Gagal menyimpan admin', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
 
@@ -955,6 +958,7 @@ const app = {
 
     saveSekolah: async () => {
         try {
+            app.showLoading('Menyimpan data sekolah...');
             const data = {
                 id: 1,
                 nama: document.getElementById('sekolah_nama').value,
@@ -973,6 +977,8 @@ const app = {
         } catch (error) {
             console.error('Error saving sekolah:', error);
             app.showAlert('Gagal menyimpan data sekolah', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
 
@@ -1238,6 +1244,49 @@ const app = {
         } catch (error) {
             console.error('Error exporting all to SQLite:', error);
             app.showAlert('Gagal mengekspor semua data', 'danger');
+        }
+    },
+
+    // Loading modal functions
+    showLoading: (text = 'Tunggu proses...') => {
+        const modal = document.getElementById('modalLoading');
+        const loadingText = document.getElementById('loadingText');
+        if (modal && loadingText) {
+            loadingText.textContent = text;
+            const bsModal = new bootstrap.Modal(modal, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            bsModal.show();
+        }
+    },
+
+    hideLoading: () => {
+        const modal = document.getElementById('modalLoading');
+        if (modal) {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+            }
+        }
+    },
+
+    // Page loading overlay functions
+    showPageLoading: () => {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    },
+
+    hidePageLoading: () => {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.style.animation = 'fadeOut 0.5s ease-in-out';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.style.animation = '';
+            }, 500);
         }
     },
 
@@ -1568,6 +1617,7 @@ const app = {
 
     saveProfil: async () => {
         try {
+            app.showLoading('Menyimpan data profil...');
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
             if (!rememberedId) {
                 app.showAlert('Sesi login tidak valid', 'danger');
@@ -1629,6 +1679,8 @@ const app = {
         } catch (error) {
             console.error('Error saving profile:', error);
             app.showAlert('Gagal menyimpan profil', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
 
@@ -1816,6 +1868,7 @@ const app = {
     },
     saveSiswa: async () => {
         try {
+            app.showLoading('Menyimpan data siswa...');
             const id = document.getElementById('s_id').value;
             const nisn = document.getElementById('s_nisn').value;
             const induk = document.getElementById('s_induk').value;
@@ -1856,6 +1909,8 @@ const app = {
         } catch (error) {
             console.error('Error saving siswa:', error);
             app.showAlert('Gagal menyimpan siswa', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
     modalGuru: (action, id = null) => {
@@ -1888,6 +1943,7 @@ const app = {
     },
     saveGuru: async () => {
         try {
+            app.showLoading('Menyimpan data guru...');
             const id = document.getElementById('g_id').value;
             const nuptk = document.getElementById('g_nuptk').value;
             const nip = document.getElementById('g_nip').value;
@@ -1914,6 +1970,8 @@ const app = {
         } catch (error) {
             console.error('Error saving guru:', error);
             app.showAlert('Gagal menyimpan guru', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
     deleteGuru: async (id) => {
@@ -1993,6 +2051,7 @@ const app = {
     },
     saveGuruMapel: async () => {
         try {
+            app.showLoading('Menyimpan data guru mapel...');
             const id = document.getElementById('gm_id').value;
             const nuptk = document.getElementById('gm_nuptk').value;
             const nama = document.getElementById('gm_nama').value;
@@ -2021,6 +2080,8 @@ const app = {
         } catch (error) {
             console.error('Error saving guru mapel:', error);
             app.showAlert('Gagal menyimpan guru mapel', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
     saveDimensi: async () => { console.log('saveDimensi called'); },
@@ -2800,6 +2861,7 @@ const app = {
     },
     saveResetPassword: async () => {
         try {
+            app.showLoading('Mereset password...');
             const id = document.getElementById('rp_id').value;
             const type = document.getElementById('rp_type').value;
             const newPassword = document.getElementById('rp_new_pass').value;
@@ -2840,6 +2902,8 @@ const app = {
         } catch (error) {
             console.error('Error resetting password:', error);
             app.showAlert('Gagal mereset password', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
     deleteUser: async (id, type) => {
@@ -2930,6 +2994,7 @@ const app = {
 
     saveSimpleMapel: async () => {
         try {
+            app.showLoading('Menyimpan data mata pelajaran sederhana...');
             const id = document.getElementById('m_id').value;
             const nama = document.getElementById('m_nama').value.trim();
 
@@ -2957,6 +3022,8 @@ const app = {
         } catch (error) {
             console.error('Error saving simple mapel:', error);
             app.showAlert('Gagal menyimpan mata pelajaran', 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
 
