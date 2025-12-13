@@ -1,9 +1,12 @@
-# TODO: Implement Forgot Password with New Password Fields
+# TODO List
 
-## Tasks
-- [ ] Add HTML elements for new password and confirm password fields in forgot password modal
-- [ ] Add CSS for fade-in animation
-- [ ] Modify handleForgotPassword function to show fields instead of success message when match found
-- [ ] Add handleResetPassword function to process new password submission
-- [ ] Update modal footer to include submit button for password reset
-- [ ] Test the functionality
+## Completed Tasks
+- [x] Hide "Super Admin" row level from users with "Admin" role on the user data page
+  - Modified `loadAdminUsers` function in `app.js`
+  - Added logic to check current user's level
+  - Filter out "Super Admin" rows when current user is not "Super Admin"
+
+## Pending Tasks
+- [ ] Test the implementation to ensure it works correctly
+- [ ] Verify that Super Admin users can still see all rows including their own
+- [ ] Verify that Admin users cannot see Super Admin rows

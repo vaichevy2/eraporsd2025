@@ -135,10 +135,6 @@
                 <div id="datapengguna" class="page-section">
                     <div class="content-header"><h2>Data Pengguna</h2><div class="super-admin-only" style="display:none;"><button class="btn btn-sm btn-outline-secondary ms-2" onclick="app.exportStoreToSQLite('admins')"><i class="fas fa-database"></i> SQLite</button><button class="btn btn-sm btn-success ms-1" onclick="app.saveStoreCache('admins')"><i class="fas fa-save"></i> Simpan</button></div></div>
                     <div class="card card-glass p-4">
-                        <div class="d-flex justify-content-end mb-3">
-                            <button class="btn btn-danger btn-sm me-2" onclick="app.modalDeleteAllUsers()"><i class="fas fa-trash-alt"></i> Hapus Semua Pengguna</button>
-                            <button class="btn btn-secondary btn-sm" onclick="app.modalSyncUsers()"><i class="fas fa-sync"></i> Sinkronisasi Pengguna</button>
-                        </div>
                         <ul class="nav nav-tabs mb-3" id="userTabs" role="tablist">
                             <li class="nav-item" role="presentation"><button class="nav-link active fw-bold" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-content" type="button" onclick="app.loadAdminUsers()">Admin</button></li>
                             <li class="nav-item" role="presentation"><button class="nav-link fw-bold" id="guru-tab" data-bs-toggle="tab" data-bs-target="#guru-content" type="button" onclick="app.loadGuruUsers()">Guru</button></li>
@@ -162,6 +158,8 @@
                                 <div class="d-flex justify-content-end mb-2">
                                     <button class="btn btn-primary btn-sm" onclick="app.modalGuruUser('add')"><i class="fas fa-plus"></i> Tambah Guru</button>
                                     <button class="btn btn-secondary btn-sm" onclick="app.modalSyncTeachers()"><i class="fas fa-sync"></i> Sinkronisasi NUPTK & Nama</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="app.modalSyncUsers()"><i class="fas fa-sync"></i> Sinkronisasi Pengguna</button>
+                                    <button class="btn btn-danger btn-sm me-2" onclick="app.modalDeleteAllUsers()"><i class="fas fa-trash-alt"></i> Hapus Semua Pengguna</button>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-hover bg-white">

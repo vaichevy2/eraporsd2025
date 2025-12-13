@@ -347,6 +347,11 @@ const app = {
         if (targetSection) {
             targetSection.classList.add('active');
             targetSection.style.display = 'block';
+
+            // Ensure profile data is loaded when profile section is shown
+            if (targetSection.id === 'profil') {
+                app.loadProfil();
+            }
         }
 
         // Update sidebar active state
@@ -523,6 +528,21 @@ const app = {
         try {
             await db.init();
 
+            // Get current user level to determine what to show
+            const currentUserId = localStorage.getItem('rapor_remember_user_id');
+            let currentUserLevel = 'Admin'; // Default fallback
+
+            if (currentUserId) {
+                try {
+                    const currentUser = await db.get('admins', parseInt(currentUserId));
+                    if (currentUser && currentUser.level) {
+                        currentUserLevel = currentUser.level;
+                    }
+                } catch (error) {
+                    console.error('Error getting current user level:', error);
+                }
+            }
+
             // Seed super admin if not exists
             const admins = await db.get('admins');
             let superAdminExists = false;
@@ -542,12 +562,19 @@ const app = {
                 console.log('Super admin seeded successfully');
             }
 
-            const updatedAdmins = await db.get('admins');
-            const tbody = document.getElementById('tbody-user-admin');
-            tbody.innerHTML = '';
+        const updatedAdmins = await db.get('admins');
+        const tbody = document.getElementById('tbody-user-admin');
+        tbody.innerHTML = '';
 
-            if (Array.isArray(updatedAdmins)) {
-                updatedAdmins.forEach((admin, index) => {
+        if (Array.isArray(updatedAdmins)) {
+            let filteredAdmins = updatedAdmins.filter(admin => admin.level !== 'Guru');
+
+            // Hide Super Admin rows from Admin users
+            if (currentUserLevel !== 'Super Admin') {
+                filteredAdmins = filteredAdmins.filter(admin => admin.level !== 'Super Admin');
+            }
+
+            filteredAdmins.forEach((admin, index) => {
                     const row = `
                         <tr>
                             <td>${index + 1}</td>
@@ -1206,28 +1233,45 @@ const app = {
 
     // Profil functions
     loadProfil: async () => {
+        console.log('loadProfil called');
         try {
-            await db.init();
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
+            console.log('rememberedId:', rememberedId);
             if (!rememberedId) {
-                app.showAlert('Sesi login tidak valid', 'danger');
-                window.location.href = 'login.html';
-                return;
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('demo') === 'true') {
+                    // In demo mode, set default values
+                    console.log('Demo mode detected');
+                    document.getElementById('profil_username').value = 'demo';
+                    document.getElementById('profil_nama').value = 'Demo User';
+                    document.getElementById('profil_email').value = 'demo@example.com';
+                    document.getElementById('profil_level').value = 'Admin';
+                    return;
+                } else {
+                    console.log('No rememberedId and not demo mode, redirecting to login');
+                    app.showAlert('Sesi login tidak valid', 'danger');
+                    window.location.href = 'login.html';
+                    return;
+                }
             }
 
+            await db.init();
+            console.log('DB initialized');
             const user = await db.get('admins', parseInt(rememberedId));
+            console.log('User data:', user);
             if (!user) {
+                console.log('User not found');
                 app.showAlert('Data pengguna tidak ditemukan', 'danger');
                 return;
             }
 
             // Fill form fields
+            console.log('Filling form fields');
             document.getElementById('profil_username').value = user.username || '';
-            document.getElementById('profil_nama').value = user.nama_pengguna || '';
+            document.getElementById('profil_nama').value = user.nama_pengguna || user.username || '';
             document.getElementById('profil_email').value = user.email || '';
             document.getElementById('profil_level').value = user.level || 'Admin';
-
-
+            console.log('Form fields filled successfully');
 
         } catch (error) {
             console.error('Error loading profile:', error);
