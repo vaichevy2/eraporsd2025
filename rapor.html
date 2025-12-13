@@ -1161,6 +1161,14 @@
                     }
                 }
 
+                // Hide 8 dimensi lulusan menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dimensiMenu = document.querySelector('[onclick="app.nav(\'dimensi\')"]');
+                    if (dimensiMenu) {
+                        dimensiMenu.style.display = 'none';
+                    }
+                }
+
                 // Navigate to the requested page
                 app.nav(page);
 
