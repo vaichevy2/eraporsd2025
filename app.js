@@ -1583,6 +1583,21 @@ const app = {
                 return;
             }
 
+            // Check if current photo is the default photo
+            const profileImg = document.getElementById('profil_picture_preview');
+            if (profileImg && profileImg.src.includes('no-profil.jpg')) {
+                app.showAlert('Foto profil default tidak dapat dihapus', 'warning');
+                // Close modal
+                const modal = document.getElementById('modalHapusFoto');
+                if (modal) {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) {
+                        bsModal.hide();
+                    }
+                }
+                return;
+            }
+
             // Remove profile photo (set to default)
             user.profile_photo = null;
 
@@ -1590,9 +1605,8 @@ const app = {
             await db.saveTo('admins', user);
 
             // Update profile picture display to default
-            const profileImg = document.getElementById('profil_picture_preview');
             if (profileImg) {
-                profileImg.src = 'src/img/logo ankid.png';
+                profileImg.src = 'src/img/no-profil.jpg';
             }
 
             // Update header display if needed
