@@ -1145,8 +1145,8 @@
                 // Update user profile display
                 app.updateUserProfileDisplay(user);
 
-                // Hide data pengguna menu for guru level
-                if (user.level === 'Guru') {
+                // Hide data pengguna menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
                     const dataPenggunaMenu = document.querySelector('[onclick="app.nav(\'datapengguna\')"]');
                     if (dataPenggunaMenu) {
                         dataPenggunaMenu.style.display = 'none';
@@ -1182,6 +1182,14 @@
                     const dimensiMenu = document.querySelector('[onclick="app.nav(\'dimensi\')"]');
                     if (dimensiMenu) {
                         dimensiMenu.style.display = 'none';
+                    }
+                }
+
+                // Hide 7KAIH menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const kaihMenu = document.querySelector('[onclick="app.nav(\'7kaih\')"]');
+                    if (kaihMenu) {
+                        kaihMenu.style.display = 'none';
                     }
                 }
 

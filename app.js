@@ -462,7 +462,7 @@ const app = {
     // Navigation function
     nav: async (page) => {
         // Check user permissions for restricted pages
-        if (page === 'siswa' || page === 'guru' || page === 'gurumapel' || page === 'dimensi') {
+        if (page === 'siswa' || page === 'guru' || page === 'gurumapel' || page === 'dimensi' || page === 'datapengguna') {
             const currentUserId = localStorage.getItem('rapor_remember_user_id');
             if (currentUserId) {
                 try {
