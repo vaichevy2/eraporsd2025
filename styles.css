@@ -160,11 +160,9 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 80px;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
+    height: 60px;
+    background: transparent;
     z-index: 1000;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-content {
@@ -176,16 +174,16 @@ body {
 }
 
 .header-profile {
-    position: absolute;
-    top: 10px;
-    right: 10px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 8px 12px;
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.username, .user-level {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    font-weight: bold;
 }
 
 /* --- LAYOUT & SIDEBAR RESPONSIVE --- */
@@ -193,7 +191,7 @@ body {
     display: none; /* Default hidden, shown after login */
     width: 100%;
     align-items: stretch;
-    padding-top: 80px; /* Space for fixed header */
+    padding-top: 60px; /* Space for fixed header */
 }
 
 /* Hide header title */
@@ -226,14 +224,14 @@ body {
 }
 
 /* --- TOGGLE LOGIC (MOBILE FIRST) --- */
-#wrapper.toggled #sidebar-wrapper { left: 0; }
-#wrapper.toggled #page-content-wrapper { padding-left: 280px; }
+#wrapper.toggle #sidebar-wrapper { left: 0; }
+#wrapper.toggle #page-content-wrapper { padding-left: 280px; }
 
 @media (min-width: 768px) {
     #sidebar-wrapper { left: 0; }
     #page-content-wrapper { padding-left: 280px; }
-    #wrapper.toggled #sidebar-wrapper { left: -280px; }
-    #wrapper.toggled #page-content-wrapper { padding-left: 0; }
+    #wrapper.toggle #sidebar-wrapper { left: -280px; }
+    #wrapper.toggle #page-content-wrapper { padding-left: 0; }
 }
 
 /* --- SIDEBAR CONTENTS --- */
@@ -342,10 +340,10 @@ body {
 
 #menu-toggle {
     position: fixed;
-    top: 90px; /* Adjusted for fixed header */
-    left: 0;
+    top: 60px; /* Below the fixed header */
+    left: 280px; /* Position next to sidebar when expanded */
     z-index: 1001;
-    background: #333;
+    background: #1a1a2e; /* Match sidebar background */
     color: white;
     border: none;
     padding: 10px 15px;
@@ -353,20 +351,33 @@ body {
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
+    display: block; /* Ensure it's always visible */
+}
+
+/* Toggle button position when sidebar is collapsed */
+#wrapper.toggle #menu-toggle {
+    left: 5px; /* Move to left edge when sidebar is hidden */
+}
+
+/* Position relative to sidebar on mobile */
+@media (max-width: 767px) {
+    #menu-toggle {
+        left: 280px; /* Next to sidebar on mobile when expanded */
+    }
+
+    #wrapper.toggle #menu-toggle {
+        left: 5px; /* Move to left edge on mobile when collapsed */
+    }
 }
 
 /* Position relative to sidebar on desktop */
 @media (min-width: 768px) {
     #menu-toggle {
-        left: 280px;
-        opacity: 1;
-        visibility: visible;
+        left: 280px; /* Next to sidebar on desktop when expanded */
     }
 
-    #wrapper.toggled #menu-toggle {
-        left: 0;
-        opacity: 0;
-        visibility: hidden;
+    #wrapper.toggle #menu-toggle {
+        left: 5px; /* Move to left edge on desktop when collapsed */
     }
 }
 
