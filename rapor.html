@@ -38,6 +38,28 @@
         </div>
     </div>
 
+    <!-- FIXED HEADER -->
+    <header id="fixed-header" class="fixed-header">
+        <div class="header-content">
+            <button id="menu-toggle" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-title">
+                <h4>Rapor Kurikulum Merdeka SD</h4>
+                <span class="header-subtitle">Deep Learning</span>
+            </div>
+            <div class="header-profile">
+                <div class="user-info">
+                    <span id="header-username" class="username">Loading...</span>
+                    <span id="header-level" class="user-level">Loading...</span>
+                </div>
+                <div class="profile-picture-container">
+                    <img id="header-profile-picture" src="src/img/no-profil.jpg" alt="Profile" class="header-profile-picture">
+                </div>
+            </div>
+        </div>
+    </header>
+
     <!-- MAIN APP WRAPPER -->
     <div id="wrapper">
         <!-- Sidebar -->
@@ -75,7 +97,7 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('catatan')"><i class="fas fa-sticky-note"></i> Catatan Guru</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('presensi')"><i class="fas fa-clipboard-check"></i> Presensi</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('rapor')"><i class="fas fa-print"></i> Cetak Rapor</a>
-                <a class="list-group-item list-group-item-action" onclick="app.logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                <a class="list-group-item list-group-item-action" onclick="app.showLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</a>
             </div>
             <div class="p-3 text-muted small text-center">
                 Cepi Kunaefi- Copyright @2025
@@ -84,22 +106,6 @@
 
         <!-- Page Content -->
         <div id="page-content-wrapper">
-            <button id="menu-toggle" class="btn btn-dark"><i class="fas fa-bars"></i></button>
-
-            <!-- User Profile Section -->
-            <div id="user-profile" class="user-profile-section" style="position: fixed; top: 15px; right: 15px; z-index:1001;">
-                <div class="d-flex align-items-center">
-                    <img id="header-profile-picture" src="src/img/no-profil.jpg" alt="Foto Profil" class="header-profile-picture me-3">
-                    <div class="me-3 text-end">
-                        <div class="user-name fw-bold text-white" id="user-name">Nama Pengguna</div>
-                        <div class="user-level small text-light" id="user-level">Level</div>
-                    </div>
-
-                    <button class="btn btn-outline-light btn-sm" onclick="app.logout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </div>
-            </div>
 
             <div class="container-fluid">
                 
@@ -1024,6 +1030,26 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-danger" onclick="app.confirmHapusFoto()">Hapus Foto</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Konfirmasi Logout -->
+    <div class="modal fade" id="modalLogout" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Konfirmasi Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p>Apakah Anda yakin ingin keluar dari aplikasi?</p>
+                    <p class="text-muted small">Anda akan diarahkan ke halaman login.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="app.confirmLogout()">Ya, Logout</button>
                 </div>
             </div>
         </div>
