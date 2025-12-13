@@ -181,6 +181,62 @@ async function initProfilePhotosSQLite() {
     }
 }
 
+// Get profile photo from storage (IndexedDB first, then SQLite fallback)
+async function getProfilePhoto(userId) {
+    try {
+        // First try to get from IndexedDB
+        await db.init();
+        const user = await db.get('admins', parseInt(userId));
+        if (user && user.profile_photo) {
+            console.log('Profile photo found in IndexedDB');
+            return user.profile_photo;
+        }
+
+        // Fallback to SQLite
+        const sqlitePhotos = getSQLiteData('profile_photos.sqlite', 'profile_photos');
+        if (sqlitePhotos && sqlitePhotos.length > 0) {
+            const userPhoto = sqlitePhotos.find(photo => photo.user_id == userId);
+            if (userPhoto && userPhoto.photo_data) {
+                console.log('Profile photo found in SQLite');
+                return userPhoto.photo_data;
+            }
+        }
+
+        console.log('No profile photo found');
+        return null;
+    } catch (e) {
+        console.error('Failed to get profile photo:', e);
+        return null;
+    }
+}
+
+// Save profile photo to both IndexedDB and SQLite
+async function postProfilePhoto(userId, photoData) {
+    try {
+        // Save to IndexedDB
+        await db.init();
+        const user = await db.get('admins', parseInt(userId));
+        if (user) {
+            user.profile_photo = photoData;
+            await db.saveTo('admins', user);
+            console.log('Profile photo saved to IndexedDB');
+        }
+
+        // Save to SQLite
+        const sqliteSuccess = await saveProfilePhotoToSQLite(userId, photoData);
+        if (sqliteSuccess) {
+            console.log('Profile photo saved to SQLite');
+        } else {
+            console.warn('Failed to save profile photo to SQLite, but IndexedDB save was successful');
+        }
+
+        return true;
+    } catch (e) {
+        console.error('Failed to save profile photo:', e);
+        return false;
+    }
+}
+
 // Save profile photo to SQLite
 async function saveProfilePhotoToSQLite(userId, photoData) {
     try {
@@ -404,7 +460,38 @@ const db = {
 
 const app = {
     // Navigation function
-    nav: (page) => {
+    nav: async (page) => {
+        // Check user permissions for restricted pages
+        if (page === 'siswa' || page === 'guru' || page === 'gurumapel') {
+            const currentUserId = localStorage.getItem('rapor_remember_user_id');
+            if (currentUserId) {
+                try {
+                    await db.init();
+                    const currentUser = await db.get('admins', parseInt(currentUserId));
+                    if (currentUser && currentUser.level !== 'Admin' && currentUser.level !== 'Super Admin') {
+                        app.showAlert('Akses ditolak. Halaman ini hanya untuk Admin dan Super Admin.', 'warning');
+                        return; // Prevent navigation
+                    }
+                } catch (error) {
+                    console.error('Error checking user permissions:', error);
+                    app.showAlert('Gagal memverifikasi izin akses', 'danger');
+                    return;
+                }
+            } else {
+                app.showAlert('Sesi login tidak valid', 'danger');
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+
+        // Store current page in localStorage for persistence on refresh
+        localStorage.setItem('rapor_current_page', page);
+
+        // Update URL without causing a page reload
+        const url = new URL(window.location);
+        url.searchParams.set('page', page);
+        window.history.replaceState({}, '', url);
+
         // Hide all page sections
         const sections = document.querySelectorAll('.page-section');
         sections.forEach(section => {
@@ -1343,6 +1430,19 @@ const app = {
             document.getElementById('profil_level').value = user.level || 'Admin';
             console.log('Form fields filled successfully');
 
+            // Load profile photo
+            const profilePhoto = await getProfilePhoto(rememberedId);
+            const profileImg = document.getElementById('profil_picture_preview');
+            if (profileImg) {
+                if (profilePhoto) {
+                    profileImg.src = profilePhoto;
+                    console.log('Profile photo loaded from storage');
+                } else {
+                    profileImg.src = 'src/img/no-profil.jpg';
+                    console.log('No profile photo found, using default');
+                }
+            }
+
         } catch (error) {
             console.error('Error loading profile:', error);
             app.showAlert('Gagal memuat data profil', 'danger');
@@ -1422,28 +1522,11 @@ const app = {
 
             reader.onload = async (e) => {
                 try {
-                    // Get current user data
-                    const user = await db.get('admins', parseInt(rememberedId));
-                    if (!user) {
-                        app.showAlert('Data pengguna tidak ditemukan', 'danger');
+                    // Save profile photo using the new postProfilePhoto function
+                    const success = await postProfilePhoto(parseInt(rememberedId), e.target.result);
+                    if (!success) {
+                        app.showAlert('Gagal menyimpan foto profil', 'danger');
                         return;
-                    }
-
-                    // Update profile photo
-                    user.profile_photo = e.target.result;
-
-                    // Save updated user to IndexedDB
-                    await db.saveTo('admins', user);
-
-                    // Also save to SQLite for persistence
-                    try {
-                        const sqliteSuccess = await saveProfilePhotoToSQLite(parseInt(rememberedId), e.target.result);
-                        if (!sqliteSuccess) {
-                            console.warn('Failed to save profile photo to SQLite, but IndexedDB save was successful');
-                        }
-                    } catch (sqliteError) {
-                        console.error('SQLite save error:', sqliteError);
-                        // Don't fail the whole operation if SQLite fails
                     }
 
                     // Update profile picture display
@@ -1453,7 +1536,10 @@ const app = {
                     }
 
                     // Update header display if needed
-                    app.updateUserProfileDisplay(user);
+                    const user = await db.get('admins', parseInt(rememberedId));
+                    if (user) {
+                        app.updateUserProfileDisplay(user);
+                    }
 
                     app.showAlert('Foto profil berhasil diperbarui', 'success');
 
@@ -1546,15 +1632,52 @@ const app = {
         }
     },
 
-    updateUserProfileDisplay: (user) => {
+    // Header Profile Picture functions
+    getHeaderProfilePhoto: () => {
+        const headerProfilePicEl = document.getElementById('header-profile-picture');
+        if (headerProfilePicEl) {
+            return headerProfilePicEl.src;
+        }
+        return null;
+    },
+
+    postHeaderProfilePhoto: (photoSrc) => {
+        const headerProfilePicEl = document.getElementById('header-profile-picture');
+        if (headerProfilePicEl && photoSrc) {
+            headerProfilePicEl.src = photoSrc;
+            console.log('Header profile picture updated');
+            return true;
+        }
+        return false;
+    },
+
+    updateUserProfileDisplay: async (user) => {
         const userNameEl = document.getElementById('user-name');
         const userLevelEl = document.getElementById('user-level');
+        const headerProfilePicEl = document.getElementById('header-profile-picture');
 
         if (userNameEl) {
             userNameEl.textContent = user.nama_pengguna || user.username || 'Nama Pengguna';
         }
         if (userLevelEl) {
             userLevelEl.textContent = user.level || 'Level';
+        }
+
+        // Always load header profile picture from storage
+        if (headerProfilePicEl) {
+            try {
+                const profilePhoto = await getProfilePhoto(user.id);
+                if (profilePhoto) {
+                    headerProfilePicEl.src = profilePhoto;
+                    console.log('Header profile picture loaded from storage');
+                } else {
+                    headerProfilePicEl.src = 'src/img/no-profil.jpg';
+                    console.log('Header profile picture set to default');
+                }
+            } catch (error) {
+                console.error('Error loading header profile picture:', error);
+                headerProfilePicEl.src = 'src/img/no-profil.jpg';
+            }
         }
     },
 

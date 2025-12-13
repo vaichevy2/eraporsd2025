@@ -75,6 +75,7 @@
             <!-- User Profile Section -->
             <div id="user-profile" class="user-profile-section" style="position: fixed; top: 15px; right: 15px; z-index:1001;">
                 <div class="d-flex align-items-center">
+                    <img id="header-profile-picture" src="src/img/no-profil.jpg" alt="Foto Profil" class="header-profile-picture me-3">
                     <div class="me-3 text-end">
                         <div class="user-name fw-bold text-white" id="user-name">Nama Pengguna</div>
                         <div class="user-level small text-light" id="user-level">Level</div>
@@ -1117,19 +1118,46 @@
 
 
 
-                // Get page parameter from URL or default to dashboard
+                // Get page parameter from URL, localStorage, or default to dashboard
                 const urlParams = new URLSearchParams(window.location.search);
-                const page = urlParams.get('page') || 'dashboard';
-                console.log('Rapor.html: Navigating to page:', page);
+                const urlPage = urlParams.get('page');
+                const storedPage = localStorage.getItem('rapor_current_page');
+                const page = urlPage || storedPage || 'dashboard';
+                console.log('Rapor.html: Navigating to page:', page, '(from URL:', urlPage, ', from storage:', storedPage, ')');
 
                 // Update user profile display
                 app.updateUserProfileDisplay(user);
 
                 // Hide data pengguna menu for guru level
                 if (user.level === 'Guru') {
+
                     const dataPenggunaMenu = document.querySelector('[onclick="app.nav(\'datapengguna\')"]');
                     if (dataPenggunaMenu) {
                         dataPenggunaMenu.style.display = 'none';
+                    }
+                }
+
+                // Hide data siswa menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dataSiswaMenu = document.querySelector('[onclick="app.nav(\'siswa\')"]');
+                    if (dataSiswaMenu) {
+                        dataSiswaMenu.style.display = 'none';
+                    }
+                }
+
+                // Hide data guru menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dataGuruMenu = document.querySelector('[onclick="app.nav(\'guru\')"]');
+                    if (dataGuruMenu) {
+                        dataGuruMenu.style.display = 'none';
+                    }
+                }
+
+                // Hide data guru mapel menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dataGuruMapelMenu = document.querySelector('[onclick="app.nav(\'gurumapel\')"]');
+                    if (dataGuruMapelMenu) {
+                        dataGuruMapelMenu.style.display = 'none';
                     }
                 }
 
