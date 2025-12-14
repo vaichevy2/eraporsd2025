@@ -239,9 +239,23 @@ body {
 #sidebar-wrapper .sidebar-heading {
     padding: 1.5rem;
     font-size: 1.2rem;
-    text-align: center;
     border-bottom: 1px solid #444;
     background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar-text {
+    flex: 1;
+    text-align: left;
 }
 
 #sidebar-wrapper h1 {
