@@ -236,6 +236,10 @@ body {
 }
 
 /* --- SIDEBAR CONTENTS --- */
+#sidebar-wrapper:hover {
+    cursor: pointer;
+}
+
 #sidebar-wrapper .sidebar-heading {
     padding: 1.5rem;
     font-size: 1.2rem;

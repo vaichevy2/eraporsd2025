@@ -3185,4 +3185,6 @@ function handleScroll() {
 // Add scroll event listener when the app loads
 document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Initialize sidebar hover functionality
+    app.handleSidebarHover();
 });
