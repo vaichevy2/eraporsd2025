@@ -462,7 +462,7 @@ const app = {
     // Navigation function
     nav: async (page) => {
         // Check user permissions for restricted pages
-        if (page === 'siswa' || page === 'guru' || page === 'gurumapel' || page === 'dimensi' || page === 'datapengguna') {
+        if (page === 'siswa' || page === 'guru' || page === 'gurumapel' || page === 'dimensi' || page === 'datapengguna' || page === 'sekolah') {
             const currentUserId = localStorage.getItem('rapor_remember_user_id');
             if (currentUserId) {
                 try {
@@ -591,7 +591,29 @@ const app = {
         }
     },
 
-    // Logout function
+    // Show logout modal
+    showLogoutModal: () => {
+        console.log('showLogoutModal called');
+        const modal = document.getElementById('modalLogout');
+        console.log('modal element:', modal);
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            console.log('Bootstrap modal created:', bsModal);
+            bsModal.show();
+            console.log('Modal show() called');
+        } else {
+            console.error('modalLogout element not found');
+        }
+    },
+
+    // Confirm logout function
+    confirmLogout: () => {
+        localStorage.removeItem('rapor_remember_user_id');
+        localStorage.removeItem('rapor_remember_user');
+        window.location.href = 'login.html';
+    },
+
+    // Logout function (kept for backward compatibility)
     logout: () => {
         localStorage.removeItem('rapor_remember_user_id');
         localStorage.removeItem('rapor_remember_user');
@@ -610,7 +632,7 @@ const app = {
     toggleSidebar: () => {
         const wrapper = document.getElementById('wrapper');
         if (wrapper) {
-            wrapper.classList.toggle('toggled');
+            wrapper.classList.toggle('toggle');
         }
     },
 
@@ -641,6 +663,11 @@ const app = {
         // Simple progress chart implementation
         const ctx = document.getElementById('progressChart');
         if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (window.progressChart && typeof window.progressChart.destroy === 'function') {
+            window.progressChart.destroy();
+        }
 
         const progressData = {
             labels: ['Siswa', 'Guru', 'Mapel', 'Nilai'],
@@ -677,7 +704,7 @@ const app = {
             }
         };
 
-        new Chart(ctx, config);
+        window.progressChart = new Chart(ctx, config);
     },
 
     // Data Pengguna functions
@@ -1377,6 +1404,34 @@ const app = {
         try {
             await db.init();
 
+            // Check user permissions for simple mapel table
+            const currentUserId = localStorage.getItem('rapor_remember_user_id');
+            let currentUserLevel = 'Admin'; // Default fallback
+
+            if (currentUserId) {
+                try {
+                    const currentUser = await db.get('admins', parseInt(currentUserId));
+                    if (currentUser && currentUser.level) {
+                        currentUserLevel = currentUser.level;
+                    }
+                } catch (error) {
+                    console.error('Error getting current user level:', error);
+                }
+            }
+
+            // Hide simple mapel section for non-Super Admin users
+            const simpleMapelCards = document.querySelectorAll('.card.card-glass.p-3.mb-4');
+            simpleMapelCards.forEach(card => {
+                const heading = card.querySelector('h5');
+                if (heading && heading.textContent.includes('Daftar Mata Pelajaran (Sederhana)')) {
+                    if (currentUserLevel !== 'Super Admin') {
+                        card.style.display = 'none';
+                    } else {
+                        card.style.display = 'block';
+                    }
+                }
+            });
+
             // Load detailed table from 'mapel' store
             const mapel = await db.get('mapel');
             const tbody = document.getElementById('tbody-mapel');
@@ -1704,8 +1759,8 @@ const app = {
     },
 
     updateUserProfileDisplay: async (user) => {
-        const userNameEl = document.getElementById('user-name');
-        const userLevelEl = document.getElementById('user-level');
+        const userNameEl = document.getElementById('header-username');
+        const userLevelEl = document.getElementById('header-level');
         const headerProfilePicEl = document.getElementById('header-profile-picture');
 
         if (userNameEl) {
@@ -3108,3 +3163,26 @@ const app = {
 
 // Make app available globally for onclick handlers
 window.app = app;
+
+// Sticky Header Scroll Behavior
+let scrollTimeout;
+const stickyHeader = document.getElementById('sticky-header');
+
+function handleScroll() {
+    if (stickyHeader) {
+        stickyHeader.classList.add('show');
+
+        // Clear the previous timeout
+        clearTimeout(scrollTimeout);
+
+        // Set a new timeout to hide the header after scrolling stops
+        scrollTimeout = setTimeout(() => {
+            stickyHeader.classList.remove('show');
+        }, 5000); // Hide after 5 seconds of no scrolling
+    }
+}
+
+// Add scroll event listener when the app loads
+document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+});

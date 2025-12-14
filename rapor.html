@@ -41,9 +41,6 @@
     <!-- FIXED HEADER -->
     <header id="fixed-header" class="fixed-header">
         <div class="header-content">
-            <button id="menu-toggle" class="menu-toggle-btn">
-                <i class="fas fa-bars"></i>
-            </button>
             <div class="header-title">
                 <h4>Rapor Kurikulum Merdeka SD</h4>
                 <span class="header-subtitle">Deep Learning</span>
@@ -56,6 +53,9 @@
                 <div class="profile-picture-container">
                     <img id="header-profile-picture" src="src/img/no-profil.jpg" alt="Profile" class="header-profile-picture">
                 </div>
+                <button class="btn btn-sm btn-outline-light ms-2" onclick="app.showLogoutModal()" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -64,6 +64,9 @@
     <div id="wrapper">
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
+            <button id="menu-toggle" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="sidebar-heading">
                 <h1>Rapor Kurikulum Merdeka SD</h1>
                 <h3>Deep Learning</h3>
@@ -84,7 +87,7 @@
                 <a class="list-group-item list-group-item-action" onclick="app.nav('mapel')"><i class="fas fa-book"></i> Data Mata Pelajaran</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('cptp')"><i class="fas fa-list"></i> CP / TP</a>
                 <a class="list-group-item list-group-item-action" onclick="app.nav('datakelas')"><i class="fas fa-users"></i> Data Kelas</a>
-                <a class="list-group-item list-group-item-action" data-bs-toggle="collapse" href="#kokurikulerCollapse" role="button" aria-expanded="false" aria-controls="kokurikulerCollapse" onclick="toggleKokurikulerIcon()"><i class="fas fa-arrow-right" id="kokurikuler-icon"></i> Kokurikuler</a>
+                <a class="list-group-item list-group-item-action" data-bs-toggle="collapse" href="#kokurikulerCollapse" role="button" aria-expanded="false" aria-controls="kokurikulerCollapse" onclick="app.toggleKokurikulerIcon()"><i class="fas fa-arrow-right" id="kokurikuler-icon"></i> Kokurikuler</a>
                 <ul class="collapse list-group list-group-flush" id="kokurikulerCollapse" style="list-style-type: disc; padding-left: 40px;">
                     <li class="list-group-item list-group-item-action" onclick="app.nav('daftar_tema_ekskul')">Daftar Tema</li>
                     <li class="list-group-item list-group-item-action" onclick="app.nav('kokurikuler')">Kegiatan Kokurikuler</li>
@@ -1184,6 +1187,14 @@
                     const dataSiswaMenu = document.querySelector('[onclick="app.nav(\'siswa\')"]');
                     if (dataSiswaMenu) {
                         dataSiswaMenu.style.display = 'none';
+                    }
+                }
+
+                // Hide data sekolah menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dataSekolahMenu = document.querySelector('[onclick="app.nav(\'sekolah\')"]');
+                    if (dataSekolahMenu) {
+                        dataSekolahMenu.style.display = 'none';
                     }
                 }
 

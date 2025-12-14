@@ -184,6 +184,7 @@ body {
     color: white;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
     font-weight: bold;
+    display: block;
 }
 
 /* --- LAYOUT & SIDEBAR RESPONSIVE --- */
@@ -456,16 +457,21 @@ body {
 /* Header Profile Picture */
 .header-profile-picture {
     width: 60px;
-    height: 90px; /* 2:3 aspect ratio */
+    height: 60px; /* Square aspect ratio */
     object-fit: cover;
     border-radius: 8px;
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Remove border from logout button */
+button[onclick="app.showLogoutModal()"] {
+    border: none !important;
+}
+
 @media (max-width: 768px) {
     .header-profile-picture {
         width: 50px;
-        height: 75px; /* Maintain 2:3 aspect ratio */
+        height: 50px; /* Maintain square aspect ratio */
     }
 }
 

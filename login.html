@@ -427,7 +427,7 @@
                     // Small delay to ensure localStorage is written, then redirect
                     setTimeout(() => {
                         console.log('Redirecting to rapor.html...');
-                        window.location.href = 'rapor.html?page=datapengguna';
+                        window.location.href = 'rapor.html?page=dashboard';
                     }, 100);
 
                     return true;
@@ -549,7 +549,7 @@
                     const remembered = await getFromDB('admins', parseInt(rememberedId));
                     if (remembered && remembered.id) {
                         // Auto-login successful, redirect to rapor.html
-                        window.location.href = 'rapor.html?page=datapengguna';
+                        window.location.href = 'rapor.html?page=dashboard';
                     }
                 } catch (e) {
                     console.log('Auto-login check failed:', e);
