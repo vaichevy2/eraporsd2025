@@ -2378,7 +2378,80 @@ const app = {
             app.showAlert('Gagal membuka modal', 'danger');
         }
     },
-    saveCPTP: async () => { console.log('saveCPTP called'); },
+    saveCPTP: async () => {
+        try {
+            app.showLoading('Menyimpan data TP...');
+
+            // Add a small delay to ensure loading animation is visible
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const id = document.getElementById('c_id').value;
+            const mapel = document.getElementById('c_mapel').value;
+            const tingkat = document.getElementById('c_tingkat').value;
+            const fase = document.getElementById('c_fase').value;
+            const semester = document.getElementById('c_semester').value;
+            const tp = document.getElementById('c_tp').value.trim();
+            const status = document.getElementById('c_status').value;
+
+            // Validate required fields
+            if (!mapel) {
+                app.showAlert('Mata pelajaran harus dipilih', 'warning');
+                return;
+            }
+            if (!tp) {
+                app.showAlert('Tujuan pembelajaran harus diisi', 'warning');
+                return;
+            }
+
+            const data = {
+                mapel,
+                tingkat,
+                fase,
+                semester,
+                tp,
+                status
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            // Save to IndexedDB
+            await db.saveTo('cptp', data);
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('cptp.sqlite', 'cptp', data);
+            if (!sqliteSuccess) {
+                console.warn('Failed to save to SQLite, but IndexedDB save was successful');
+            }
+
+            app.showAlert('Data TP berhasil disimpan', 'success');
+            app.loadCPTP();
+            bootstrap.Modal.getInstance(document.getElementById('modalCPTP')).hide();
+        } catch (error) {
+            console.error('Error saving CPTP:', error);
+            app.showAlert('Gagal menyimpan data TP', 'danger');
+        } finally {
+            // Add another small delay before hiding loading to ensure success message is visible
+            setTimeout(() => {
+                app.hideLoading();
+            }, 1000);
+        }
+    },
+
+    deleteCPTP: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus data TP ini?')) {
+            try {
+                await db.init();
+                await db.delete('cptp', id);
+                app.showAlert('Data TP berhasil dihapus', 'success');
+                app.loadCPTP();
+            } catch (error) {
+                console.error('Error deleting CPTP:', error);
+                app.showAlert('Gagal menghapus data TP', 'danger');
+            }
+        }
+    },
     modalKokurikuler: (action) => { console.log(`modalKokurikuler called with ${action}`); },
     saveKokurikuler: async () => { console.log('saveKokurikuler called'); },
     modalTemaEkskul: (action) => { console.log(`modalTemaEkskul called with ${action}`); },
