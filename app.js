@@ -1480,7 +1480,37 @@ const app = {
             console.error('Error loading mapel:', error);
         }
     },
-    loadCPTP: async () => { console.log('loadCPTP called'); },
+    loadCPTP: async () => {
+        try {
+            await db.init();
+            const cptp = await db.get('cptp');
+            const tbody = document.getElementById('tbody-cptp');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(cptp)) {
+                cptp.forEach((cp, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${cp.mapel || ''}</td>
+                            <td>${cp.tingkat || ''}</td>
+                            <td>${cp.fase || ''}</td>
+                            <td>${cp.semester || ''}</td>
+                            <td>${cp.tp || ''}</td>
+                            <td>${cp.status || 'Aktif'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalCPTP('edit', ${cp.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteCPTP(${cp.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading CPTP:', error);
+        }
+    },
     renderDataKelas: async () => { console.log('renderDataKelas called'); },
     loadKokurikuler: async () => { console.log('loadKokurikuler called'); },
     loadTemaEkskul: async () => { console.log('loadTemaEkskul called'); },
@@ -2299,7 +2329,55 @@ const app = {
             }
         }
     },
-    modalCPTP: (action) => { console.log(`modalCPTP called with ${action}`); },
+    modalCPTP: async (action, id = null) => {
+        try {
+            const modal = document.getElementById('modalCPTP');
+            const form = document.getElementById('form-cptp');
+
+            // Load mapel options for dropdown
+            await db.init();
+            const mapel = await db.get('mapel');
+            const mapelSelect = document.getElementById('c_mapel');
+            mapelSelect.innerHTML = '<option value="">-- Pilih Mapel --</option>';
+
+            if (Array.isArray(mapel)) {
+                mapel.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.nama || '';
+                    option.textContent = m.nama || '';
+                    mapelSelect.appendChild(option);
+                });
+            }
+
+            if (action === 'add') {
+                document.getElementById('c_id').value = '';
+                document.getElementById('c_mapel').value = '';
+                document.getElementById('c_tingkat').value = '1';
+                document.getElementById('c_fase').value = 'A';
+                document.getElementById('c_semester').value = '1';
+                document.getElementById('c_tp').value = '';
+                document.getElementById('c_status').value = 'Aktif';
+            } else if (action === 'edit' && id) {
+                // Load existing data
+                const cptp = await db.get('cptp', id);
+                if (cptp) {
+                    document.getElementById('c_id').value = cptp.id || '';
+                    document.getElementById('c_mapel').value = cptp.mapel || '';
+                    document.getElementById('c_tingkat').value = cptp.tingkat || '1';
+                    document.getElementById('c_fase').value = cptp.fase || 'A';
+                    document.getElementById('c_semester').value = cptp.semester || '1';
+                    document.getElementById('c_tp').value = cptp.tp || '';
+                    document.getElementById('c_status').value = cptp.status || 'Aktif';
+                }
+            }
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        } catch (error) {
+            console.error('Error opening modal CPTP:', error);
+            app.showAlert('Gagal membuka modal', 'danger');
+        }
+    },
     saveCPTP: async () => { console.log('saveCPTP called'); },
     modalKokurikuler: (action) => { console.log(`modalKokurikuler called with ${action}`); },
     saveKokurikuler: async () => { console.log('saveKokurikuler called'); },
