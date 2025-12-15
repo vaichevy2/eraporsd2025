@@ -1513,7 +1513,33 @@ const app = {
     },
     renderDataKelas: async () => { console.log('renderDataKelas called'); },
     loadKokurikuler: async () => { console.log('loadKokurikuler called'); },
-    loadTemaEkskul: async () => { console.log('loadTemaEkskul called'); },
+    loadTemaEkskul: async () => {
+        try {
+            await db.init();
+            const temaEkskul = await db.get('tema_ekskul');
+            const tbody = document.getElementById('tbody-tema-kegiatan');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(temaEkskul)) {
+                temaEkskul.forEach((tema, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${tema.nama || ''}</td>
+                            <td>${tema.deskripsi || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalTemaEkskul('edit', ${tema.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteTemaEkskul(${tema.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading tema ekskul:', error);
+        }
+    },
     loadEkskul: async () => { console.log('loadEkskul called'); },
     loadNilai: async () => { console.log('loadNilai called'); },
     loadRekap: async () => { console.log('loadRekap called'); },
@@ -2380,11 +2406,6 @@ const app = {
     },
     saveCPTP: async () => {
         try {
-            app.showLoading('Menyimpan data TP...');
-
-            // Add a small delay to ensure loading animation is visible
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             const id = document.getElementById('c_id').value;
             const mapel = document.getElementById('c_mapel').value;
             const tingkat = document.getElementById('c_tingkat').value;
@@ -2431,11 +2452,6 @@ const app = {
         } catch (error) {
             console.error('Error saving CPTP:', error);
             app.showAlert('Gagal menyimpan data TP', 'danger');
-        } finally {
-            // Add another small delay before hiding loading to ensure success message is visible
-            setTimeout(() => {
-                app.hideLoading();
-            }, 1000);
         }
     },
 
@@ -2454,8 +2470,81 @@ const app = {
     },
     modalKokurikuler: (action) => { console.log(`modalKokurikuler called with ${action}`); },
     saveKokurikuler: async () => { console.log('saveKokurikuler called'); },
-    modalTemaEkskul: (action) => { console.log(`modalTemaEkskul called with ${action}`); },
-    saveTemaEkskul: async () => { console.log('saveTemaEkskul called'); },
+    modalTemaEkskul: async (action, id = null) => {
+        const modal = document.getElementById('modalTemaEkskul');
+        const form = document.getElementById('form-tema-ekskul');
+
+        if (action === 'add') {
+            document.getElementById('te_id').value = '';
+            document.getElementById('te_nama').value = '';
+            document.getElementById('te_deskripsi').value = '';
+            document.getElementById('tbody-tema-kegiatan').innerHTML = '';
+        } else if (action === 'edit' && id) {
+            // Load existing data for editing
+            try {
+                await db.init();
+                const tema = await db.get('tema_ekskul', id);
+                if (tema) {
+                    document.getElementById('te_id').value = tema.id || '';
+                    document.getElementById('te_nama').value = tema.nama || '';
+                    document.getElementById('te_deskripsi').value = tema.deskripsi || '';
+                }
+            } catch (error) {
+                console.error('Error loading tema ekskul for edit:', error);
+                app.showAlert('Gagal memuat data tema untuk edit', 'danger');
+                return;
+            }
+        }
+
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    },
+    saveTemaEkskul: async () => {
+        try {
+            const id = document.getElementById('te_id').value;
+            const nama = document.getElementById('te_nama').value.trim();
+            const deskripsi = document.getElementById('te_deskripsi').value.trim();
+
+            // Validate required fields
+            if (!nama) {
+                app.showAlert('Nama tema harus diisi', 'warning');
+                return;
+            }
+
+            const data = {
+                nama,
+                deskripsi
+            };
+
+            if (id) {
+                data.id = parseInt(id);
+            }
+
+            await db.saveTo('tema_ekskul', data);
+            app.showAlert('Tema kokurikuler berhasil disimpan', 'success');
+            app.loadTemaEkskul();
+            bootstrap.Modal.getInstance(document.getElementById('modalTemaEkskul')).hide();
+        } catch (error) {
+            console.error('Error saving tema ekskul:', error);
+            app.showAlert('Gagal menyimpan tema kokurikuler', 'danger');
+        } finally {
+            app.hideLoading();
+        }
+    },
+
+    deleteTemaEkskul: async (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus tema kokurikuler ini?')) {
+            try {
+                await db.init();
+                await db.delete('tema_ekskul', id);
+                app.showAlert('Tema kokurikuler berhasil dihapus', 'success');
+                app.loadTemaEkskul();
+            } catch (error) {
+                console.error('Error deleting tema ekskul:', error);
+                app.showAlert('Gagal menghapus tema kokurikuler', 'danger');
+            }
+        }
+    },
     modalJenisEkskul: (action) => { console.log(`modalJenisEkskul called with ${action}`); },
     saveJenisEkskul: async () => { console.log('saveJenisEkskul called'); },
     modalAssignEkskul: () => { console.log('modalAssignEkskul called'); },
