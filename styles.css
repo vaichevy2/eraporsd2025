@@ -236,6 +236,22 @@ body {
 }
 
 /* --- SIDEBAR CONTENTS --- */
+.sidebar-resize-handle {
+    max-width: 500px;
+    cursor: ew-resize;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s;
+}
+
+.sidebar-resize-handle:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
 #sidebar-wrapper:hover {
     cursor: pointer;
 }

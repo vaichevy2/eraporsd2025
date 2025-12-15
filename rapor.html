@@ -1195,6 +1195,14 @@
                     }
                 }
 
+                // Hide data utility rapor menu for non-admin users
+                if (user.level !== 'Admin' && user.level !== 'Super Admin') {
+                    const dataUtilityMenu = document.querySelector('[onclick="app.nav(\'utility\')"]');
+                    if (dataUtilityMenu) {
+                        dataUtilityMenu.style.display = 'none';
+                    }
+                }
+
                 // Hide data sekolah menu for non-admin users
                 if (user.level !== 'Admin' && user.level !== 'Super Admin') {
                     const dataSekolahMenu = document.querySelector('[onclick="app.nav(\'sekolah\')"]');
