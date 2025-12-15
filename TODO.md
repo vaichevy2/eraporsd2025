@@ -1,10 +1,7 @@
-# TODO: Implement Access Control for "Data Identitas Sekolah"
+# TODO: Add Automatic Icons to Kokurikuler Sidebar Menu Items
 
 ## Tasks
-- [ ] Update app.js: Add 'sekolah' to restricted pages in app.nav function
-- [ ] Update rapor.html: Add menu hiding logic for sekolah menu item
-- [ ] Test access control for Admin and Super Admin users
-- [ ] Verify menu is hidden for non-admin users
-
-## Status
-In Progress
+- [x] Add icon to "Daftar Tema" menu item (<i class="fas fa-list"></i>)
+- [ ] Add icon to "Kegiatan Kokurikuler" menu item (<i class="fas fa-calendar-check"></i>)
+- [x] Add icon to "Kelompok Kokurikuler" menu item (<i class="fas fa-users"></i>)
+- [x] Verify icons display correctly in the sidebar

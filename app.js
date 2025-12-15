@@ -2900,7 +2900,73 @@ const app = {
             app.exportData('guru');
         }
     },
-    previewRaporPDF: () => { console.log('previewRaporPDF called'); },
+    previewRaporPDF: async () => {
+        try {
+            app.showLoading('Membuat preview rapor PDF...');
+
+            // Initialize database
+            await db.init();
+
+            // Fetch all necessary data
+            const sekolah = await db.get('sekolah', 1);
+            const utility = await db.get('utility', 1);
+            const dimensi = await db.get('dimensi', 1);
+            const kaih = await db.get('kaih', 1);
+
+            // Get all students for selection
+            const students = await db.get('students');
+            if (!Array.isArray(students) || students.length === 0) {
+                app.showAlert('Tidak ada data siswa untuk membuat rapor', 'warning');
+                return;
+            }
+
+            // For demo purposes, use the first student. In production, you might want to select a specific student
+            const selectedStudent = students[0];
+
+            // Fetch student-specific data
+            const nilai = await db.get('nilai');
+            const ekskul = await db.get('student_ekskul');
+            const kokurikuler = await db.get('siswa_kelompok_kokurikuler');
+
+            // Filter data for selected student
+            const studentNilai = Array.isArray(nilai) ? nilai.filter(n => n.student_id == selectedStudent.id) : [];
+            const studentEkskul = Array.isArray(ekskul) ? ekskul.filter(e => e.student_id == selectedStudent.id) : [];
+            const studentKokurikuler = Array.isArray(kokurikuler) ? kokurikuler.filter(k => k.student_id == selectedStudent.id) : [];
+
+            // Generate PDF
+            const pdfBytes = await app.generateRaporPDF({
+                sekolah,
+                utility,
+                student: selectedStudent,
+                nilai: studentNilai,
+                ekskul: studentEkskul,
+                kokurikuler: studentKokurikuler,
+                dimensi,
+                kaih
+            });
+
+            // Create blob URL for preview
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+
+            // Show preview modal
+            const modal = document.getElementById('modalPreviewPdf');
+            const iframe = document.getElementById('pdfPreviewFrame');
+            const downloadBtn = document.getElementById('btnDownloadFinal');
+
+            iframe.src = url;
+            downloadBtn.onclick = () => app.downloadRaporPDF(pdfBytes, selectedStudent);
+
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+        } catch (error) {
+            console.error('Error generating PDF preview:', error);
+            app.showAlert('Gagal membuat preview rapor PDF', 'danger');
+        } finally {
+            app.hideLoading();
+        }
+    },
     modalResetPass: (id, type) => {
         // Set hidden fields
         document.getElementById('rp_id').value = id;
