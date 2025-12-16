@@ -1162,7 +1162,11 @@ const app = {
     },
 
     modalSyncUsers: () => {
-        app.syncUsers();
+        const modal = document.getElementById('modalSyncUsers');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
     },
 
     syncUsers: async () => {
@@ -1196,7 +1200,14 @@ const app = {
             }
 
             app.showAlert('Sinkronisasi pengguna berhasil', 'success');
-            app.loadAdminUsers();
+
+            // Check which tab content is currently active and reload the appropriate data
+            const guruContent = document.getElementById('guru-content');
+            if (guruContent && guruContent.classList.contains('active')) {
+                app.loadGuruUsers();
+            } else {
+                app.loadAdminUsers();
+            }
         } catch (error) {
             console.error('Error syncing users:', error);
             app.showAlert('Gagal melakukan sinkronisasi', 'danger');

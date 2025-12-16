@@ -1,20 +1,19 @@
-# TODO: Perbaiki Animasi Loading "Menyimpan Data TP"
+# TODO - Fix Sync Users Issue
 
-## Task Description
-Fix the loading animation for saving TP (Tujuan Pembelajaran) data.
+## Issue Description
+When clicking "sinkronisasi pengguna" button in the "guru" table in the "data pengguna" page, it shows "sinkronisasi pengguna berhasil" but the page doesn't display data.
 
-## Analysis
-- The loading modal was using Bootstrap's `spinner-border` which may not display properly.
-- The CSS already defines a custom `.loading-spinner` with multiple `.spinner-ring` elements for a layered spinning effect.
-- The `saveCPTP` function in app.js calls `app.showLoading('Menyimpan data TP...')` to display the loading animation.
+## Root Cause
+The `syncUsers()` function was only calling `app.loadAdminUsers()` after synchronization, regardless of which tab (Admin or Guru) was active.
 
-## Changes Made
-- [x] Updated `modalLoading` in rapor.html to use the custom `.loading-spinner` instead of Bootstrap's `spinner-border`.
-- [x] The custom spinner consists of 4 concentric rings with different animation delays for a smooth layered effect.
+## Solution Implemented
+Modified the `syncUsers()` function to check which tab is currently active and reload the appropriate data:
+- If Guru tab is active: call `app.loadGuruUsers()`
+- If Admin tab is active: call `app.loadAdminUsers()`
+
+## Files Modified
+- `app.js`: Updated `syncUsers()` function to conditionally reload data based on active tab
 
 ## Testing
-- The loading animation should now display properly when saving TP data.
-- The animation uses CSS keyframes for smooth rotation with staggered delays.
-
-## Status
-✅ **COMPLETED** - Loading animation fixed and should now display correctly.
+- Click "sinkronisasi pengguna" in Guru tab → should now refresh Guru table
+- Click "sinkronisasi pengguna" in Admin tab → should refresh Admin table
