@@ -796,10 +796,14 @@ const app = {
 
             if (Array.isArray(admins)) {
                 const guruUsers = admins.filter(admin => admin.level === 'Guru');
-                guruUsers.forEach((guru, index) => {
+                const startIndex = (appState.guru.currentPage - 1) * appState.guru.rowsPerPage;
+                const endIndex = startIndex + appState.guru.rowsPerPage;
+                const paginatedGuruUsers = guruUsers.slice(startIndex, endIndex);
+
+                paginatedGuruUsers.forEach((guru, index) => {
                     const row = `
                         <tr>
-                            <td>${index + 1}</td>
+                            <td>${startIndex + index + 1}</td>
                             <td>${guru.username || ''}</td>
                             <td>${guru.nama_pengguna || ''}</td>
                             <td>${guru.email || ''}</td>
@@ -815,6 +819,9 @@ const app = {
                     `;
                     tbody.innerHTML += row;
                 });
+
+                // Render pagination
+                app.renderPagination('guru', guruUsers.length);
             }
         } catch (error) {
             console.error('Error loading guru users:', error);
@@ -2073,6 +2080,9 @@ const app = {
         if (type === 'guru' && appState.guru.currentPage > 1) {
             appState.guru.currentPage--;
             app.loadGuru();
+        } else if (type === 'guru_users' && appState.guru.currentPage > 1) {
+            appState.guru.currentPage--;
+            app.loadGuruUsers();
         } else if (type === 'siswa' && appState.siswa.currentPage > 1) {
             appState.siswa.currentPage--;
             app.loadSiswa();
@@ -2085,6 +2095,9 @@ const app = {
         if (type === 'guru') {
             appState.guru.currentPage++;
             app.loadGuru();
+        } else if (type === 'guru_users') {
+            appState.guru.currentPage++;
+            app.loadGuruUsers();
         } else if (type === 'siswa') {
             appState.siswa.currentPage++;
             app.loadSiswa();

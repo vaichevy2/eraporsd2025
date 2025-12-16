@@ -180,6 +180,12 @@
                                         <tbody id="tbody-user-admin"></tbody>
                                     </table>
                                 </div>
+                                <!-- PAGINATION CONTROLS FOR ADMIN -->
+                                <div id="admin-pagination" class="pagination-container" style="display:none;">
+                                    <button class="btn btn-sm btn-secondary" onclick="app.prevPage('admin')">Sebelumnya</button>
+                                    <span id="admin-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.nextPage('admin')">Selanjutnya</button>
+                                </div>
                             </div>
                             <!-- Tab Guru -->
                             <div class="tab-pane fade" id="guru-content" role="tabpanel">
@@ -194,6 +200,12 @@
                                         <thead class="table-dark"><tr><th>No</th><th>Username</th><th>Nama Pengguna</th><th>Email</th><th>Level</th><th>Status Aktif</th><th>Login Terakhir</th><th>Status Online</th><th>Opsi</th></tr></thead>
                                         <tbody id="tbody-user-guru"></tbody>
                                     </table>
+                                </div>
+                                <!-- PAGINATION CONTROLS FOR GURU -->
+                                <div id="guru-pagination" class="pagination-container" style="display:none;">
+                                    <button class="btn btn-sm btn-secondary" onclick="app.prevPage('guru_users')">Sebelumnya</button>
+                                    <span id="guru-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
+                                    <button class="btn btn-sm btn-secondary" onclick="app.nextPage('guru_users')">Selanjutnya</button>
                                 </div>
                             </div>
                         </div>
