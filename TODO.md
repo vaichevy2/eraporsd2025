@@ -1,12 +1,10 @@
-# TODO: Add Halaman Kelompok Kokurikuler
+# TODO: Implement Access Control for "Data Identitas Sekolah"
 
-## Steps to Complete
-- [ ] Update sidebar link for "Kelompok Kokurikuler" to navigate to 'kelompok_kokurikuler'
-- [ ] Add new IndexedDB stores: 'kelompok_kokurikuler' and 'siswa_kelompok_kokurikuler' in db.init
-- [ ] Increment DB_VERSION to 7
-- [ ] Add new page section div id="kelompok_kokurikuler" with tables for data kelompok and siswa kelompok
-- [ ] Add JS functions: modalKelompokKokurikuler, saveKelompokKokurikuler, loadKelompokKokurikuler, editKelompokKokurikuler, modalAssignKelompokKokurikuler, saveAssignKelompokKokurikuler, renderSiswaKelompokKokurikuler, editAssignKelompokKokurikuler
-- [ ] Add subscriptions for the new stores in db.init
-- [ ] Update nav function to load kelompok_kokurikuler data
-- [ ] Add modals for kelompok kokurikuler and assign siswa
-- [ ] Test navigation and CRUD operations
+## Tasks
+- [ ] Update app.js: Add 'sekolah' to restricted pages in app.nav function
+- [ ] Update rapor.html: Add menu hiding logic for sekolah menu item
+- [ ] Test access control for Admin and Super Admin users
+- [ ] Verify menu is hidden for non-admin users
+
+## Status
+In Progress

@@ -1,3 +1,85 @@
+/* --- LOADING OVERLAY --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.loading-content {
+    text-align: center;
+    color: white;
+    max-width: 400px;
+    padding: 40px;
+}
+
+.loading-spinner {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 30px;
+}
+
+.spinner-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite;
+}
+
+.spinner-ring:nth-child(2) {
+    animation-delay: 0.2s;
+    width: 60px;
+    height: 60px;
+    top: 10px;
+    left: 10px;
+}
+
+.spinner-ring:nth-child(3) {
+    animation-delay: 0.4s;
+    width: 40px;
+    height: 40px;
+    top: 20px;
+    left: 20px;
+}
+
+.spinner-ring:nth-child(4) {
+    animation-delay: 0.6s;
+    width: 20px;
+    height: 20px;
+    top: 30px;
+    left: 30px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.loading-subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
 /* --- CSS UTAMA --- */
 body {
     font-family: 'Arial', sans-serif;
@@ -67,11 +149,55 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+.user-profile-section {
+    display: flex;
+    align-items: center;
+}
+
+/* --- FIXED HEADER --- */
+.fixed-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: transparent;
+    z-index: 1000;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 20px;
+}
+
+.header-profile {
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.username, .user-level {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    font-weight: bold;
+    display: block;
+}
+
 /* --- LAYOUT & SIDEBAR RESPONSIVE --- */
 #wrapper {
     display: none; /* Default hidden, shown after login */
     width: 100%;
     align-items: stretch;
+    padding-top: 60px; /* Space for fixed header */
+}
+
+/* Hide header title */
+.header-title {
+    display: none;
 }
 
 #sidebar-wrapper {
@@ -99,33 +225,68 @@ body {
 }
 
 /* --- TOGGLE LOGIC (MOBILE FIRST) --- */
-#wrapper.toggled #sidebar-wrapper { left: 0; }
+#wrapper.toggle #sidebar-wrapper { left: 0; }
+#wrapper.toggle #page-content-wrapper { padding-left: 280px; }
 
 @media (min-width: 768px) {
     #sidebar-wrapper { left: 0; }
     #page-content-wrapper { padding-left: 280px; }
-    #wrapper.toggled #sidebar-wrapper { left: -280px; }
-    #wrapper.toggled #page-content-wrapper { padding-left: 0; }
+    #wrapper.toggle #sidebar-wrapper { left: -280px; }
+    #wrapper.toggle #page-content-wrapper { padding-left: 0; }
 }
 
 /* --- SIDEBAR CONTENTS --- */
+.sidebar-resize-handle {
+    max-width: 500px;
+    cursor: ew-resize;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s;
+}
+
+.sidebar-resize-handle:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+#sidebar-wrapper:hover {
+    cursor: pointer;
+}
+
 #sidebar-wrapper .sidebar-heading {
     padding: 1.5rem;
     font-size: 1.2rem;
-    text-align: center;
     border-bottom: 1px solid #444;
     background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sidebar-text {
+    flex: 1;
+    text-align: left;
 }
 
 #sidebar-wrapper h1 {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
     color: #fff;
 }
 
 #sidebar-wrapper h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #aaa;
     font-style: italic;
     margin: 0;
@@ -214,16 +375,45 @@ body {
 
 #menu-toggle {
     position: fixed;
-    top: 15px;
-    left: 15px;
+    top: 60px; /* Below the fixed header */
+    left: 280px; /* Position next to sidebar when expanded */
     z-index: 1001;
-    background: #333;
+    background: #1a1a2e; /* Match sidebar background */
     color: white;
     border: none;
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+    display: block; /* Ensure it's always visible */
+}
+
+/* Toggle button position when sidebar is collapsed */
+#wrapper.toggle #menu-toggle {
+    left: 5px; /* Move to left edge when sidebar is hidden */
+}
+
+/* Position relative to sidebar on mobile */
+@media (max-width: 767px) {
+    #menu-toggle {
+        left: 280px; /* Next to sidebar on mobile when expanded */
+    }
+
+    #wrapper.toggle #menu-toggle {
+        left: 5px; /* Move to left edge on mobile when collapsed */
+    }
+}
+
+/* Position relative to sidebar on desktop */
+@media (min-width: 768px) {
+    #menu-toggle {
+        left: 280px; /* Next to sidebar on desktop when expanded */
+    }
+
+    #wrapper.toggle #menu-toggle {
+        left: 5px; /* Move to left edge on desktop when collapsed */
+    }
 }
 
 .page-section {
@@ -235,6 +425,8 @@ body {
 .page-section.active {
     display: block;
     animation: fadeIn 0.5s;
+    position: relative;
+    z-index: 1002;
 }
 
 .pagination-container {
@@ -278,4 +470,81 @@ body {
 
 #kokurikuler-icon.move-down {
     transform: translateY(20px);
+}
+
+/* Profile Picture Responsive Size */
+.profile-picture {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 4/6;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    .profile-picture {
+        max-width: 150px;
+    }
+}
+
+/* Header Profile Picture */
+.header-profile-picture {
+    width: 60px;
+    height: 60px; /* Square aspect ratio */
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Remove border from logout button */
+button[onclick="app.showLogoutModal()"] {
+    border: none !important;
+}
+
+@media (max-width: 768px) {
+    .header-profile-picture {
+        width: 50px;
+        height: 50px; /* Maintain square aspect ratio */
+    }
+}
+
+/* Sidebar Profile Picture */
+.sidebar-profile-picture {
+    width: 50px;
+    height: 75px; /* 2:3 aspect ratio (50 * 1.5 = 75) */
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: border-color 0.3s ease;
+}
+
+.sidebar-profile-picture:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Responsive sidebar header content */
+@media (max-width: 768px) {
+    .sidebar-header-content {
+        padding: 10px 15px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sidebar-header-left {
+        justify-content: center;
+    }
+
+    .sidebar-header-right {
+        justify-content: center;
+    }
+
+    .sidebar-app-title h5 {
+        font-size: 1rem;
+    }
+
+    .sidebar-profile-picture {
+        width: 40px;
+        height: 60px; /* Maintain 2:3 aspect ratio */
+    }
 }
