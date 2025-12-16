@@ -1171,14 +1171,38 @@ const app = {
 
     syncUsers: async () => {
         try {
+            app.showLoading('Memulai sinkronisasi pengguna...');
             await db.init();
             const admins = await db.get('admins');
 
-            // Load teacher data from SQLite database (teachers.sqlite)
-            const teachersFromSQLite = getSQLiteData('teachers.sqlite', 'teachers');
+            let teachersFromSQLite = null;
+
+            // Try PHP endpoint first
+            try {
+                app.showLoading('Mengambil data guru dari server...');
+                const response = await fetch('get_teachers.php');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                teachersFromSQLite = await response.json();
+                console.log('Teacher data fetched from PHP endpoint:', teachersFromSQLite);
+            } catch (phpError) {
+                console.warn('PHP endpoint failed, trying direct SQLite access:', phpError);
+
+                // Fallback: Try direct SQLite access
+                try {
+                    app.showLoading('Mengakses database SQLite langsung...');
+                    teachersFromSQLite = getSQLiteData('teachers.sqlite', 'teachers');
+                    console.log('Teacher data fetched from direct SQLite access:', teachersFromSQLite);
+                } catch (sqliteError) {
+                    console.error('Direct SQLite access also failed:', sqliteError);
+                    throw new Error('Tidak dapat mengakses data guru. Pastikan file teachers.sqlite tersedia.');
+                }
+            }
 
             // Sync admin names
             if (Array.isArray(admins)) {
+                app.showLoading('Menyinkronkan nama admin...');
                 for (const admin of admins) {
                     if (!admin.nama_pengguna && admin.username) {
                         admin.nama_pengguna = admin.username;
@@ -1188,7 +1212,9 @@ const app = {
             }
 
             // Sync teacher data from teachers.sqlite to admins table
+            let syncCount = 0;
             if (Array.isArray(teachersFromSQLite)) {
+                app.showLoading('Menyinkronkan data guru...');
                 for (const teacher of teachersFromSQLite) {
                     if (teacher.nama && teacher.nuptk) {
                         // Check if admin user already exists with this NUPTK
@@ -1200,6 +1226,7 @@ const app = {
                             existingAdmin.level = 'Guru';
                             existingAdmin.aktif = true;
                             await db.saveTo('admins', existingAdmin);
+                            console.log('Updated existing admin:', teacher.nama);
                         } else {
                             // Create new admin user for teacher
                             const newAdmin = {
@@ -1212,12 +1239,14 @@ const app = {
                                 password: teacher.nuptk // Use NUPTK as default password
                             };
                             await db.saveTo('admins', newAdmin);
+                            console.log('Created new admin for teacher:', teacher.nama);
                         }
+                        syncCount++;
                     }
                 }
             }
 
-            app.showAlert('Sinkronisasi pengguna berhasil', 'success');
+            app.showAlert(`Sinkronisasi berhasil! ${syncCount} data guru telah disinkronkan.`, 'success');
 
             // Check which tab content is currently active and reload the appropriate data
             const guruContent = document.getElementById('guru-content');
@@ -1228,7 +1257,9 @@ const app = {
             }
         } catch (error) {
             console.error('Error syncing users:', error);
-            app.showAlert('Gagal melakukan sinkronisasi', 'danger');
+            app.showAlert(`Gagal melakukan sinkronisasi: ${error.message}`, 'danger');
+        } finally {
+            app.hideLoading();
         }
     },
 
