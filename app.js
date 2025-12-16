@@ -1143,8 +1143,6 @@ const app = {
     // Modal functions
     modalSinkronisasiPengguna: async () => {
         try {
-            app.showLoading('Memuat data guru untuk sinkronisasi...');
-
             // Fetch all teachers from the teachers table
             await db.init();
             const teachers = await db.get('teachers');
@@ -1230,8 +1228,6 @@ const app = {
         } catch (error) {
             console.error('Error opening sync modal:', error);
             app.showAlert('Gagal membuka modal sinkronisasi', 'danger');
-        } finally {
-            app.hideLoading();
         }
     },
 
@@ -1378,10 +1374,23 @@ const app = {
         if (modal && loadingText) {
             loadingText.textContent = text;
             const bsModal = new bootstrap.Modal(modal, {
-                backdrop: 'static',
+                backdrop: false, // Remove default backdrop
                 keyboard: false
             });
             bsModal.show();
+
+            // Add fully transparent background overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'loading-overlay-transparent';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0)'; // 100% transparent
+            overlay.style.zIndex = '1040'; // Above content, below modal
+            overlay.style.pointerEvents = 'none'; // Allow interaction if needed
+            document.body.appendChild(overlay);
         }
     },
 
@@ -1392,6 +1401,12 @@ const app = {
             if (bsModal) {
                 bsModal.hide();
             }
+        }
+
+        // Remove transparent overlay
+        const overlay = document.getElementById('loading-overlay-transparent');
+        if (overlay) {
+            document.body.removeChild(overlay);
         }
     },
 

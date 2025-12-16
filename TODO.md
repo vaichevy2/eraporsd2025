@@ -1,11 +1,12 @@
-# TODO: Remove "Sinkronisasi Pengguna" Button and Related Components
+# TODO List
 
-## Tasks Completed:
-- [x] Remove the "Sinkronisasi Pengguna" button from rapor.html
-- [x] Remove the modalSyncUsers modal from rapor.html
-- [x] Remove modalSyncUsers() and syncUsers() functions from app.js
-- [x] Delete get_teachers.php file
-- [x] Update TODO.md to reflect completion
+## Completed Tasks
+- [x] Add loading animation to "sinkronisasi" button in "sinkronisasi pengguna guru" popup
+  - [x] Show loading animation when synchronization starts
+  - [x] Use 100% transparent background as specified
+  - [x] Hide loading animation when synchronization completes successfully
+  - [x] Animation appears at guru tab data pengguna menu and page
 
-## Status:
-- [x] All synchronization functionality successfully removed
+## Pending Tasks
+- [ ] Test the loading animation functionality
+- [ ] Verify transparent background works as expected
