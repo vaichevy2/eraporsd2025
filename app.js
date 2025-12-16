@@ -1141,6 +1141,172 @@ const app = {
     },
 
     // Modal functions
+    modalSinkronisasiPengguna: async () => {
+        try {
+            app.showLoading('Memuat data guru untuk sinkronisasi...');
+
+            // Fetch all teachers from the teachers table
+            await db.init();
+            const teachers = await db.get('teachers');
+
+            if (!Array.isArray(teachers) || teachers.length === 0) {
+                app.showAlert('Tidak ada data guru untuk disinkronisasi', 'warning');
+                return;
+            }
+
+            // Show confirmation modal with teacher count
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'modalSinkronisasiPengguna';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Sinkronisasi Pengguna Guru</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Ditemukan <strong>${teachers.length}</strong> data guru yang akan disinkronisasi.</p>
+                            <p>Data guru akan digunakan untuk membuat atau memperbarui akun pengguna dengan:</p>
+                            <ul>
+                                <li>Username: NUPTK guru</li>
+                                <li>Password default: NUPTK guru</li>
+                                <li>Level: Guru</li>
+                            </ul>
+                            <div class="alert alert-warning">
+                                <strong>Perhatian:</strong> Akun yang sudah ada akan diperbarui, akun baru akan dibuat.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>NUPTK</th>
+                                            <th>Nama Guru</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-sync-preview">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-primary" onclick="app.confirmSinkronisasiPengguna()">Sinkronisasi</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+            // Populate preview table
+            const tbody = document.getElementById('tbody-sync-preview');
+            const admins = await db.get('admins');
+
+            teachers.forEach((teacher, index) => {
+                const existingUser = Array.isArray(admins) ? admins.find(admin => admin.username === teacher.nuptk) : null;
+                const status = existingUser ? 'Akan diperbarui' : 'Akan dibuat baru';
+
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${teacher.nuptk || '-'}</td>
+                        <td>${teacher.nama || '-'}</td>
+                        <td><span class="badge bg-${existingUser ? 'warning' : 'success'}">${status}</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            // Clean up modal when hidden
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+
+        } catch (error) {
+            console.error('Error opening sync modal:', error);
+            app.showAlert('Gagal membuka modal sinkronisasi', 'danger');
+        } finally {
+            app.hideLoading();
+        }
+    },
+
+    confirmSinkronisasiPengguna: async () => {
+        try {
+            // Fetch teachers data
+            const teachers = await db.get('teachers');
+            const admins = await db.get('admins') || [];
+
+            if (!Array.isArray(teachers)) {
+                app.showAlert('Tidak ada data guru untuk disinkronisasi', 'warning');
+                return;
+            }
+
+            let created = 0;
+            let updated = 0;
+
+            // Process each teacher
+            for (const teacher of teachers) {
+                if (!teacher.nuptk) {
+                    console.warn('Teacher without NUPTK skipped:', teacher);
+                    continue;
+                }
+
+                // Check if admin user already exists
+                const existingUser = admins.find(admin => admin.username === teacher.nuptk);
+
+                const userData = {
+                    username: teacher.nuptk,
+                    nama_pengguna: teacher.nama || teacher.nuptk,
+                    level: 'Guru',
+                    aktif: true,
+                    last_login: existingUser?.last_login || null,
+                    online: false
+                };
+
+                if (existingUser) {
+                    // Update existing user
+                    userData.id = existingUser.id;
+                    userData.password = existingUser.password; // Keep existing password
+                    await db.saveTo('admins', userData);
+                    updated++;
+                } else {
+                    // Create new user with default password
+                    userData.password = teacher.nuptk; // Use NUPTK as default password
+                    await db.saveTo('admins', userData);
+                    created++;
+                }
+            }
+
+            // Close modal
+            const modal = document.getElementById('modalSinkronisasiPengguna');
+            if (modal) {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+            }
+
+            // Show success message
+            let message = `Sinkronisasi berhasil! `;
+            if (created > 0) message += `${created} akun baru dibuat. `;
+            if (updated > 0) message += `${updated} akun diperbarui.`;
+
+            app.showAlert(message, 'success');
+
+            // Refresh guru users table
+            app.loadGuruUsers();
+
+        } catch (error) {
+            console.error('Error during synchronization:', error);
+            app.showAlert('Gagal melakukan sinkronisasi pengguna', 'danger');
+        }
+    },
+
     modalDeleteAllUsers: () => {
         if (confirm('Apakah Anda yakin ingin menghapus semua pengguna? Tindakan ini tidak dapat dibatalkan.')) {
             app.confirmDeleteUsers();
