@@ -1173,7 +1173,9 @@ const app = {
         try {
             await db.init();
             const admins = await db.get('admins');
-            const teachers = await db.get('teachers');
+
+            // Load teacher data from SQLite database (teachers.sqlite)
+            const teachersFromSQLite = getSQLiteData('teachers.sqlite', 'teachers');
 
             // Sync admin names
             if (Array.isArray(admins)) {
@@ -1185,15 +1187,31 @@ const app = {
                 }
             }
 
-            // Sync teacher names from teachers table
-            if (Array.isArray(teachers)) {
-                for (const teacher of teachers) {
+            // Sync teacher data from teachers.sqlite to admins table
+            if (Array.isArray(teachersFromSQLite)) {
+                for (const teacher of teachersFromSQLite) {
                     if (teacher.nama && teacher.nuptk) {
-                        // Update any admin entries that match
-                        const matchingAdmin = admins.find(a => a.username === teacher.nuptk);
-                        if (matchingAdmin && !matchingAdmin.nama_pengguna) {
-                            matchingAdmin.nama_pengguna = teacher.nama;
-                            await db.saveTo('admins', matchingAdmin);
+                        // Check if admin user already exists with this NUPTK
+                        const existingAdmin = admins.find(a => a.username === teacher.nuptk);
+
+                        if (existingAdmin) {
+                            // Update existing admin with teacher data
+                            existingAdmin.nama_pengguna = teacher.nama;
+                            existingAdmin.level = 'Guru';
+                            existingAdmin.aktif = true;
+                            await db.saveTo('admins', existingAdmin);
+                        } else {
+                            // Create new admin user for teacher
+                            const newAdmin = {
+                                username: teacher.nuptk,
+                                nama_pengguna: teacher.nama,
+                                level: 'Guru',
+                                aktif: true,
+                                last_login: null,
+                                online: false,
+                                password: teacher.nuptk // Use NUPTK as default password
+                            };
+                            await db.saveTo('admins', newAdmin);
                         }
                     }
                 }
@@ -1214,44 +1232,7 @@ const app = {
         }
     },
 
-    modalSyncTeachers: () => {
-        const modal = document.getElementById('modalSyncTeachers');
-        if (modal) {
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
-        }
-    },
 
-    syncTeachers: async () => {
-        try {
-            await db.init();
-
-            // Load teachers from SQLite file
-            const sqliteTeachers = getSQLiteData('teachers.sqlite', 'teachers');
-            if (!sqliteTeachers || sqliteTeachers.length === 0) {
-                console.warn('No teachers found in SQLite file');
-                app.showAlert('File SQLite kosong. Silakan import data guru terlebih dahulu melalui tombol "Import" di halaman Data Guru.', 'warning');
-                return;
-            }
-
-            // Clear existing teachers in IndexedDB
-            await db.clear('teachers');
-
-            // Save each teacher to IndexedDB
-            for (const teacher of sqliteTeachers) {
-                await db.saveTo('teachers', teacher);
-            }
-
-            console.log(`Synced ${sqliteTeachers.length} teachers from SQLite to IndexedDB`);
-            app.showAlert(`Sinkronisasi guru berhasil - ${sqliteTeachers.length} data guru disinkronkan`, 'success');
-
-            // Reload the guru table to show the synced data
-            app.loadGuru();
-        } catch (error) {
-            console.error('Error syncing teachers:', error);
-            app.showAlert('Gagal melakukan sinkronisasi guru', 'danger');
-        }
-    },
 
     // Preview image function
     previewImg: (input, previewId) => {
@@ -2117,6 +2098,60 @@ const app = {
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
     },
+    // Function to sync teacher data to admin users table
+    syncTeacherToAdmin: async (teacherData, action) => {
+        try {
+            // Check if teacher has NUPTK (required for login)
+            if (!teacherData.nuptk) {
+                console.log('Teacher does not have NUPTK, skipping user account creation');
+                return;
+            }
+
+            // Check if admin user already exists with this NUPTK
+            const existingAdmins = await db.get('admins');
+            let existingAdmin = null;
+
+            if (Array.isArray(existingAdmins)) {
+                existingAdmin = existingAdmins.find(admin => admin.username === teacherData.nuptk);
+            }
+
+            const adminData = {
+                username: teacherData.nuptk,
+                nama_pengguna: teacherData.nama,
+                level: 'Guru',
+                aktif: true,
+                last_login: null,
+                online: false
+            };
+
+            if (action === 'add') {
+                // Only create new admin account if it doesn't exist
+                if (!existingAdmin) {
+                    // Set default password for new teacher accounts
+                    adminData.password = teacherData.nuptk; // Use NUPTK as default password
+                    await db.saveTo('admins', adminData);
+                    console.log('Created new admin account for teacher:', teacherData.nama);
+                } else {
+                    console.log('Admin account already exists for teacher:', teacherData.nama);
+                }
+            } else if (action === 'update') {
+                // Update existing admin account or create if doesn't exist
+                if (existingAdmin) {
+                    existingAdmin.nama_pengguna = teacherData.nama;
+                    await db.saveTo('admins', existingAdmin);
+                    console.log('Updated admin account for teacher:', teacherData.nama);
+                } else {
+                    // Create new admin account for existing teacher
+                    adminData.password = teacherData.nuptk;
+                    await db.saveTo('admins', adminData);
+                    console.log('Created admin account for existing teacher:', teacherData.nama);
+                }
+            }
+        } catch (error) {
+            console.error('Error syncing teacher to admin:', error);
+        }
+    },
+
     saveGuru: async () => {
         try {
             app.showLoading('Menyimpan data guru...');
@@ -2140,6 +2175,10 @@ const app = {
             }
 
             await db.saveTo('teachers', data);
+
+            // Sync to admins table (data pengguna)
+            await app.syncTeacherToAdmin(data, id ? 'update' : 'add');
+
             app.showAlert('Guru berhasil disimpan', 'success');
             app.loadGuru();
             bootstrap.Modal.getInstance(document.getElementById('modalGuru')).hide();
@@ -3008,6 +3047,13 @@ const app = {
                     }
 
                     await db.saveTo('teachers', teacherData);
+
+                    // Save to SQLiteDB
+                    const sqliteSuccess = saveSQLiteData('teachers.sqlite', 'teachers', teacherData);
+                    if (!sqliteSuccess) {
+                        console.warn('Failed to save to SQLite, but IndexedDB save was successful');
+                    }
+
                     successCount++;
                 } catch (error) {
                     console.error('Error importing row:', error);

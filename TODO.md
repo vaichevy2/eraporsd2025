@@ -1,19 +1,15 @@
-# TODO - Fix Sync Users Issue
+# TODO: Implementasi Fungsi Ambil Data NUPTK dan Nama dari Tabel Data Guru
 
-## Issue Description
-When clicking "sinkronisasi pengguna" button in the "guru" table in the "data pengguna" page, it shows "sinkronisasi pengguna berhasil" but the page doesn't display data.
+## Tugas:
+Tambahkan fungsi ambil data "NUPTK" dan "nama" pada tabel "data guru" (teachers.sqlite) untuk diimplementasikan ke tabel header "username" dan "nama pengguna" pada tab "guru" menu halaman "data pengguna"
 
-## Root Cause
-The `syncUsers()` function was only calling `app.loadAdminUsers()` after synchronization, regardless of which tab (Admin or Guru) was active.
+## Langkah-langkah:
+1. [ ] Modifikasi fungsi syncUsers untuk mengambil data dari teachers.sqlite
+2. [ ] Update logika sinkronisasi untuk menggunakan NUPTK sebagai username dan nama sebagai nama_pengguna
+3. [ ] Test implementasi dengan memuat data dari teachers.sqlite
+4. [ ] Verifikasi bahwa data ditampilkan dengan benar di tab Guru
 
-## Solution Implemented
-Modified the `syncUsers()` function to check which tab is currently active and reload the appropriate data:
-- If Guru tab is active: call `app.loadGuruUsers()`
-- If Admin tab is active: call `app.loadAdminUsers()`
-
-## Files Modified
-- `app.js`: Updated `syncUsers()` function to conditionally reload data based on active tab
-
-## Testing
-- Click "sinkronisasi pengguna" in Guru tab → should now refresh Guru table
-- Click "sinkronisasi pengguna" in Admin tab → should refresh Admin table
+## Status:
+- [x] Analisis kode dan pemahaman tugas
+- [ ] Implementasi perubahan
+- [ ] Testing
