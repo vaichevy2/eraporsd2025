@@ -11,6 +11,10 @@ const appState = {
     guru: {
         currentPage: 1,
         rowsPerPage: 10
+    },
+    gurumapel: {
+        currentPage: 1,
+        rowsPerPage: 10
     }
 };
 
@@ -1375,10 +1379,14 @@ const app = {
             tbody.innerHTML = '';
 
             if (Array.isArray(gurumapel)) {
-                gurumapel.forEach((gm, index) => {
+                const startIndex = (appState.gurumapel.currentPage - 1) * appState.gurumapel.rowsPerPage;
+                const endIndex = startIndex + appState.gurumapel.rowsPerPage;
+                const paginatedGurumapel = gurumapel.slice(startIndex, endIndex);
+
+                paginatedGurumapel.forEach((gm, index) => {
                     const row = `
                         <tr>
-                            <td>${index + 1}</td>
+                            <td>${startIndex + index + 1}</td>
                             <td>${gm.nuptk || ''}</td>
                             <td>${gm.nama || ''}</td>
                             <td>${gm.jk || ''}</td>
@@ -1394,6 +1402,9 @@ const app = {
                     tbody.innerHTML += row;
                 });
             }
+
+            // Render pagination
+            app.renderPagination('gurumapel', gurumapel.length);
         } catch (error) {
             console.error('Error loading guru mapel:', error);
         }
@@ -1916,7 +1927,40 @@ const app = {
     },
 
 
-    renderPagination: (type, total) => { console.log(`renderPagination called for ${type} with ${total} items`); },
+    renderPagination: (type, total) => {
+        const paginationContainer = document.getElementById(`${type}-pagination`);
+        if (!paginationContainer) return;
+
+        const rowsPerPage = appState[type].rowsPerPage;
+        const currentPage = appState[type].currentPage;
+        const totalPages = Math.ceil(total / rowsPerPage);
+
+        if (total <= rowsPerPage) {
+            // Hide pagination if all data fits on one page
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        // Show pagination
+        paginationContainer.style.display = 'flex';
+
+        // Update page info
+        const pageInfo = document.getElementById(`${type}-page-info`);
+        if (pageInfo) {
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+        }
+
+        // Update button states
+        const prevBtn = paginationContainer.querySelector('button:first-child');
+        const nextBtn = paginationContainer.querySelector('button:last-child');
+
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+    },
     prevPage: (type) => {
         if (type === 'guru' && appState.guru.currentPage > 1) {
             appState.guru.currentPage--;
@@ -1924,6 +1968,9 @@ const app = {
         } else if (type === 'siswa' && appState.siswa.currentPage > 1) {
             appState.siswa.currentPage--;
             app.loadSiswa();
+        } else if (type === 'gurumapel' && appState.gurumapel.currentPage > 1) {
+            appState.gurumapel.currentPage--;
+            app.loadGuruMapel();
         }
     },
     nextPage: (type) => {
@@ -1933,6 +1980,9 @@ const app = {
         } else if (type === 'siswa') {
             appState.siswa.currentPage++;
             app.loadSiswa();
+        } else if (type === 'gurumapel') {
+            appState.gurumapel.currentPage++;
+            app.loadGuruMapel();
         }
     },
     modalSiswa: (action, id = null) => {
