@@ -1204,7 +1204,11 @@ const app = {
     },
 
     modalSyncTeachers: () => {
-        app.syncTeachers();
+        const modal = document.getElementById('modalSyncTeachers');
+        if (modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+        }
     },
 
     syncTeachers: async () => {
@@ -1215,7 +1219,7 @@ const app = {
             const sqliteTeachers = getSQLiteData('teachers.sqlite', 'teachers');
             if (!sqliteTeachers || sqliteTeachers.length === 0) {
                 console.warn('No teachers found in SQLite file');
-                app.showAlert('Tidak ada data guru di file SQLite', 'warning');
+                app.showAlert('File SQLite kosong. Silakan import data guru terlebih dahulu melalui tombol "Import" di halaman Data Guru.', 'warning');
                 return;
             }
 
