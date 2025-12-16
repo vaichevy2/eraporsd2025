@@ -1,15 +1,11 @@
-# TODO: Implementasi Fungsi Ambil Data NUPTK dan Nama dari Tabel Data Guru
+# TODO: Remove "Sinkronisasi Pengguna" Button and Related Components
 
-## Tugas:
-Tambahkan fungsi ambil data "NUPTK" dan "nama" pada tabel "data guru" (teachers.sqlite) untuk diimplementasikan ke tabel header "username" dan "nama pengguna" pada tab "guru" menu halaman "data pengguna"
-
-## Langkah-langkah:
-1. [ ] Modifikasi fungsi syncUsers untuk mengambil data dari teachers.sqlite
-2. [ ] Update logika sinkronisasi untuk menggunakan NUPTK sebagai username dan nama sebagai nama_pengguna
-3. [ ] Test implementasi dengan memuat data dari teachers.sqlite
-4. [ ] Verifikasi bahwa data ditampilkan dengan benar di tab Guru
+## Tasks Completed:
+- [x] Remove the "Sinkronisasi Pengguna" button from rapor.html
+- [x] Remove the modalSyncUsers modal from rapor.html
+- [x] Remove modalSyncUsers() and syncUsers() functions from app.js
+- [x] Delete get_teachers.php file
+- [x] Update TODO.md to reflect completion
 
 ## Status:
-- [x] Analisis kode dan pemahaman tugas
-- [ ] Implementasi perubahan
-- [ ] Testing
+- [x] All synchronization functionality successfully removed

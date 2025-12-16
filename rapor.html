@@ -186,7 +186,6 @@
                                 <div class="alert alert-info small"><i class="fas fa-info-circle"></i> Data Guru disinkronisasi otomatis dari Data Guru (Wali). Username menggunakan NUPTK.</div>
                                 <div class="d-flex justify-content-end mb-2">
                                     <button class="btn btn-primary btn-sm" onclick="app.modalGuruUser('add')"><i class="fas fa-plus"></i> Tambah Guru</button>
-                                    <button class="btn btn-secondary btn-sm" onclick="app.modalSyncUsers()"><i class="fas fa-sync"></i> Sinkronisasi Pengguna</button>
                                     <button class="btn btn-danger btn-sm me-2" onclick="app.modalDeleteAllUsers()"><i class="fas fa-trash-alt"></i> Hapus Semua Pengguna</button>
                                 </div>
                                 <div class="table-responsive">
@@ -967,28 +966,7 @@
         </div>
     </div>
 
-    <!-- Modal: Sinkronisasi Pengguna (Admin & Guru) -->
-    <div class="modal fade" id="modalSyncUsers" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sinkronisasi Pengguna</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Fungsi ini akan men-generate / men-sinkronisasi kolom <strong>username</strong> dan <strong>nama pengguna</strong> pada tampilan Data Pengguna berdasarkan data yang tersedia.</p>
-                    <ul>
-                        <li><strong>Guru:</strong> username = NUPTK, nama pengguna = Nama</li>
-                        <li><strong>Admin:</strong> nama pengguna akan diisi dari field username jika kosong</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary" onclick="app.syncUsers()">Jalankan Sinkronisasi</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
 
 
