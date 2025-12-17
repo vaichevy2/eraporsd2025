@@ -202,11 +202,12 @@
                                     </table>
                                 </div>
                                 <!-- PAGINATION CONTROLS FOR GURU -->
-                                <div id="guru-pagination" class="pagination-container" style="display:none;">
+                                <div id="guru_users-pagination" class="pagination-container" style="display:none;">
                                     <button class="btn btn-sm btn-secondary" onclick="app.prevPage('guru_users')">Sebelumnya</button>
-                                    <span id="guru-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
+                                    <span id="guru_users-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
                                     <button class="btn btn-sm btn-secondary" onclick="app.nextPage('guru_users')">Selanjutnya</button>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -327,6 +328,9 @@
                             <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('siswa')"><i class="fas fa-file-import"></i> Import</button>
                             <button class="btn btn-danger btn-sm" onclick="app.deleteAll('students')"><i class="fas fa-trash"></i> Hapus Masal</button>
                         </div>
+                        <div class="d-flex justify-content-end mb-3">
+                            <input type="text" id="search-siswa" class="form-control" placeholder="Cari siswa..." style="max-width: 300px;">
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-striped bg-white">
                                 <thead class="table-dark"><tr><th>No</th><th>NISN</th><th>Nama</th><th>L/P</th><th>Kelas</th><th>Agama</th><th>Aksi</th></tr></thead>
@@ -353,6 +357,7 @@
                             <button class="btn btn-outline-secondary btn-sm ms-1" onclick="app.exportStoreToSQLite('teachers')"><i class="fas fa-database"></i> SQLite</button>
                             <button class="btn btn-warning btn-sm text-white" onclick="app.modalImport('guru')"><i class="fas fa-file-import"></i> Import</button>
                             <button class="btn btn-danger btn-sm" onclick="app.deleteAll('teachers')"><i class="fas fa-trash"></i> Hapus Masal</button>
+                            <button class="btn btn-secondary btn-sm ms-1" onclick="app.autoGenerateGuruData()"><i class="fas fa-magic"></i> Generate Otomatis</button>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-striped bg-white">
@@ -361,10 +366,10 @@
                             </table>
                         </div>
                         <!-- PAGINATION CONTROLS -->
-                        <div id="wali-pagination" class="pagination-container" style="display:none;">
-                            <button class="btn btn-sm btn-secondary" onclick="app.prevPage('wali')">Sebelumnya</button>
-                            <span id="wali-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
-                            <button class="btn btn-sm btn-secondary" onclick="app.nextPage('wali')">Selanjutnya</button>
+                        <div id="guru-pagination" class="pagination-container" style="display:none;">
+                            <button class="btn btn-sm btn-secondary" onclick="app.prevPage('guru')">Sebelumnya</button>
+                            <span id="guru-page-info" class="align-self-center fw-bold">Halaman 1 dari 1</span>
+                            <button class="btn btn-sm btn-secondary" onclick="app.nextPage('guru')">Selanjutnya</button>
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,10 @@ const appState = {
         currentPage: 1,
         rowsPerPage: 10
     },
+    admin_users: {
+        currentPage: 1,
+        rowsPerPage: 10
+    },
     guru_users: {
         currentPage: 1,
         rowsPerPage: 10
@@ -551,9 +555,19 @@ const app = {
                 break;
             case 'siswa':
                 app.loadSiswa();
+                // Set up search functionality for siswa table after page is loaded
+                setTimeout(() => {
+                    const searchInput = document.getElementById('search-siswa');
+                    if (searchInput) {
+                        // Remove existing listeners to avoid duplicates
+                        searchInput.removeEventListener('input', app.handleSiswaSearch);
+                        // Add the event listener
+                        searchInput.addEventListener('input', app.handleSiswaSearch);
+                    }
+                }, 100);
                 break;
             case 'guru':
-                app.loadwali();
+                app.loadguru();
                 break;
             case 'gurumapel':
                 app.loadGuruMapel();
@@ -804,6 +818,7 @@ const app = {
 
             if (Array.isArray(admins)) {
                 const guruUsers = admins.filter(admin => admin.level === 'Guru');
+
                 const startIndex = (appState.guru_users.currentPage - 1) * appState.guru_users.rowsPerPage;
                 const endIndex = startIndex + appState.guru_users.rowsPerPage;
                 const paginatedGuruUsers = guruUsers.slice(startIndex, endIndex);
@@ -1088,11 +1103,49 @@ const app = {
         // For now, just leave it as is
     },
 
+    // Search handler for siswa table
+    handleSiswaSearch: (e) => {
+        // Reset to first page when searching
+        appState.siswa.currentPage = 1;
+        console.log('Search input triggered:', e.target.value);
+        app.loadSiswa();
+    },
+
     // Siswa functions
     loadSiswa: async () => {
         try {
             await db.init();
-            const siswa = await db.get('students');
+            let siswa = await db.get('students');
+
+            // Get search term and apply filtering if search term has at least 1 character
+            const searchTerm = document.getElementById('search-siswa').value.trim().toLowerCase();
+
+            if (Array.isArray(siswa)) {
+                // Always sort by name first
+                siswa.sort((a, b) => {
+                    const nameA = (a.nama || '').toLowerCase();
+                    const nameB = (b.nama || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
+                // Apply filtering if search term has at least 1 character
+                if (searchTerm.length >= 1) {
+                    siswa = siswa.filter(s => {
+                        const nisn = (s.nisn || '').toLowerCase();
+                        const nama = (s.nama || '').toLowerCase();
+                        const jk = (s.jk || '').toLowerCase();
+                        const kelasRombel = `${s.kelas || ''}${s.rombel || ''}`.toLowerCase();
+                        const agama = (s.agama || '').toLowerCase();
+
+                        return nisn.includes(searchTerm) ||
+                               nama.includes(searchTerm) ||
+                               jk.includes(searchTerm) ||
+                               kelasRombel.includes(searchTerm) ||
+                               agama.includes(searchTerm);
+                    });
+                }
+            }
+
             const tbody = document.getElementById('tbody-siswa');
             tbody.innerHTML = '';
 
@@ -1120,7 +1173,7 @@ const app = {
                 });
             }
 
-            // Render pagination
+            // Render pagination with filtered results count
             app.renderPagination('siswa', siswa.length);
         } catch (error) {
             console.error('Error loading siswa:', error);
@@ -1457,8 +1510,8 @@ const app = {
         }
     },
 
-    // Placeholder functions for missing implementations
-    loadwali: async () => {
+    // New loadguru function for guru page
+    loadguru: async () => {
         try {
             await db.init();
             const guru = await db.get('teachers');
@@ -1466,13 +1519,9 @@ const app = {
             tbody.innerHTML = '';
 
             if (Array.isArray(guru)) {
-                // Limit maximum rows to 100 for performance
-                const maxRows = 100;
-                const limitedGuru = guru.slice(0, maxRows);
-
-                const startIndex = (appState.wali.currentPage - 1) * appState.wali.rowsPerPage;
-                const endIndex = startIndex + appState.wali.rowsPerPage;
-                const paginatedGuru = limitedGuru.slice(startIndex, endIndex);
+                const startIndex = (appState.guru.currentPage - 1) * appState.guru.rowsPerPage;
+                const endIndex = startIndex + appState.guru.rowsPerPage;
+                const paginatedGuru = guru.slice(startIndex, endIndex);
 
                 paginatedGuru.forEach((g, index) => {
                     const row = `
@@ -1490,25 +1539,48 @@ const app = {
                     `;
                     tbody.innerHTML += row;
                 });
-
-                // Show warning if data is truncated
-                if (guru.length > maxRows) {
-                    const warningRow = `
-                        <tr>
-                            <td colspan="6" class="text-center text-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Data dibatasi maksimal ${maxRows} baris untuk performa optimal.
-                                Total data: ${guru.length} guru.
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += warningRow;
-                }
             }
 
             // Render pagination
-            const displayLength = Math.min(guru.length, 100);
-            app.renderPagination('wali', displayLength);
+            app.renderPagination('guru', guru.length);
+        } catch (error) {
+            console.error('Error loading guru:', error);
+        }
+    },
+
+    // Placeholder functions for missing implementations
+    loadwali: async () => {
+        try {
+            await db.init();
+            const guru = await db.get('teachers');
+            const tbody = document.getElementById('tbody-guru');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(guru)) {
+                const startIndex = (appState.wali.currentPage - 1) * appState.wali.rowsPerPage;
+                const endIndex = startIndex + appState.wali.rowsPerPage;
+                const paginatedGuru = guru.slice(startIndex, endIndex);
+
+                paginatedGuru.forEach((g, index) => {
+                    const row = `
+                        <tr>
+                            <td>${startIndex + index + 1}</td>
+                            <td>${g.nuptk || ''}</td>
+                            <td>${g.nama || ''}</td>
+                            <td>${g.jk || ''}</td>
+                            <td>${g.kelas || ''}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalGuru('edit', ${g.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteGuru(${g.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+
+            // Render pagination
+            app.renderPagination('wali', guru.length);
         } catch (error) {
             console.error('Error loading guru:', error);
         }
@@ -2077,14 +2149,17 @@ const app = {
         const currentPage = appState[type].currentPage;
         const totalPages = Math.ceil(total / rowsPerPage);
 
-        if (total <= rowsPerPage) {
-            // Hide pagination if all data fits on one page
+        // Always show pagination controls for guru_users type
+        if (type === 'guru_users') {
+            paginationContainer.style.display = 'flex';
+        } else if (total <= rowsPerPage) {
+            // Hide pagination if all data fits on one page for other types
             paginationContainer.style.display = 'none';
             return;
+        } else {
+            // Show pagination for other types
+            paginationContainer.style.display = 'flex';
         }
-
-        // Show pagination
-        paginationContainer.style.display = 'flex';
 
         // Update page info
         const pageInfo = document.getElementById(`${type}-page-info`);
@@ -2106,7 +2181,7 @@ const app = {
     prevPage: (type) => {
         if (type === 'guru' && appState.guru.currentPage > 1) {
             appState.guru.currentPage--;
-            app.loadwali();
+            app.loadguru();
         } else if (type === 'wali' && appState.wali.currentPage > 1) {
             appState.wali.currentPage--;
             app.loadwali();
@@ -2124,7 +2199,7 @@ const app = {
     nextPage: (type) => {
         if (type === 'guru') {
             appState.guru.currentPage++;
-            app.loadwali();
+            app.loadguru();
         } else if (type === 'wali') {
             appState.wali.currentPage++;
             app.loadwali();
@@ -3733,6 +3808,288 @@ const app = {
     cancelSimpleMapelForm: () => {
         document.getElementById('sm_nama').value = '';
         document.getElementById('simple-mapel-form').style.display = 'none';
+    },
+
+    // New automatic function for "data guru" - auto generate teacher data
+    autoGenerateGuruData: async () => {
+        try {
+            app.showLoading('Membuat data guru otomatis...');
+
+            await db.init();
+
+            // Sample teacher data to generate automatically
+            const sampleTeachers = [
+                { nuptk: '1234567890', nip: '198001011234567890', nama: 'Ahmad Surya', jk: 'L', kelas: '1.A' },
+                { nuptk: '1234567891', nip: '198002021234567891', nama: 'Siti Aminah', jk: 'P', kelas: '2.B' },
+                { nuptk: '1234567892', nip: '198003031234567892', nama: 'Budi Santoso', jk: 'L', kelas: '3.A' },
+                { nuptk: '1234567893', nip: '198004041234567893', nama: 'Maya Sari', jk: 'P', kelas: '4.B' },
+                { nuptk: '1234567894', nip: '198005051234567894', nama: 'Rudi Hartono', jk: 'L', kelas: '5.A' },
+                { nuptk: '1234567895', nip: '198006061234567895', nama: 'Dewi Lestari', jk: 'P', kelas: '6.B' }
+            ];
+
+            let created = 0;
+            let skipped = 0;
+
+            for (const teacher of sampleTeachers) {
+                // Check if teacher already exists
+                const existingTeachers = await db.get('teachers');
+                const exists = Array.isArray(existingTeachers) && existingTeachers.some(t => t.nuptk === teacher.nuptk);
+
+                if (!exists) {
+                    await db.saveTo('teachers', teacher);
+                    created++;
+                } else {
+                    skipped++;
+                }
+            }
+
+            app.showAlert(`Data guru otomatis berhasil dibuat: ${created} baru, ${skipped} dilewati`, 'success');
+            app.loadwali(); // Reload the teacher data
+
+        } catch (error) {
+            console.error('Error auto generating guru data:', error);
+            app.showAlert('Gagal membuat data guru otomatis', 'danger');
+        } finally {
+            app.hideLoading();
+        }
+    },
+
+    // Real-time synchronization manager
+    syncManager: {
+        serverUrl: 'http://localhost:1180',
+        isConnected: false,
+        syncInterval: null,
+        lastSyncTime: null,
+        pendingChanges: new Map(),
+
+        // Initialize synchronization
+        init: async () => {
+            console.log('Initializing real-time synchronization...');
+
+            try {
+                // Test server connection
+                await app.syncManager.testConnection();
+
+                // Set up listeners for all data stores
+                await app.syncManager.setupListeners();
+
+                // Start periodic sync
+                app.syncManager.startPeriodicSync();
+
+                // Initial full sync
+                await app.syncManager.fullSync();
+
+                console.log('Real-time synchronization initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize synchronization:', error);
+                app.showAlert('Gagal menginisialisasi sinkronisasi real-time', 'warning');
+            }
+        },
+
+        // Test server connection
+        testConnection: async () => {
+            try {
+                const response = await fetch(`${app.syncManager.serverUrl}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    app.syncManager.isConnected = true;
+                    console.log('Server connection successful');
+                } else {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+            } catch (error) {
+                app.syncManager.isConnected = false;
+                console.warn('Server connection failed:', error);
+                throw error;
+            }
+        },
+
+        // Set up listeners for all data stores
+        setupListeners: async () => {
+            const stores = [
+                'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
+                'mapel', 'mapel_simple', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
+                'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
+            ];
+
+            for (const store of stores) {
+                db.subscribe(store, async (data) => {
+                    console.log(`Data changed in store: ${store}`, data);
+                    await app.syncManager.queueChange(store, data);
+                });
+            }
+        },
+
+        // Queue change for synchronization
+        queueChange: async (store, data) => {
+            if (!app.syncManager.isConnected) {
+                console.warn('Server not connected, queuing change locally');
+                return;
+            }
+
+            const changeId = `${store}_${Date.now()}_${Math.random()}`;
+            const change = {
+                id: changeId,
+                store,
+                data,
+                timestamp: new Date().toISOString(),
+                type: 'update'
+            };
+
+            app.syncManager.pendingChanges.set(changeId, change);
+
+            // Attempt immediate sync
+            await app.syncManager.syncChange(change);
+        },
+
+        // Sync individual change
+        syncChange: async (change) => {
+            try {
+                const response = await fetch(`${app.syncManager.serverUrl}/sync`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(change)
+                });
+
+                if (response.ok) {
+                    app.syncManager.pendingChanges.delete(change.id);
+                    app.syncManager.lastSyncTime = new Date();
+                    console.log(`Successfully synced change: ${change.id}`);
+                } else {
+                    console.error(`Failed to sync change ${change.id}:`, response.status);
+                }
+            } catch (error) {
+                console.error(`Error syncing change ${change.id}:`, error);
+            }
+        },
+
+        // Start periodic synchronization
+        startPeriodicSync: () => {
+            // Sync every 30 seconds
+            app.syncManager.syncInterval = setInterval(async () => {
+                if (app.syncManager.isConnected) {
+                    await app.syncManager.periodicSync();
+                }
+            }, 30000);
+        },
+
+        // Periodic synchronization
+        periodicSync: async () => {
+            try {
+                // Sync any pending changes
+                for (const [changeId, change] of app.syncManager.pendingChanges) {
+                    await app.syncManager.syncChange(change);
+                }
+
+                // Send heartbeat
+                await fetch(`${app.syncManager.serverUrl}/heartbeat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        clientId: 'rapor-client'
+                    })
+                });
+
+            } catch (error) {
+                console.error('Error during periodic sync:', error);
+            }
+        },
+
+        // Full synchronization of all data
+        fullSync: async () => {
+            if (!app.syncManager.isConnected) {
+                console.warn('Cannot perform full sync: server not connected');
+                return;
+            }
+
+            try {
+                console.log('Starting full data synchronization...');
+                app.showLoading('Sinkronisasi data lengkap...');
+
+                await db.init();
+
+                const stores = [
+                    'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
+                    'mapel', 'mapel_simple', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                    'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
+                    'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
+                ];
+
+                const allData = {};
+
+                for (const store of stores) {
+                    try {
+                        const data = await db.get(store);
+                        if (data) {
+                            allData[store] = Array.isArray(data) ? data : [data];
+                        }
+                    } catch (error) {
+                        console.warn(`Failed to get data for store ${store}:`, error);
+                    }
+                }
+
+                const response = await fetch(`${app.syncManager.serverUrl}/full-sync`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        data: allData
+                    })
+                });
+
+                if (response.ok) {
+                    app.syncManager.lastSyncTime = new Date();
+                    console.log('Full synchronization completed successfully');
+                    app.showAlert('Sinkronisasi data lengkap berhasil', 'success');
+                } else {
+                    throw new Error(`Full sync failed with status: ${response.status}`);
+                }
+
+            } catch (error) {
+                console.error('Error during full sync:', error);
+                app.showAlert('Gagal melakukan sinkronisasi data lengkap', 'danger');
+            } finally {
+                app.hideLoading();
+            }
+        },
+
+        // Manual sync trigger
+        manualSync: async () => {
+            await app.syncManager.testConnection();
+            await app.syncManager.fullSync();
+        },
+
+        // Get sync status
+        getStatus: () => {
+            return {
+                isConnected: app.syncManager.isConnected,
+                lastSyncTime: app.syncManager.lastSyncTime,
+                pendingChanges: app.syncManager.pendingChanges.size
+            };
+        },
+
+        // Stop synchronization
+        stop: () => {
+            if (app.syncManager.syncInterval) {
+                clearInterval(app.syncManager.syncInterval);
+                app.syncManager.syncInterval = null;
+            }
+            app.syncManager.isConnected = false;
+            console.log('Real-time synchronization stopped');
+        }
     }
 };
 
@@ -3762,4 +4119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     // Initialize sidebar hover functionality
     app.handleSidebarHover();
+
+    // Initialize real-time synchronization
+    app.syncManager.init();
 });
