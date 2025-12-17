@@ -12,6 +12,14 @@ const appState = {
         currentPage: 1,
         rowsPerPage: 10
     },
+    wali: {
+        currentPage: 1,
+        rowsPerPage: 10
+    },
+    guru_users: {
+        currentPage: 1,
+        rowsPerPage: 10
+    },
     gurumapel: {
         currentPage: 1,
         rowsPerPage: 10
@@ -545,7 +553,7 @@ const app = {
                 app.loadSiswa();
                 break;
             case 'guru':
-                app.loadGuru();
+                app.loadwali();
                 break;
             case 'gurumapel':
                 app.loadGuruMapel();
@@ -796,8 +804,8 @@ const app = {
 
             if (Array.isArray(admins)) {
                 const guruUsers = admins.filter(admin => admin.level === 'Guru');
-                const startIndex = (appState.guru.currentPage - 1) * appState.guru.rowsPerPage;
-                const endIndex = startIndex + appState.guru.rowsPerPage;
+                const startIndex = (appState.guru_users.currentPage - 1) * appState.guru_users.rowsPerPage;
+                const endIndex = startIndex + appState.guru_users.rowsPerPage;
                 const paginatedGuruUsers = guruUsers.slice(startIndex, endIndex);
 
                 paginatedGuruUsers.forEach((guru, index) => {
@@ -821,7 +829,7 @@ const app = {
                 });
 
                 // Render pagination
-                app.renderPagination('guru', guruUsers.length);
+                app.renderPagination('guru_users', guruUsers.length);
             }
         } catch (error) {
             console.error('Error loading guru users:', error);
@@ -1450,7 +1458,7 @@ const app = {
     },
 
     // Placeholder functions for missing implementations
-    loadGuru: async () => {
+    loadwali: async () => {
         try {
             await db.init();
             const guru = await db.get('teachers');
@@ -1458,9 +1466,13 @@ const app = {
             tbody.innerHTML = '';
 
             if (Array.isArray(guru)) {
-                const startIndex = (appState.guru.currentPage - 1) * appState.guru.rowsPerPage;
-                const endIndex = startIndex + appState.guru.rowsPerPage;
-                const paginatedGuru = guru.slice(startIndex, endIndex);
+                // Limit maximum rows to 100 for performance
+                const maxRows = 100;
+                const limitedGuru = guru.slice(0, maxRows);
+
+                const startIndex = (appState.wali.currentPage - 1) * appState.wali.rowsPerPage;
+                const endIndex = startIndex + appState.wali.rowsPerPage;
+                const paginatedGuru = limitedGuru.slice(startIndex, endIndex);
 
                 paginatedGuru.forEach((g, index) => {
                     const row = `
@@ -1478,10 +1490,25 @@ const app = {
                     `;
                     tbody.innerHTML += row;
                 });
+
+                // Show warning if data is truncated
+                if (guru.length > maxRows) {
+                    const warningRow = `
+                        <tr>
+                            <td colspan="6" class="text-center text-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Data dibatasi maksimal ${maxRows} baris untuk performa optimal.
+                                Total data: ${guru.length} guru.
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += warningRow;
+                }
             }
 
             // Render pagination
-            app.renderPagination('guru', guru.length);
+            const displayLength = Math.min(guru.length, 100);
+            app.renderPagination('wali', displayLength);
         } catch (error) {
             console.error('Error loading guru:', error);
         }
@@ -2079,9 +2106,12 @@ const app = {
     prevPage: (type) => {
         if (type === 'guru' && appState.guru.currentPage > 1) {
             appState.guru.currentPage--;
-            app.loadGuru();
-        } else if (type === 'guru_users' && appState.guru.currentPage > 1) {
-            appState.guru.currentPage--;
+            app.loadwali();
+        } else if (type === 'wali' && appState.wali.currentPage > 1) {
+            appState.wali.currentPage--;
+            app.loadwali();
+        } else if (type === 'guru_users' && appState.guru_users.currentPage > 1) {
+            appState.guru_users.currentPage--;
             app.loadGuruUsers();
         } else if (type === 'siswa' && appState.siswa.currentPage > 1) {
             appState.siswa.currentPage--;
@@ -2094,9 +2124,12 @@ const app = {
     nextPage: (type) => {
         if (type === 'guru') {
             appState.guru.currentPage++;
-            app.loadGuru();
+            app.loadwali();
+        } else if (type === 'wali') {
+            appState.wali.currentPage++;
+            app.loadwali();
         } else if (type === 'guru_users') {
-            appState.guru.currentPage++;
+            appState.guru_users.currentPage++;
             app.loadGuruUsers();
         } else if (type === 'siswa') {
             appState.siswa.currentPage++;
@@ -2305,7 +2338,7 @@ const app = {
             await app.syncTeacherToAdmin(data, id ? 'update' : 'add');
 
             app.showAlert('Guru berhasil disimpan', 'success');
-            app.loadGuru();
+            app.loadwali();
             bootstrap.Modal.getInstance(document.getElementById('modalGuru')).hide();
         } catch (error) {
             console.error('Error saving guru:', error);
@@ -2320,7 +2353,7 @@ const app = {
                 await db.init();
                 await db.delete('teachers', id);
                 app.showAlert('Guru berhasil dihapus', 'success');
-                app.loadGuru();
+                app.loadwali();
             } catch (error) {
                 console.error('Error deleting guru:', error);
                 app.showAlert('Gagal menghapus guru', 'danger');
@@ -3188,7 +3221,7 @@ const app = {
 
             // Close modal and show results
             bootstrap.Modal.getInstance(document.getElementById('modalImportGuru')).hide();
-            app.loadGuru();
+            app.loadwali();
 
             if (successCount > 0) {
                 app.showAlert(`Import berhasil: ${successCount} data guru diimpor${errorCount > 0 ? `, ${errorCount} gagal` : ''}`, 'success');
@@ -3352,7 +3385,7 @@ const app = {
                 if (store === 'students') {
                     app.loadSiswa();
                 } else if (store === 'teachers') {
-                    app.loadGuru();
+                    app.loadwali();
                 }
             } catch (error) {
                 console.error('Error deleting all data:', error);
