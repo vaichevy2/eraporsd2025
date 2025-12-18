@@ -1,6 +1,6 @@
 // db.js - Shared database module for login.html and rapor.html
 const DB_NAME = "RaporDeepLearningDB";
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 let dbInstance = null;
 
 // Daftar tabel yang hanya boleh punya 1 baris data (single entry)

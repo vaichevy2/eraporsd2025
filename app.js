@@ -1,28 +1,33 @@
 /* --- JAVASCRIPT LOGIC --- */
 const DB_NAME = "RaporDeepLearningDB";
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 // STATE MANAGEMENT
 const appState = {
     siswa: {
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        totalPages: 1
     },
     guru: {
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        totalPages: 1
     },
     wali: {
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        totalPages: 1
     },
     guru_users: {
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        totalPages: 1
     },
     gurumapel: {
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        totalPages: 1
     }
 };
 
@@ -551,6 +556,16 @@ const app = {
                 break;
             case 'siswa':
                 app.loadSiswa();
+                // Set up search functionality for siswa table after page is loaded
+                setTimeout(() => {
+                    const searchInput = document.getElementById('search-siswa');
+                    if (searchInput) {
+                        // Remove existing listeners to avoid duplicates
+                        searchInput.removeEventListener('input', app.handleSiswaSearch);
+                        // Add the event listener
+                        searchInput.addEventListener('input', app.handleSiswaSearch);
+                    }
+                }, 100);
                 break;
             case 'guru':
                 app.loadwali();
@@ -1004,7 +1019,6 @@ const app = {
 
     saveSekolah: async () => {
         try {
-            app.showLoading('Menyimpan data sekolah...');
             const data = {
                 id: 1,
                 nama: document.getElementById('sekolah_nama').value,
@@ -1023,8 +1037,6 @@ const app = {
         } catch (error) {
             console.error('Error saving sekolah:', error);
             app.showAlert('Gagal menyimpan data sekolah', 'danger');
-        } finally {
-            app.hideLoading();
         }
     },
 
@@ -1088,29 +1100,47 @@ const app = {
         // For now, just leave it as is
     },
 
+    // Search handler for siswa table
+    handleSiswaSearch: (e) => {
+        // Reset to first page when searching
+        appState.siswa.currentPage = 1;
+        console.log('Search input triggered:', e.target.value);
+        app.loadSiswa();
+    },
+
     // Siswa functions
     loadSiswa: async () => {
         try {
             await db.init();
             let siswa = await db.get('students');
 
-            // Get search term
-            const searchInput = document.getElementById('search-siswa');
-            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            // Get search term and apply filtering if search term has at least 1 character
+            const searchTerm = document.getElementById('search-siswa').value.trim().toLowerCase();
 
-            // Filter data if search term exists
-            if (Array.isArray(siswa) && searchTerm) {
-                siswa = siswa.filter(s => {
-                    const searchableText = [
-                        s.nisn || '',
-                        s.nama || '',
-                        s.jk || '',
-                        (s.kelas || '') + (s.rombel || ''),
-                        s.agama || ''
-                    ].join(' ').toLowerCase();
-
-                    return searchableText.includes(searchTerm);
+            if (Array.isArray(siswa)) {
+                // Always sort by name first
+                siswa.sort((a, b) => {
+                    const nameA = (a.nama || '').toLowerCase();
+                    const nameB = (b.nama || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
                 });
+
+                // Apply filtering if search term has at least 1 character
+                if (searchTerm.length >= 1) {
+                    siswa = siswa.filter(s => {
+                        const nisn = (s.nisn || '').toLowerCase();
+                        const nama = (s.nama || '').toLowerCase();
+                        const jk = (s.jk || '').toLowerCase();
+                        const kelasRombel = `${s.kelas || ''}${s.rombel || ''}`.toLowerCase();
+                        const agama = (s.agama || '').toLowerCase();
+
+                        return nisn.includes(searchTerm) ||
+                               nama.includes(searchTerm) ||
+                               jk.includes(searchTerm) ||
+                               kelasRombel.includes(searchTerm) ||
+                               agama.includes(searchTerm);
+                    });
+                }
             }
 
             const tbody = document.getElementById('tbody-siswa');
@@ -1128,7 +1158,7 @@ const app = {
                             <td>${s.nisn || ''}</td>
                             <td>${s.nama || ''}</td>
                             <td>${s.jk || ''}</td>
-                            <td>${s.kelas || ''}${s.rombel ? s.rombel : ''}</td>
+                            <td>${s.kelas || ''}.${s.rombel || ''}</td>
                             <td>${s.agama || ''}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="app.modalSiswa('edit', ${s.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -1685,7 +1715,61 @@ const app = {
             console.error('Error loading CPTP:', error);
         }
     },
-    renderDataKelas: async () => { console.log('renderDataKelas called'); },
+    renderDataKelas: async () => {
+        try {
+            await db.init();
+            let siswa = await db.get('students');
+
+            // Get filter value
+            const filterKelas = document.getElementById('filter_kelas_datakelas').value;
+
+            if (Array.isArray(siswa)) {
+                // Sort by name
+                siswa.sort((a, b) => {
+                    const nameA = (a.nama || '').toLowerCase();
+                    const nameB = (b.nama || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
+                // Apply filter if selected
+                if (filterKelas) {
+                    siswa = siswa.filter(s => s.kelas == filterKelas);
+                }
+
+                // Populate filter options if not already done
+                const filterSelect = document.getElementById('filter_kelas_datakelas');
+                if (filterSelect && filterSelect.options.length <= 1) { // Only has "Semua Kelas" option
+                    const allStudents = await db.get('students');
+                    const uniqueKelas = [...new Set(allStudents.map(s => s.kelas).filter(k => k))].sort();
+
+                    uniqueKelas.forEach(kelas => {
+                        const option = document.createElement('option');
+                        option.value = kelas;
+                        option.textContent = `Kelas ${kelas}`;
+                        filterSelect.appendChild(option);
+                    });
+                }
+            }
+
+            const tbody = document.getElementById('tbody-kelas');
+            tbody.innerHTML = '';
+
+            if (Array.isArray(siswa)) {
+                siswa.forEach((s, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${s.nama || ''}</td>
+                            <td>${s.kelas || ''}.${s.rombel || ''}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (error) {
+            console.error('Error loading data kelas:', error);
+        }
+    },
     loadKokurikuler: async () => { console.log('loadKokurikuler called'); },
     loadTemaEkskul: async () => {
         try {
@@ -1902,7 +1986,6 @@ const app = {
 
     saveProfil: async () => {
         try {
-            app.showLoading('Menyimpan data profil...');
             const rememberedId = localStorage.getItem('rapor_remember_user_id');
             if (!rememberedId) {
                 app.showAlert('Sesi login tidak valid', 'danger');
@@ -2098,7 +2181,43 @@ const app = {
         const currentPage = appState[type].currentPage;
         const totalPages = Math.ceil(total / rowsPerPage);
 
+        // Store totalPages in appState
+        appState[type].totalPages = totalPages;
+
         if (total <= rowsPerPage) {
+            // Hide pagination if all data fits on one page
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        // Show pagination
+        paginationContainer.style.display = 'flex';
+
+        // Update page info
+        const pageInfo = document.getElementById(`${type}-page-info`);
+        if (pageInfo) {
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+        }
+
+        // Update button states
+        const prevBtn = paginationContainer.querySelector('button:first-child');
+        const nextBtn = paginationContainer.querySelector('button:last-child');
+
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+    },
+
+    renderPaginationServer: (type, totalItems, totalPages, currentPage) => {
+        const paginationContainer = document.getElementById(`${type}-pagination`);
+        if (!paginationContainer) return;
+
+        const rowsPerPage = appState[type].rowsPerPage;
+
+        if (totalItems <= rowsPerPage) {
             // Hide pagination if all data fits on one page
             paginationContainer.style.display = 'none';
             return;
@@ -2143,19 +2262,19 @@ const app = {
         }
     },
     nextPage: (type) => {
-        if (type === 'guru') {
+        if (type === 'guru' && appState.guru.currentPage < appState.guru.totalPages) {
             appState.guru.currentPage++;
             app.loadwali();
-        } else if (type === 'wali') {
+        } else if (type === 'wali' && appState.wali.currentPage < appState.wali.totalPages) {
             appState.wali.currentPage++;
             app.loadwali();
-        } else if (type === 'guru_users') {
+        } else if (type === 'guru_users' && appState.guru_users.currentPage < appState.guru_users.totalPages) {
             appState.guru_users.currentPage++;
             app.loadGuruUsers();
-        } else if (type === 'siswa') {
+        } else if (type === 'siswa' && appState.siswa.currentPage < appState.siswa.totalPages) {
             appState.siswa.currentPage++;
             app.loadSiswa();
-        } else if (type === 'gurumapel') {
+        } else if (type === 'gurumapel' && appState.gurumapel.currentPage < appState.gurumapel.totalPages) {
             appState.gurumapel.currentPage++;
             app.loadGuruMapel();
         }
@@ -2238,7 +2357,28 @@ const app = {
                 data.id = parseInt(id);
             }
 
+            // Save to IndexedDB (local)
             await db.saveTo('students', data);
+
+            // Also save to server database
+            try {
+                const response = await fetch('http://localhost:1180/api/students', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    console.log('Data siswa berhasil disimpan ke server');
+                } else {
+                    console.warn('Gagal menyimpan ke server, tetapi data tersimpan di IndexedDB');
+                }
+            } catch (serverError) {
+                console.warn('Server tidak tersedia, data hanya tersimpan di IndexedDB:', serverError);
+            }
+
             app.showAlert('Siswa berhasil disimpan', 'success');
             app.loadSiswa();
             bootstrap.Modal.getInstance(document.getElementById('modalSiswa')).hide();
@@ -2484,40 +2624,30 @@ const app = {
         try {
             const modal = document.getElementById('modalMapel');
             const form = document.getElementById('form-mapel');
-            const namaSelect = document.getElementById('m_nama');
+            const namaInput = document.getElementById('m_nama');
 
-            // Define the auto-fill subjects
-            const subjects = [
-                "Pendidikan Agama Islam Budi Pekerti",
-                "Pendidikan Agama Kristen Budi Pekerti",
-                "Pendidikan Agama Katholik Budi Pekerti",
-                "Pendidikan Agama Budha Budi Pekerti",
-                "Pendidikan Agama Hindu Budi Pekerti",
-                "Pendidikan Agama Konghuchu Budi Pekerti",
-                "Pendidikan Agama dan Kepercayaan Terhadap Tuhan Yang Maha Esa Budi Pekerti",
-                "Pendidikan Pancasila dan Kewarganegaraan",
-                "Bahasa Indonesia",
-                "Matematika",
-                "IPAS",
-                "Seni Budaya",
-                "Pendidikan Jasmani Olahraga dan Kesehatan",
-                "Pendidikan Lingkungan Hidup",
-                "Bahasa Sunda",
-                "Bahasa Inggris",
-                "Koding dan Kecerdasan Artifisial",
-                "Angklung"
-            ];
+            // Load data from mapel_simple store for typeable dropdown
+            await db.init();
+            const mapelSimple = await db.get('mapel_simple');
 
-            // Clear existing options except the first one
-            namaSelect.innerHTML = '<option value="">-- Pilih Mata Pelajaran --</option>';
+            // Get the existing datalist element
+            const datalist = document.getElementById('m_nama_list');
 
-            // Add subject options
-            subjects.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject;
-                option.textContent = subject;
-                namaSelect.appendChild(option);
-            });
+            // Clear existing options
+            if (datalist) {
+                datalist.innerHTML = '';
+
+                // Add options from mapel_simple data
+                if (Array.isArray(mapelSimple)) {
+                    mapelSimple.forEach(mapel => {
+                        if (mapel.nama) {
+                            const option = document.createElement('option');
+                            option.value = mapel.nama;
+                            datalist.appendChild(option);
+                        }
+                    });
+                }
+            }
 
             if (action === 'add') {
                 document.getElementById('m_id').value = '';
@@ -3783,12 +3913,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     // Initialize sidebar hover functionality
     app.handleSidebarHover();
-
-    // Add search functionality for siswa table
-    const searchInput = document.getElementById('search-siswa');
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            app.loadSiswa();
-        });
-    }
 });
