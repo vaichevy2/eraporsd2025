@@ -1092,7 +1092,27 @@ const app = {
     loadSiswa: async () => {
         try {
             await db.init();
-            const siswa = await db.get('students');
+            let siswa = await db.get('students');
+
+            // Get search term
+            const searchInput = document.getElementById('search-siswa');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+            // Filter data if search term exists
+            if (Array.isArray(siswa) && searchTerm) {
+                siswa = siswa.filter(s => {
+                    const searchableText = [
+                        s.nisn || '',
+                        s.nama || '',
+                        s.jk || '',
+                        (s.kelas || '') + (s.rombel || ''),
+                        s.agama || ''
+                    ].join(' ').toLowerCase();
+
+                    return searchableText.includes(searchTerm);
+                });
+            }
+
             const tbody = document.getElementById('tbody-siswa');
             tbody.innerHTML = '';
 
@@ -1120,8 +1140,9 @@ const app = {
                 });
             }
 
-            // Render pagination
-            app.renderPagination('siswa', siswa.length);
+            // Render pagination with filtered count
+            const totalCount = Array.isArray(siswa) ? siswa.length : 0;
+            app.renderPagination('siswa', totalCount);
         } catch (error) {
             console.error('Error loading siswa:', error);
         }
@@ -3762,4 +3783,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     // Initialize sidebar hover functionality
     app.handleSidebarHover();
+
+    // Add search functionality for siswa table
+    const searchInput = document.getElementById('search-siswa');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            app.loadSiswa();
+        });
+    }
 });
