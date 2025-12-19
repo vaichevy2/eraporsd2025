@@ -26,7 +26,7 @@ const appState = {
     },
     gurumapel: {
         currentPage: 1,
-        rowsPerPage: 10,
+        rowsPerPage: 5,
         totalPages: 1
     },
     reguler: {
@@ -1250,8 +1250,9 @@ const app = {
             // Fetch all teachers from the teachers table
             await db.init();
             const teachers = await db.get('teachers');
+            const subjectTeachers = await db.get('subject_teachers');
 
-            if (!Array.isArray(teachers) || teachers.length === 0) {
+            if ((!Array.isArray(teachers) || teachers.length === 0) && (!Array.isArray(subjectTeachers) || subjectTeachers.length === 0)) {
                 app.showAlert('Tidak ada data guru untuk disinkronisasi', 'warning');
                 return;
             }
@@ -1261,14 +1262,14 @@ const app = {
             modal.className = 'modal fade';
             modal.id = 'modalSinkronisasiPengguna';
             modal.innerHTML = `
-                <div class="modal-dialog modal-lg">
+                <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Sinkronisasi Pengguna Guru</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Ditemukan <strong>${teachers.length}</strong> data guru yang akan disinkronisasi.</p>
+                            <p>Ditemukan <strong>${teachers.length}</strong> data guru dan <strong>${subjectTeachers.length}</strong> data guru mata pelajaran yang akan ditampilkan.</p>
                             <p>Data guru akan digunakan untuk membuat atau memperbarui akun pengguna dengan:</p>
                             <ul>
                                 <li>Username: NUPTK guru</li>
@@ -1278,7 +1279,10 @@ const app = {
                             <div class="alert alert-warning">
                                 <strong>Perhatian:</strong> Akun yang sudah ada akan diperbarui, akun baru akan dibuat.
                             </div>
-                            <div class="table-responsive">
+
+                            ${Array.isArray(teachers) && teachers.length > 0 ? `
+                            <h6>Data Guru</h6>
+                            <div class="table-responsive mb-4">
                                 <table class="table table-sm table-striped">
                                     <thead class="table-dark">
                                         <tr>
@@ -1288,10 +1292,28 @@ const app = {
                                             <th>Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="tbody-sync-preview">
+                                    <tbody id="tbody-sync-preview-teachers">
                                     </tbody>
                                 </table>
                             </div>
+                            ` : ''}
+
+                            ${Array.isArray(subjectTeachers) && subjectTeachers.length > 0 ? `
+                            <h6>Data Guru Mata Pelajaran</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>NUPTK</th>
+                                            <th>Nama Guru</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-sync-preview-subject-teachers">
+                                    </tbody>
+                                </table>
+                            </div>
+                            ` : ''}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -1305,24 +1327,42 @@ const app = {
             const bsModal = new bootstrap.Modal(modal);
             bsModal.show();
 
-            // Populate preview table
-            const tbody = document.getElementById('tbody-sync-preview');
+            // Populate preview tables
             const admins = await db.get('admins');
 
-            teachers.forEach((teacher, index) => {
-                const existingUser = Array.isArray(admins) ? admins.find(admin => admin.username === teacher.nuptk) : null;
-                const status = existingUser ? 'Akan diperbarui' : 'Akan dibuat baru';
+            // Populate teachers table
+            if (Array.isArray(teachers) && teachers.length > 0) {
+                const tbodyTeachers = document.getElementById('tbody-sync-preview-teachers');
+                teachers.forEach((teacher, index) => {
+                    const existingUser = Array.isArray(admins) ? admins.find(admin => admin.username === teacher.nuptk) : null;
+                    const status = existingUser ? 'Akan diperbarui' : 'Akan dibuat baru';
 
-                const row = `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${teacher.nuptk || '-'}</td>
-                        <td>${teacher.nama || '-'}</td>
-                        <td><span class="badge bg-${existingUser ? 'warning' : 'success'}">${status}</span></td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${teacher.nuptk || '-'}</td>
+                            <td>${teacher.nama || '-'}</td>
+                            <td><span class="badge bg-${existingUser ? 'warning' : 'success'}">${status}</span></td>
+                        </tr>
+                    `;
+                    tbodyTeachers.innerHTML += row;
+                });
+            }
+
+            // Populate subject teachers table
+            if (Array.isArray(subjectTeachers) && subjectTeachers.length > 0) {
+                const tbodySubjectTeachers = document.getElementById('tbody-sync-preview-subject-teachers');
+                subjectTeachers.forEach((subjectTeacher, index) => {
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${subjectTeacher.nuptk || '-'}</td>
+                            <td>${subjectTeacher.nama || '-'}</td>
+                        </tr>
+                    `;
+                    tbodySubjectTeachers.innerHTML += row;
+                });
+            }
 
             // Clean up modal when hidden
             modal.addEventListener('hidden.bs.modal', () => {
@@ -2648,7 +2688,6 @@ const app = {
 
     saveGuru: async () => {
         try {
-            app.showLoading('Menyimpan data guru...');
             const id = document.getElementById('g_id').value;
             const nuptk = document.getElementById('g_nuptk').value;
             const nip = document.getElementById('g_nip').value;
@@ -2679,8 +2718,6 @@ const app = {
         } catch (error) {
             console.error('Error saving guru:', error);
             app.showAlert('Gagal menyimpan guru', 'danger');
-        } finally {
-            app.hideLoading();
         }
     },
     deleteGuru: async (id) => {
@@ -2760,7 +2797,6 @@ const app = {
     },
     saveGuruMapel: async () => {
         try {
-            app.showLoading('Menyimpan data guru mapel...');
             const id = document.getElementById('gm_id').value;
             const nuptk = document.getElementById('gm_nuptk').value;
             const nama = document.getElementById('gm_nama').value;
@@ -3712,6 +3748,8 @@ const app = {
                     app.loadSiswa();
                 } else if (store === 'teachers') {
                     app.loadwali();
+                } else if (store === 'subject_teachers') {
+                    app.loadGuruMapel();
                 }
             } catch (error) {
                 console.error('Error deleting all data:', error);
