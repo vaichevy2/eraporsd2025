@@ -1108,6 +1108,7 @@ const app = {
                 document.getElementById('sekolah_provinsi').value = sekolah.provinsi || '';
                 document.getElementById('sekolah_email').value = sekolah.email || '';
                 document.getElementById('sekolah_telp').value = sekolah.telp || '';
+                document.getElementById('sekolah_kepsek').value = sekolah.kepsek || '';
             }
         } catch (error) {
             console.error('Error loading sekolah:', error);
@@ -1126,14 +1127,91 @@ const app = {
                 kota: document.getElementById('sekolah_kota').value,
                 provinsi: document.getElementById('sekolah_provinsi').value,
                 email: document.getElementById('sekolah_email').value,
-                telp: document.getElementById('sekolah_telp').value
+                telp: document.getElementById('sekolah_telp').value,
+                kepsek: document.getElementById('sekolah_kepsek').value
             };
 
+            // Save to IndexedDB
             await db.saveTo('sekolah', data);
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('sekolah.sqlite', 'sekolah', data);
+            if (!sqliteSuccess) {
+                console.warn('Failed to save sekolah to SQLite, but IndexedDB save was successful');
+            }
+
             app.showAlert('Data sekolah berhasil disimpan', 'success');
         } catch (error) {
             console.error('Error saving sekolah:', error);
             app.showAlert('Gagal menyimpan data sekolah', 'danger');
+        }
+    },
+
+    // saveto() functions for IndexedDB and SQLiteDB
+    savetoIndexedDB: async (storeName, data) => {
+        try {
+            await db.init();
+            await db.saveTo(storeName, data);
+            console.log(`Data saved to IndexedDB store: ${storeName}`);
+            return true;
+        } catch (error) {
+            console.error(`Error saving to IndexedDB store ${storeName}:`, error);
+            return false;
+        }
+    },
+
+    savetoSQLiteDB: async (filename, tableName, data) => {
+        try {
+            const success = saveSQLiteData(filename, tableName, data);
+            if (success) {
+                console.log(`Data saved to SQLiteDB: ${filename}.${tableName}`);
+                return true;
+            } else {
+                console.error(`Failed to save to SQLiteDB: ${filename}.${tableName}`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`Error saving to SQLiteDB ${filename}.${tableName}:`, error);
+            return false;
+        }
+    },
+
+    // get() and post() functions for nama kepala sekolah
+    getNamaKepsek: async () => {
+        try {
+            await db.init();
+            const sekolah = await db.get('sekolah', 1);
+            return sekolah ? sekolah.kepsek || '' : '';
+        } catch (error) {
+            console.error('Error getting nama kepala sekolah:', error);
+            return '';
+        }
+    },
+
+    postNamaKepsek: async (namaKepsek) => {
+        try {
+            await db.init();
+
+            // Get existing sekolah data
+            const sekolah = await db.get('sekolah', 1) || { id: 1 };
+
+            // Update kepsek field
+            sekolah.kepsek = namaKepsek;
+
+            // Save to IndexedDB
+            await db.saveTo('sekolah', sekolah);
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('sekolah.sqlite', 'sekolah', sekolah);
+            if (!sqliteSuccess) {
+                console.warn('Failed to save nama kepala sekolah to SQLite, but IndexedDB save was successful');
+            }
+
+            console.log('Nama kepala sekolah saved successfully');
+            return true;
+        } catch (error) {
+            console.error('Error saving nama kepala sekolah:', error);
+            return false;
         }
     },
 
