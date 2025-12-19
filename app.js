@@ -848,6 +848,21 @@ const app = {
 
             if (Array.isArray(admins)) {
                 const guruUsers = admins.filter(admin => admin.level === 'Guru');
+
+            // Auto-generate emails and usernames for guru users if missing
+            for (const guru of guruUsers) {
+                if (!guru.username && guru.nama_pengguna) {
+                    guru.username = guru.nama_pengguna.toLowerCase().replace(/\s+/g, '');
+                    // Save the updated guru data with the generated username
+                    await db.saveTo('admins', guru);
+                }
+                if (!guru.email && guru.username) {
+                    guru.email = `${guru.username}@erapor.id`;
+                    // Save the updated guru data with the generated email
+                    await db.saveTo('admins', guru);
+                }
+            }
+
                 const startIndex = (appState.guru_users.currentPage - 1) * appState.guru_users.rowsPerPage;
                 const endIndex = startIndex + appState.guru_users.rowsPerPage;
                 const paginatedGuruUsers = guruUsers.slice(startIndex, endIndex);
@@ -982,10 +997,63 @@ const app = {
             document.getElementById('gu_email').value = '';
             document.getElementById('gu_pass').value = '';
             document.getElementById('gu_pass_container').style.display = 'block';
+
+            // Add event listener for auto-filling username when nama changes
+            const namaInput = document.getElementById('gu_nama');
+            const usernameInput = document.getElementById('gu_user');
+            const emailInput = document.getElementById('gu_email');
+
+            // Remove existing listeners to avoid duplicates
+            namaInput.removeEventListener('input', app.autoFillUsername);
+            usernameInput.removeEventListener('input', app.autoFillEmail);
+            // Add new listeners
+            namaInput.addEventListener('input', app.autoFillUsername);
+            usernameInput.addEventListener('input', app.autoFillEmail);
+
+            // Reset readonly state for username field
+            usernameInput.readOnly = false;
         }
 
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
+    },
+
+    // Auto-fill username function
+    autoFillUsername: () => {
+        const namaInput = document.getElementById('gu_nama');
+        const usernameInput = document.getElementById('gu_user');
+
+        if (namaInput && usernameInput) {
+            const nama = namaInput.value.trim();
+
+            if (nama) {
+                // Generate username from nama: lowercase, replace spaces with nothing
+                const username = nama.toLowerCase().replace(/\s+/g, '');
+                usernameInput.value = username;
+                usernameInput.readOnly = true; // Make readonly after filling
+                // Also trigger email auto-fill
+                app.autoFillEmail();
+            } else {
+                // Clear username if nama is cleared
+                usernameInput.value = '';
+                usernameInput.readOnly = false; // Make editable again
+            }
+        }
+    },
+
+    // Auto-fill email function
+    autoFillEmail: () => {
+        const usernameInput = document.getElementById('gu_user');
+        const emailInput = document.getElementById('gu_email');
+
+        if (usernameInput && emailInput) {
+            const username = usernameInput.value.trim();
+            if (username) {
+                emailInput.value = `${username}@erapor.id`;
+            } else {
+                emailInput.value = '';
+            }
+        }
     },
 
     saveGuruUser: async () => {
