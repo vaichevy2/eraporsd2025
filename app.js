@@ -28,7 +28,23 @@ const appState = {
         currentPage: 1,
         rowsPerPage: 10,
         totalPages: 1
-    }
+    },
+    reguler: {
+        currentPage: 1,
+        rowsPerPage: 10,
+        totalPages: 1
+    },
+    pilihan: {
+        currentPage: 1,
+        rowsPerPage: 10,
+        totalPages: 1
+    },
+    eskul: {
+        currentPage: 1,
+        rowsPerPage: 10,
+        totalPages: 1
+    },
+
 };
 
 // ======================== SQLITE INTEGRATION ==========================
@@ -586,7 +602,20 @@ const app = {
                 app.loadCPTP();
                 break;
             case 'datakelas':
-                app.renderDataKelas();
+                // Load initial tab (reguler)
+                app.loadDataKelas('reguler');
+                // Set up search functionality for all tabs after page is loaded
+                setTimeout(() => {
+                    ['reguler', 'pilihan', 'eskul'].forEach(type => {
+                        const searchInput = document.getElementById(`search-${type}`);
+                        if (searchInput) {
+                            // Remove existing listeners to avoid duplicates
+                            searchInput.removeEventListener('input', () => app.filterDataKelas(type));
+                            // Add the event listener
+                            searchInput.addEventListener('input', () => app.filterDataKelas(type));
+                        }
+                    });
+                }, 100);
                 break;
             case 'kokurikuler':
                 app.loadKokurikuler();
@@ -1054,6 +1083,7 @@ const app = {
                 document.getElementById('util_jml_siswa').value = utility.jml_siswa || '';
                 document.getElementById('util_tapel').value = utility.tapel || '';
                 document.getElementById('util_tanggal').value = utility.tanggal || '';
+                document.getElementById('util_kurikulum').value = utility.kurikulum || '';
                 document.getElementById('util_kepsek').value = utility.kepsek || '';
                 document.getElementById('util_nip_kepsek').value = utility.nip_kepsek || '';
                 document.getElementById('util_guru').value = utility.guru || '';
@@ -1106,6 +1136,14 @@ const app = {
         appState.siswa.currentPage = 1;
         console.log('Search input triggered:', e.target.value);
         app.loadSiswa();
+    },
+
+    // Search handler for datakelas table
+    handleDataKelasSearch: (e) => {
+        // Reset to first page when searching
+        appState.datakelas.currentPage = 1;
+        console.log('DataKelas search input triggered:', e.target.value);
+        app.renderDataKelas();
     },
 
     // Siswa functions
@@ -1715,13 +1753,15 @@ const app = {
             console.error('Error loading CPTP:', error);
         }
     },
-    renderDataKelas: async () => {
+    // Data Kelas functions with tabbed interface
+    loadDataKelas: async (type) => {
         try {
             await db.init();
             let siswa = await db.get('students');
 
-            // Get filter value
-            const filterKelas = document.getElementById('filter_kelas_datakelas').value;
+            // Get search term for this tab
+            const searchInput = document.getElementById(`search-${type}`);
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
             if (Array.isArray(siswa)) {
                 // Sort by name
@@ -1731,8 +1771,132 @@ const app = {
                     return nameA.localeCompare(nameB);
                 });
 
-                // Apply filter if selected
-                if (filterKelas) {
+                // Apply search filter if search term has at least 1 character
+                if (searchTerm.length >= 1) {
+                    siswa = siswa.filter(s => {
+                        const nama = (s.nama || '').toLowerCase();
+                        const kelasRombel = `${s.kelas || ''}${s.rombel || ''}`.toLowerCase();
+
+                        return nama.includes(searchTerm) || kelasRombel.includes(searchTerm);
+                    });
+                }
+
+                // Filter by type (this would need to be implemented based on your data structure)
+                // For now, we'll show all students in each tab - you can modify this logic
+                // based on how you categorize students into reguler, pilihan, eskul
+                if (type === 'reguler') {
+                    // Add logic to filter reguler students
+                    // siswa = siswa.filter(s => s.type === 'reguler');
+                } else if (type === 'pilihan') {
+                    // Add logic to filter pilihan students
+                    // siswa = siswa.filter(s => s.type === 'pilihan');
+                } else if (type === 'eskul') {
+                    // Add logic to filter eskul students
+                    // siswa = siswa.filter(s => s.type === 'eskul');
+                }
+            }
+
+            const tbody = document.getElementById(`tbody-${type}`);
+            tbody.innerHTML = '';
+
+            if (Array.isArray(siswa)) {
+                // Apply pagination
+                const startIndex = (appState[type].currentPage - 1) * appState[type].rowsPerPage;
+                const endIndex = startIndex + appState[type].rowsPerPage;
+                const paginatedSiswa = siswa.slice(startIndex, endIndex);
+
+                // Calculate student count per class/rombel
+                const studentCountByClass = {};
+                siswa.forEach(s => {
+                    const classKey = `${s.kelas || ''}${s.rombel || ''}`;
+                    if (!studentCountByClass[classKey]) {
+                        studentCountByClass[classKey] = 0;
+                    }
+                    studentCountByClass[classKey]++;
+                });
+
+                paginatedSiswa.forEach((s, index) => {
+                    const classKey = `${s.kelas || ''}${s.rombel || ''}`;
+                    const studentCount = studentCountByClass[classKey] || 0;
+                    const row = `
+                        <tr>
+                            <td>${startIndex + index + 1}</td>
+                            <td>Kurikulum Merdeka</td>
+                            <td>Kelas ${s.kelas || ''}${s.rombel || ''}</td>
+                            <td>${type === 'reguler' ? 'Reguler' : type === 'pilihan' ? 'Pilihan' : 'Eskul'}</td>
+                            <td>${s.kelas || ''}</td>
+                            <td>-</td>
+                            <td>${studentCount}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="app.modalSiswa('edit', ${s.id})"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="app.deleteSiswa(${s.id})"><i class="fas fa-trash"></i> Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                // Render pagination with filtered count
+                app.renderPagination(type, siswa.length);
+            }
+        } catch (error) {
+            console.error(`Error loading data kelas for ${type}:`, error);
+        }
+    },
+
+    filterDataKelas: (type) => {
+        // Reset to first page when filtering
+        appState[type].currentPage = 1;
+        app.loadDataKelas(type);
+    },
+
+    prevPageKelas: (type) => {
+        if (appState[type].currentPage > 1) {
+            appState[type].currentPage--;
+            app.loadDataKelas(type);
+        }
+    },
+
+    nextPageKelas: (type) => {
+        if (appState[type].currentPage < appState[type].totalPages) {
+            appState[type].currentPage++;
+            app.loadDataKelas(type);
+        }
+    },
+
+    renderDataKelas: async () => {
+        try {
+            await db.init();
+            let siswa = await db.get('students');
+
+            // Get search term
+            const searchInput = document.getElementById('search-datakelas');
+            const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+            // Get class filter
+            const filterSelect = document.getElementById('filter_kelas_datakelas');
+            const filterKelas = filterSelect ? filterSelect.value : '';
+
+            if (Array.isArray(siswa)) {
+                // Sort by name
+                siswa.sort((a, b) => {
+                    const nameA = (a.nama || '').toLowerCase();
+                    const nameB = (b.nama || '').toLowerCase();
+                    return nameA.localeCompare(nameB);
+                });
+
+                // Apply search filter if search term has at least 1 character
+                if (searchTerm.length >= 1) {
+                    siswa = siswa.filter(s => {
+                        const nama = (s.nama || '').toLowerCase();
+                        const kelasRombel = `${s.kelas || ''}${s.rombel || ''}`.toLowerCase();
+
+                        return nama.includes(searchTerm) || kelasRombel.includes(searchTerm);
+                    });
+                }
+
+                // Apply class filter if selected
+                if (filterKelas && filterKelas !== '') {
                     siswa = siswa.filter(s => s.kelas == filterKelas);
                 }
 
@@ -1755,16 +1919,24 @@ const app = {
             tbody.innerHTML = '';
 
             if (Array.isArray(siswa)) {
-                siswa.forEach((s, index) => {
+                // Apply pagination
+                const startIndex = (appState.datakelas.currentPage - 1) * appState.datakelas.rowsPerPage;
+                const endIndex = startIndex + appState.datakelas.rowsPerPage;
+                const paginatedSiswa = siswa.slice(startIndex, endIndex);
+
+                paginatedSiswa.forEach((s, index) => {
                     const row = `
                         <tr>
-                            <td>${index + 1}</td>
+                            <td>${startIndex + index + 1}</td>
                             <td>${s.nama || ''}</td>
                             <td>${s.kelas || ''}.${s.rombel || ''}</td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
                 });
+
+                // Render pagination with filtered count
+                app.renderPagination('datakelas', siswa.length);
             }
         } catch (error) {
             console.error('Error loading data kelas:', error);
@@ -2277,6 +2449,9 @@ const app = {
         } else if (type === 'gurumapel' && appState.gurumapel.currentPage < appState.gurumapel.totalPages) {
             appState.gurumapel.currentPage++;
             app.loadGuruMapel();
+        } else if (['reguler', 'pilihan', 'eskul'].includes(type) && appState[type].currentPage < appState[type].totalPages) {
+            appState[type].currentPage++;
+            app.loadDataKelas(type);
         }
     },
     modalSiswa: (action, id = null) => {
@@ -3884,6 +4059,23 @@ const app = {
     cancelSimpleMapelForm: () => {
         document.getElementById('sm_nama').value = '';
         document.getElementById('simple-mapel-form').style.display = 'none';
+    },
+
+    // Sidebar hover functionality
+    handleSidebarHover: () => {
+        const sidebar = document.getElementById('sidebar');
+        const wrapper = document.getElementById('wrapper');
+
+        if (sidebar && wrapper) {
+            // Add hover event listeners
+            sidebar.addEventListener('mouseenter', () => {
+                wrapper.classList.add('sidebar-hovered');
+            });
+
+            sidebar.addEventListener('mouseleave', () => {
+                wrapper.classList.remove('sidebar-hovered');
+            });
+        }
     }
 };
 
@@ -3908,9 +4100,9 @@ function handleScroll() {
     }
 }
 
-// Add scroll event listener when the app loads
-document.addEventListener('DOMContentLoaded', () => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    // Initialize sidebar hover functionality
-    app.handleSidebarHover();
-});
+    // Add scroll event listener when the app loads
+    document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        // Initialize sidebar hover functionality
+        app.handleSidebarHover();
+    });
