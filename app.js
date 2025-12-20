@@ -44,6 +44,11 @@ const appState = {
         rowsPerPage: 10,
         totalPages: 1
     },
+    simple_mapel: {
+        currentPage: 1,
+        rowsPerPage: 10,
+        totalPages: 1
+    },
 
 };
 
@@ -1215,6 +1220,90 @@ const app = {
         }
     },
 
+    // get() and post() functions for kurikulum
+    getKurikulum: async () => {
+        try {
+            await db.init();
+            const utility = await db.get('utility', 1);
+            return utility ? utility.kurikulum || '' : '';
+        } catch (error) {
+            console.error('Error getting kurikulum:', error);
+            return '';
+        }
+    },
+
+    postKurikulum: async (kurikulum) => {
+        try {
+            await db.init();
+
+            // Get existing utility data
+            const utility = await db.get('utility', 1) || { id: 1 };
+
+            // Update kurikulum field
+            utility.kurikulum = kurikulum;
+
+            // Save to IndexedDB
+            await db.saveTo('utility', utility);
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('utility.sqlite', 'utility', utility);
+            if (!sqliteSuccess) {
+                console.warn('Failed to save kurikulum to SQLite, but IndexedDB save was successful');
+            }
+
+            console.log('Kurikulum saved successfully');
+            return true;
+        } catch (error) {
+            console.error('Error saving kurikulum:', error);
+            return false;
+        }
+    },
+
+    // saveto() functions for kurikulum (IndexedDB and SQLiteDB)
+    savetoKurikulumIndexedDB: async (kurikulum) => {
+        try {
+            await db.init();
+
+            // Get existing utility data
+            const utility = await db.get('utility', 1) || { id: 1 };
+
+            // Update kurikulum field
+            utility.kurikulum = kurikulum;
+
+            // Save to IndexedDB
+            await db.saveTo('utility', utility);
+            console.log('Kurikulum saved to IndexedDB successfully');
+            return true;
+        } catch (error) {
+            console.error('Error saving kurikulum to IndexedDB:', error);
+            return false;
+        }
+    },
+
+    savetoKurikulumSQLiteDB: async (kurikulum) => {
+        try {
+            // Get existing utility data from IndexedDB first
+            await db.init();
+            const utility = await db.get('utility', 1) || { id: 1 };
+
+            // Update kurikulum field
+            utility.kurikulum = kurikulum;
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('utility.sqlite', 'utility', utility);
+            if (sqliteSuccess) {
+                console.log('Kurikulum saved to SQLiteDB successfully');
+                return true;
+            } else {
+                console.error('Failed to save kurikulum to SQLiteDB');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error saving kurikulum to SQLiteDB:', error);
+            return false;
+        }
+    },
+
     // Utility functions
     loadUtility: async () => {
         try {
@@ -1236,6 +1325,9 @@ const app = {
                 document.getElementById('util_nip_guru').value = utility.nip_guru || '';
             }
 
+            // Set up auto-save for kurikulum input field
+            app.setupKurikulumAutoSave();
+
             app.triggerSyncGuru();
         } catch (error) {
             console.error('Error loading utility:', error);
@@ -1253,6 +1345,7 @@ const app = {
                 jml_siswa: document.getElementById('util_jml_siswa').value,
                 tapel: document.getElementById('util_tapel').value,
                 tanggal: document.getElementById('util_tanggal').value,
+                kurikulum: document.getElementById('util_kurikulum').value,
                 kepsek: document.getElementById('util_kepsek').value,
                 nip_kepsek: document.getElementById('util_nip_kepsek').value,
                 guru: document.getElementById('util_guru').value,
@@ -1890,10 +1983,14 @@ const app = {
             tbodySimple.innerHTML = '';
 
             if (Array.isArray(mapelSimple)) {
-                mapelSimple.forEach((m, index) => {
+                const startIndex = (appState.simple_mapel.currentPage - 1) * appState.simple_mapel.rowsPerPage;
+                const endIndex = startIndex + appState.simple_mapel.rowsPerPage;
+                const paginatedMapelSimple = mapelSimple.slice(startIndex, endIndex);
+
+                paginatedMapelSimple.forEach((m, index) => {
                     const simpleRow = `
                         <tr>
-                            <td>${index + 1}</td>
+                            <td>${startIndex + index + 1}</td>
                             <td>${m.nama || ''}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="app.modalSimpleMapel('edit', ${m.id})"><i class="fas fa-edit"></i> Edit</button>
@@ -1904,6 +2001,10 @@ const app = {
                     tbodySimple.innerHTML += simpleRow;
                 });
             }
+
+            // Render pagination for simple mapel
+            const totalSimpleMapel = Array.isArray(mapelSimple) ? mapelSimple.length : 0;
+            app.renderPagination('simple_mapel', totalSimpleMapel);
         } catch (error) {
             console.error('Error loading mapel:', error);
         }
@@ -4243,6 +4344,28 @@ const app = {
     cancelSimpleMapelForm: () => {
         document.getElementById('sm_nama').value = '';
         document.getElementById('simple-mapel-form').style.display = 'none';
+    },
+
+    // Setup auto-save for kurikulum input field
+    setupKurikulumAutoSave: () => {
+        const kurikulumInput = document.getElementById('util_kurikulum');
+        if (kurikulumInput) {
+            // Remove existing listener to avoid duplicates
+            kurikulumInput.removeEventListener('input', app.handleKurikulumInput);
+            // Add new listener
+            kurikulumInput.addEventListener('input', app.handleKurikulumInput);
+        }
+    },
+
+    // Handle kurikulum input change
+    handleKurikulumInput: async (event) => {
+        const value = event.target.value;
+        try {
+            await app.postKurikulum(value);
+            console.log('Kurikulum auto-saved:', value);
+        } catch (error) {
+            console.error('Error auto-saving kurikulum:', error);
+        }
     },
 
     // Sidebar hover functionality
