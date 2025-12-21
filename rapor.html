@@ -982,7 +982,33 @@
     <div class="modal fade" id="modalKokurikuler" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Kokurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-kokurikuler"><input type="hidden" id="k_id"><div class="mb-3"><label>Nama Proyek</label><input type="text" class="form-control" id="k_nama" required placeholder="Contoh: Gaya Hidup Berkelanjutan"></div><div class="mb-3"><label>Tema</label><input type="text" class="form-control" id="k_tema" placeholder="Contoh: Sampahku Tanggung Jawabku"></div><div class="mb-3"><label>Deskripsi</label><textarea id="k_deskripsi" class="form-control" rows="3" placeholder="Siswa mampu memilah sampah..."></textarea></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveKokurikuler()">Simpan</button></div></div></div></div>
 
     <!-- Modal Tema Ekskul -->
-    <div class="modal fade" id="modalTemaEkskul" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Tema Kokurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-tema-ekskul"><input type="hidden" id="te_id"><div class="mb-3"><label>Nama Tema</label><input type="text" class="form-control" id="te_nama" required placeholder="Contoh: Olahraga dan Kesehatan"></div><div class="mb-3"><label>Deskripsi</label><textarea id="te_deskripsi" class="form-control" rows="3" placeholder="Deskripsi tema kegiatan ekstrakurikuler..."></textarea></div></form><hr><h6>Kegiatan Kokurikuler dalam Tema Ini</h6><div class="table-responsive"><table class="table table-striped table-sm bg-white"><thead class="table-dark"><tr><th>No</th><th>Nama Proyek</th><th>Deskripsi</th></tr></thead><tbody id="tbody-tema-kegiatan"></tbody></table></div></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveTemaEkskul()">Simpan</button></div></div></div></div>
+    <div class="modal fade" id="modalTemaEkskul" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Data Tema Kokurikuler</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-tema-ekskul">
+                        <input type="hidden" id="te_id">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Tema</label>
+                            <input type="text" class="form-control" id="te_nama" required placeholder="Contoh: Lingkungan Hidup">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Deskripsi</label>
+                            <textarea class="form-control" id="te_deskripsi" rows="3" placeholder="Deskripsi tema kokurikuler..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="app.saveTemaEkskul()">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Kelompok Kokurikuler -->
     <div class="modal fade" id="modalKelompokKokurikuler" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Data Kelompok Kokurikuler</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="form-kelompok-kokurikuler"><input type="hidden" id="kk_id"><div class="mb-3"><label>Nama Kelompok</label><input type="text" class="form-control" id="kk_nama" required placeholder="Contoh: Kelompok A"></div><div class="mb-3"><label>Deskripsi</label><textarea id="kk_deskripsi" class="form-control" rows="3" placeholder="Deskripsi kelompok..."></textarea></div></form></div><div class="modal-footer"><button class="btn btn-custom-save" onclick="app.saveKelompokKokurikuler()">Simpan</button></div></div></div></div>

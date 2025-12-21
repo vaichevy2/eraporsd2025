@@ -219,6 +219,42 @@ async function initProfilePhotosSQLite() {
     }
 }
 
+// Initialize tema ekskul SQLite database
+async function initTemaEkskulSQLite() {
+    try {
+        // Try to load existing database
+        let db = await loadSQLiteFile('tema_ekskul.sqlite');
+
+        // If database doesn't exist, create new one
+        if (!db) {
+            const SQL = await initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.wasm' });
+            db = new SQL.Database();
+            sqliteDBs['tema_ekskul.sqlite'] = db;
+            console.log('Created new tema ekskul SQLite database');
+        }
+
+        // Create table if it doesn't exist
+        const createTableSQL = `
+            CREATE TABLE IF NOT EXISTS tema_ekskul (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nama TEXT NOT NULL,
+                deskripsi TEXT
+            )
+        `;
+
+        db.run(createTableSQL);
+        console.log('Tema ekskul table initialized');
+
+        // Save the database to server
+        await saveSQLiteFile('tema_ekskul.sqlite', db);
+
+        return db;
+    } catch (e) {
+        console.error('Failed to initialize tema ekskul SQLite database:', e);
+        return null;
+    }
+}
+
 // Get profile photo from storage (IndexedDB first, then SQLite fallback)
 async function getProfilePhoto(userId) {
     try {
@@ -2247,8 +2283,25 @@ const app = {
     loadTemaEkskul: async () => {
         try {
             await db.init();
-            const temaEkskul = await db.get('tema_ekskul');
-            const tbody = document.getElementById('tbody-tema-kegiatan');
+            let temaEkskul = await db.get('tema_ekskul');
+
+            // If no data in IndexedDB, try to load from SQLiteDB
+            if (!Array.isArray(temaEkskul) || temaEkskul.length === 0) {
+                console.log('No tema ekskul data found in IndexedDB, trying SQLiteDB...');
+                // Initialize SQLiteDB first
+                await initTemaEkskulSQLite();
+                const sqliteData = getSQLiteData('tema_ekskul.sqlite', 'tema_ekskul');
+                if (Array.isArray(sqliteData) && sqliteData.length > 0) {
+                    console.log('Found tema ekskul data in SQLiteDB, syncing to IndexedDB...');
+                    // Sync SQLiteDB data to IndexedDB for faster access
+                    for (const tema of sqliteData) {
+                        await db.saveTo('tema_ekskul', tema);
+                    }
+                    temaEkskul = sqliteData;
+                }
+            }
+
+            const tbody = document.getElementById('tbody-tema-ekskul');
             tbody.innerHTML = '';
 
             if (Array.isArray(temaEkskul)) {
@@ -3383,7 +3436,6 @@ const app = {
             document.getElementById('te_id').value = '';
             document.getElementById('te_nama').value = '';
             document.getElementById('te_deskripsi').value = '';
-            document.getElementById('tbody-tema-kegiatan').innerHTML = '';
         } else if (action === 'edit' && id) {
             // Load existing data for editing
             try {
@@ -3427,7 +3479,15 @@ const app = {
                 data.id = parseInt(id);
             }
 
+            // Save to IndexedDB
             await db.saveTo('tema_ekskul', data);
+
+            // Save to SQLiteDB
+            const sqliteSuccess = saveSQLiteData('tema_ekskul.sqlite', 'tema_ekskul', data);
+            if (!sqliteSuccess) {
+                console.warn('Failed to save tema ekskul to SQLite, but IndexedDB save was successful');
+            }
+
             app.showAlert('Tema kokurikuler berhasil disimpan', 'success');
             app.loadTemaEkskul();
             bootstrap.Modal.getInstance(document.getElementById('modalTemaEkskul')).hide();
