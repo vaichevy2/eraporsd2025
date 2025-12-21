@@ -82,7 +82,7 @@
 
 /* --- CSS UTAMA --- */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Arial', Helvetica, sans-serif;
     overflow-x: hidden;
     background-color: #f4f6f9;
 }
@@ -163,6 +163,25 @@ body {
     height: 60px;
     background: transparent;
     z-index: 1000;
+}
+
+/* --- HEADER PROGRESS BAR --- */
+.header-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 9px;
+    background: linear-gradient(90deg, #ff5722, #ffc107);
+    display: none;
+    z-index: 1001;
+    animation: progressAnimation 6s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .header-content {
@@ -349,8 +368,8 @@ body {
     color: white;
 }
 
-.btn-custom-save { background-color: #28a745; color: white; }
-.btn-custom-delete { background-color: #dc3545; color: white; }
+.btn-custom-save { background-color: #28a745; color: rgb(45, 96, 11); }
+.btn-custom-delete { background-color: #dc3545; color: rgb(155, 23, 23); }
 
 /* Custom Table Actions Dropdown */
 .dropdown-toggle::after { display: none; }

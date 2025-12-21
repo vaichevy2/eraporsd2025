@@ -954,6 +954,7 @@ const app = {
 
     saveAdmin: async () => {
         try {
+            app.showHeaderProgress();
             app.showLoading('Menyimpan data admin...');
             const id = document.getElementById('adm_id').value;
             const username = document.getElementById('adm_user').value;
@@ -982,9 +983,12 @@ const app = {
             app.showAlert('Admin berhasil disimpan', 'success');
             app.loadAdminUsers();
             bootstrap.Modal.getInstance(document.getElementById('modalAdmin')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving admin:', error);
             app.showAlert('Gagal menyimpan admin', 'danger');
+            app.hideHeaderProgress();
         } finally {
             app.hideLoading();
         }
@@ -1122,6 +1126,8 @@ const app = {
 
     saveSekolah: async () => {
         try {
+            app.showHeaderProgress();
+
             const data = {
                 id: 1,
                 nama: document.getElementById('sekolah_nama').value,
@@ -1146,9 +1152,12 @@ const app = {
             }
 
             app.showAlert('Data sekolah berhasil disimpan', 'success');
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving sekolah:', error);
             app.showAlert('Gagal menyimpan data sekolah', 'danger');
+            app.hideHeaderProgress();
         }
     },
 
@@ -1336,6 +1345,8 @@ const app = {
 
     saveUtility: async () => {
         try {
+            app.showHeaderProgress();
+
             const data = {
                 id: 1,
                 kelas: document.getElementById('util_kelas').value,
@@ -1354,9 +1365,12 @@ const app = {
 
             await db.saveTo('utility', data);
             app.showAlert('Data utility berhasil disimpan', 'success');
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving utility:', error);
             app.showAlert('Gagal menyimpan data utility', 'danger');
+            app.hideHeaderProgress();
         }
     },
 
@@ -2718,6 +2732,9 @@ const app = {
         } else if (type === 'gurumapel' && appState.gurumapel.currentPage > 1) {
             appState.gurumapel.currentPage--;
             app.loadGuruMapel();
+        } else if (type === 'simple_mapel' && appState.simple_mapel.currentPage > 1) {
+            appState.simple_mapel.currentPage--;
+            app.loadMapel();
         }
     },
     nextPage: (type) => {
@@ -2736,6 +2753,9 @@ const app = {
         } else if (type === 'gurumapel' && appState.gurumapel.currentPage < appState.gurumapel.totalPages) {
             appState.gurumapel.currentPage++;
             app.loadGuruMapel();
+        } else if (type === 'simple_mapel' && appState.simple_mapel.currentPage < appState.simple_mapel.totalPages) {
+            appState.simple_mapel.currentPage++;
+            app.loadMapel();
         } else if (['reguler', 'pilihan', 'eskul'].includes(type) && appState[type].currentPage < appState[type].totalPages) {
             appState[type].currentPage++;
             app.loadDataKelas(type);
@@ -2785,6 +2805,7 @@ const app = {
     },
     saveSiswa: async () => {
         try {
+            app.showHeaderProgress();
             app.showLoading('Menyimpan data siswa...');
             const id = document.getElementById('s_id').value;
             const nisn = document.getElementById('s_nisn').value;
@@ -2844,9 +2865,12 @@ const app = {
             app.showAlert('Siswa berhasil disimpan', 'success');
             app.loadSiswa();
             bootstrap.Modal.getInstance(document.getElementById('modalSiswa')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving siswa:', error);
             app.showAlert('Gagal menyimpan siswa', 'danger');
+            app.hideHeaderProgress();
         } finally {
             app.hideLoading();
         }
@@ -2935,6 +2959,8 @@ const app = {
 
     saveGuru: async () => {
         try {
+            app.showHeaderProgress();
+
             const id = document.getElementById('g_id').value;
             const nuptk = document.getElementById('g_nuptk').value;
             const nip = document.getElementById('g_nip').value;
@@ -2962,9 +2988,12 @@ const app = {
             app.showAlert('Guru berhasil disimpan', 'success');
             app.loadwali();
             bootstrap.Modal.getInstance(document.getElementById('modalGuru')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving guru:', error);
             app.showAlert('Gagal menyimpan guru', 'danger');
+            app.hideHeaderProgress();
         }
     },
     deleteGuru: async (id) => {
@@ -3044,6 +3073,8 @@ const app = {
     },
     saveGuruMapel: async () => {
         try {
+            app.showHeaderProgress();
+
             const id = document.getElementById('gm_id').value;
             const nuptk = document.getElementById('gm_nuptk').value;
             const nama = document.getElementById('gm_nama').value;
@@ -3069,9 +3100,12 @@ const app = {
             app.showAlert('Guru Mapel berhasil disimpan', 'success');
             app.loadGuruMapel();
             bootstrap.Modal.getInstance(document.getElementById('modalGuruMapel')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving guru mapel:', error);
             app.showAlert('Gagal menyimpan guru mapel', 'danger');
+            app.hideHeaderProgress();
         } finally {
             app.hideLoading();
         }
@@ -3372,6 +3406,7 @@ const app = {
     },
     saveTemaEkskul: async () => {
         try {
+            app.showHeaderProgress();
             const id = document.getElementById('te_id').value;
             const nama = document.getElementById('te_nama').value.trim();
             const deskripsi = document.getElementById('te_deskripsi').value.trim();
@@ -3379,6 +3414,7 @@ const app = {
             // Validate required fields
             if (!nama) {
                 app.showAlert('Nama tema harus diisi', 'warning');
+                app.hideHeaderProgress();
                 return;
             }
 
@@ -3395,9 +3431,12 @@ const app = {
             app.showAlert('Tema kokurikuler berhasil disimpan', 'success');
             app.loadTemaEkskul();
             bootstrap.Modal.getInstance(document.getElementById('modalTemaEkskul')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving tema ekskul:', error);
             app.showAlert('Gagal menyimpan tema kokurikuler', 'danger');
+            app.hideHeaderProgress();
         } finally {
             app.hideLoading();
         }
@@ -4235,6 +4274,7 @@ const app = {
 
     saveSimpleMapel: async () => {
         try {
+            app.showHeaderProgress();
             app.showLoading('Menyimpan data mata pelajaran sederhana...');
             const id = document.getElementById('m_id').value;
             const nama = document.getElementById('m_nama').value.trim();
@@ -4260,9 +4300,12 @@ const app = {
             app.showAlert('Mata pelajaran berhasil disimpan', 'success');
             app.loadMapel();
             bootstrap.Modal.getInstance(document.getElementById('modalMapel')).hide();
+            app.hideHeaderProgress();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             console.error('Error saving simple mapel:', error);
             app.showAlert('Gagal menyimpan mata pelajaran', 'danger');
+            app.hideHeaderProgress();
         } finally {
             app.hideLoading();
         }
@@ -4382,6 +4425,29 @@ const app = {
             sidebar.addEventListener('mouseleave', () => {
                 wrapper.classList.remove('sidebar-hovered');
             });
+        }
+    },
+
+    // Header progress bar functions
+    showHeaderProgress: () => {
+        const progressBar = document.getElementById('header-progress-bar');
+        console.log('showHeaderProgress called, element found:', progressBar);
+        if (progressBar) {
+            progressBar.style.display = 'block';
+            console.log('Progress bar displayed');
+        } else {
+            console.error('Progress bar element not found');
+        }
+    },
+
+    hideHeaderProgress: () => {
+        const progressBar = document.getElementById('header-progress-bar');
+        console.log('hideHeaderProgress called, element found:', progressBar);
+        if (progressBar) {
+            progressBar.style.display = 'none';
+            console.log('Progress bar hidden');
+        } else {
+            console.error('Progress bar element not found');
         }
     }
 };
