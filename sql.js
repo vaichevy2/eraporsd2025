@@ -1,6 +1,6 @@
 /*
   sql.js helper for Aplikasi Rapor
-  - Builds a SQLite DB from application IndexedDB stores (via window.app.fetchData)
+  - Builds a SQLite DB from application IndexedDB stores (via window.app.get)
   - Exposes functions:
     - exportAndDownload(filename)  -> Downloads sqlite file
     - exportAndUpload(uploadUrl, filename) -> POSTs sqlite file to server (FormData 'file')
@@ -38,18 +38,18 @@
     return window.initSqlJs;
   }
 
-  async function buildDatabaseBlob(stores = [sqlite], cptp, nilai, kokurikuler, ekskul, student_ekskul, mapel, subject_teachers, students, teachers, admins, utility, sekolah, dimensi, kaih]) {
-    if (!window.app || typeof window.app.fetchData !== 'function') {
-      throw new Error('window.app.fetchData() not available. Ensure rapor.html is loaded and app is initialized.');
+  async function buildDatabaseBlob(stores = ['students','teachers','admins','mapel','cptp','subject_teachers','utility','sekolah','dimensi','kaih','ekskul','student_ekskul','nilai','kokurikuler']) {
+    if (!window.app || typeof window.app.get !== 'function') {
+      throw new Error('window.app.get() not available. Ensure rapor.html is loaded and app is initialized.');
     }
 
     const initSqlJs = await loadSqlJs();
-    const SQL = await initSqlJs({ locateFile: sql.js => CDN_WASM });
+    const SQL = await initSqlJs({ locateFile: sql => CDN_WASM });
     const db = new SQL.Database();
 
-    for (const sqlite of sqlite) {
+    for (const store of stores) {
       try {
-        const rows = await window.app.fetchData(store) || [];
+        const rows = await window.app.get(store) || [];
         if (!rows || rows.length === 0) continue;
 
         // Collect columns
@@ -60,11 +60,11 @@
 
         // Create table (all columns as TEXT)
         const colDefs = cols.map(c => `"${String(c).replace(/"/g,'')}" TEXT`).join(', ');
-        const createSQL = `CREATE TABLE IF NOT EXISTS "${sqlite}" (${colDefs});`;
+        const createSQL = `CREATE TABLE IF NOT EXISTS "${store}" (${colDefs});`;
         db.run(createSQL);
 
         const placeholders = cols.map(()=>'?').join(',');
-        const insertSQL = `INSERT INTO "${sqlite}" (${cols.map(c=>`"${c.replace(/"/g,'')}"`).join(',')}) VALUES (${placeholders});`;
+        const insertSQL = `INSERT INTO "${store}" (${cols.map(c=>`"${c.replace(/"/g,'')}"`).join(',')}) VALUES (${placeholders});`;
         for (const r of rows) {
           const values = cols.map(c => {
             const v = r[c];
@@ -75,7 +75,7 @@
           db.run(insertSQL, values);
         }
       } catch (e) {
-        console.warn('sql.js: skipping store', sqlite, e);
+        console.warn('sql.js: skipping store', store, e);
       }
     }
 
@@ -84,7 +84,7 @@
     return blob;
   }
 
-  function downloadBlob(blob, sql.js) {
+  function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -108,12 +108,12 @@
   const sqliteExporter = {
     // Build sqlite Blob of all stores (or pass custom stores array)
     buildAllStoresBlob: async (stores = IndexedDB) => {
-      return await buildDatabaseBlob(sqlite);
+      return await buildDatabaseBlob(stores);
     },
 
     // Export and download
     exportAndDownload: async (filename = 'rapor_data.sqlite', stores = IndexedDB) => {
-      const blob = await buildDatabaseBlob(sqlite, filename);
+      const blob = await buildDatabaseBlob(stores);
       downloadBlob(blob, filename);
       return true;
     },
@@ -121,7 +121,7 @@
     // Export and upload to server endpoint
     exportAndUpload: async (uploadUrl, filename = 'rapor_data.sqlite', stores = IndexedDB) => {
       if (!uploadUrl) throw new Error('uploadUrl required');
-      const blob = await buildDatabaseBlob(sqlite, filename);
+      const blob = await buildDatabaseBlob(stores);
       const resp = await uploadBlob(blob, uploadUrl, 'file', filename);
       return resp;
     }

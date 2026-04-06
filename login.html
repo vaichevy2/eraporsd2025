@@ -127,6 +127,22 @@
             margin-top: 5px;
             display: none;
         }
+
+        /* Fade-in animation for password fields */
+        .fade-in-fields {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -144,14 +160,25 @@
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="form-check mb-4">
+                <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="remember" value="">
                     <label class="form-check-label" for="remember">
                         Ingat saya
                     </label>
+                </div>
+
+                <div class="text-end mb-3">
+                    <a href="#" class="text-decoration-none" onclick="showForgotPasswordModal()">
+                        <small>Lupa Password?</small>
+                    </a>
                 </div>
 
                 <div id="errorMsg" class="error-message">
@@ -162,38 +189,134 @@
                     <i class="fas fa-sign-in-alt"></i> Masuk
                 </button>
 
-                <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="quickLogin()">
+                <button type="button" class="btn btn-outline-light w-100 mt-2" onclick="quickLogin()" style="display: none;">
                     <i class="fas fa-key"></i> Demo Login (admin)
+                </button>
+
+                <button type="button" class="btn btn-outline-warning w-100 mt-2" onclick="demoAccess()" style="display: none;">
+                    <i class="fas fa-eye"></i> Demo Access (View App)
                 </button>
             </form>
 
             <div class="footer-text">
-                <small>Gunakan akun admin untuk masuk</small><br>
-                <small>Username: <strong>admin</strong> | Password: <strong>rapor123</strong></small>
+                <small style="color: #000; font-weight: bold;">@2025.Cepi Kunaefi</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">
+                        <i class="fas fa-key"></i> Lupa Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Masukkan username dan email Anda untuk mereset password. Sistem akan memverifikasi data dengan data pengguna guru.</p>
+
+                    <form id="forgotPasswordForm" onsubmit="handleForgotPassword(event)">
+                        <div class="mb-3">
+                            <label for="fp_username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="fp_username" placeholder="Masukkan username Anda" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="fp_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="fp_email" placeholder="Masukkan email Anda" required>
+                            <small class="text-muted">klik di luar area setelah input</small>
+                        </div>
+
+                        <div id="fp_errorMsg" class="error-message" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i> <span id="fp_errorText"></span>
+                        </div>
+
+                        <div id="fp_successMsg" class="success-message" style="display: none;">
+                            <i class="fas fa-check-circle"></i> <span id="fp_successText"></span>
+                        </div>
+
+                        <!-- New Password Fields (Hidden initially) -->
+                        <div id="newPasswordFields" class="fade-in-fields" style="display: none;">
+                            <hr>
+                            <h6 class="text-success mb-3"><i class="fas fa-check-circle"></i> Data ditemukan! Masukkan password baru</h6>
+
+                            <div class="mb-3">
+                                <label for="fp_new_password" class="form-label">Password Baru</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="fp_new_password" placeholder="Masukkan password baru" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fp_confirm_password" class="form-label">Konfirmasi Password Baru</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="fp_confirm_password" placeholder="Konfirmasi password baru" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="fp_password_errorMsg" class="error-message" style="display: none;">
+                                <i class="fas fa-exclamation-circle"></i> <span id="fp_password_errorText"></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" form="forgotPasswordForm" class="btn btn-primary" id="fp_submitBtn">
+                        <i class="fas fa-paper-plane"></i> Kirim Permintaan Reset
+                    </button>
+                    <button type="button" class="btn btn-success" id="fp_resetBtn" style="display: none;" onclick="handleResetPassword()">
+                        <i class="fas fa-save"></i> Reset Password
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const DB_NAME = "RaporDeepLearningDB";
-        const DB_VERSION = 6;
+        const DB_VERSION = 9;
         let dbInstance;
+
+        // Daftar tabel yang hanya boleh punya 1 baris data (single entry)
+        const SINGLE_ENTRY_STORES = ['sekolah', 'utility', 'dimensi', 'kaih'];
 
         // Initialize IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
+                // Cek dukungan browser
+                if (!window.indexedDB) {
+                    reject("Browser tidak mendukung IndexedDB");
+                    return;
+                }
+
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    const stores = ['sekolah', 'utility', 'students', 'teachers', 'subject_teachers', 'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul', 'student_ekskul', 'kokurikuler', 'admins'];
+                    const stores = [
+                        'sekolah', 'utility', 'students', 'teachers', 'subject_teachers',
+                        'mapel', 'cptp', 'dimensi', 'kaih', 'nilai', 'ekskul',
+                        'student_ekskul', 'kokurikuler', 'tema_ekskul', 'tema_kokurikuler', 'admins',
+                        'kelompok_kokurikuler', 'siswa_kelompok_kokurikuler'
+                    ];
                     stores.forEach(s => {
                         if (!db.objectStoreNames.contains(s)) {
-                            db.createObjectStore(s, { keyPath: 'id', autoIncrement: s !== 'sekolah' && s !== 'utility' && s !== 'dimensi' && s !== 'kaih' });
+                            const isSingleEntry = SINGLE_ENTRY_STORES.includes(s);
+                            const auto = !isSingleEntry;
+                            db.createObjectStore(s, { keyPath: 'id', autoIncrement: auto });
                         }
                     });
                 };
                 request.onsuccess = (e) => { dbInstance = e.target.result; resolve(dbInstance); };
-                request.onerror = (e) => reject("Database Error");
+                request.onerror = (e) => reject("Database Error: " + e.target.error);
             });
         }
 
@@ -218,27 +341,80 @@
 
         // Authenticate user with username and password
         async function authenticateUser(username, password, remember = false) {
+            console.log('Starting authentication for user:', username);
+
             if (!dbInstance) {
+                console.log('Initializing database...');
                 await initDB();
             }
 
             try {
-                // Seed default admin if DB is empty
+                // Seed default admin and super admin if not exists
+                console.log('Checking for default admin user...');
                 const admins = await getFromDB('admins');
-                if (!admins || admins.length === 0) {
-                    await saveToDB('admins', { username: 'admin', password: 'rapor123', level: 'Super Admin' });
+                console.log('Current admins:', admins);
+
+                let adminExists = false;
+                let superAdminExists = false;
+                if (admins && admins.length > 0) {
+                    const adminUser = admins.find(a => a.username === 'admin');
+                    const superAdminUser = admins.find(a => a.username === 'vaichevy');
+
+                    if (adminUser) {
+                        adminExists = true;
+                        console.log('Admin user found, checking password...');
+                        if (adminUser.password !== 'admin') {
+                            console.log('Updating admin password...');
+                            adminUser.password = 'admin';
+                            await saveToDB('admins', adminUser);
+                        }
+                    }
+
+                    if (superAdminUser) {
+                        superAdminExists = true;
+                        console.log('Super admin user found');
+                    }
+                }
+
+                if (!adminExists) {
+                    console.log('Creating default admin user...');
+                    await saveToDB('admins', {
+                        username: 'admin',
+                        password: 'admin',
+                        level: 'Admin',
+                        aktif: true,
+                        last_login: null,
+                        online: false
+                    });
+                }
+
+                if (!superAdminExists) {
+                    console.log('Creating default super admin user...');
+                    await saveToDB('admins', {
+                        username: 'vaichevy',
+                        password: 'Cepi1978',
+                        level: 'Super Admin',
+                        aktif: true,
+                        last_login: null,
+                        online: false
+                    });
                 }
 
                 // Authenticate
+                console.log('Authenticating user...');
                 const allAdmins = await getFromDB('admins');
+                console.log('All admins for auth:', allAdmins);
+
                 const found = allAdmins.find(a => String(a.username) === username && String(a.password) === password);
+                console.log('Authentication result:', found ? 'SUCCESS' : 'FAILED');
 
                 if (found) {
                     // Save remember-me token with ID
                     if (found.id) {
+                        console.log('Saving user ID to localStorage:', found.id);
                         localStorage.setItem('rapor_remember_user_id', String(found.id));
                     }
-                    
+
                     // Store additional user data if remember is checked
                     if (remember) {
                         localStorage.setItem('rapor_remember_user', JSON.stringify({
@@ -250,15 +426,16 @@
 
                     // Small delay to ensure localStorage is written, then redirect
                     setTimeout(() => {
-                        window.location.href = 'rapor.html?page=datapengguna';
+                        console.log('Redirecting to rapor.html...');
+                        window.location.href = 'rapor.html?page=dashboard';
                     }, 100);
-                    
+
                     return true;
                 } else {
                     return false;
                 }
             } catch (e) {
-                console.error(e);
+                console.error('Authentication error:', e);
                 return false;
             }
         }
@@ -272,25 +449,50 @@
             const remember = document.getElementById('remember').checked;
             const errorMsg = document.getElementById('errorMsg');
             const errorText = document.getElementById('errorText');
+            const loginBtn = document.querySelector('.btn-login');
 
-            const success = await authenticateUser(username, password, remember);
-            
-            if (!success) {
-                errorText.textContent = 'Username atau Password salah';
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Masuk...';
+
+            try {
+                const success = await authenticateUser(username, password, remember);
+
+                if (!success) {
+                    errorText.textContent = 'Username atau Password salah';
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Login error:', e);
+                errorText.textContent = 'Terjadi kesalahan saat login';
                 errorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
             }
         }
 
         // Quick login with demo credentials
         async function quickLogin() {
-            const success = await authenticateUser('admin', 'rapor123', true);
-            
+            const success = await authenticateUser('admin', 'admin', true);
+
             if (!success) {
                 const errorMsg = document.getElementById('errorMsg');
                 const errorText = document.getElementById('errorText');
                 errorText.textContent = 'Demo login gagal. Silakan coba manual.';
                 errorMsg.style.display = 'block';
             }
+        }
+
+        // Demo access - direct navigation to rapor.html without authentication
+        function demoAccess() {
+            // Clear any existing session
+            localStorage.removeItem('rapor_remember_user_id');
+            localStorage.removeItem('rapor_remember_user');
+
+            // Redirect to rapor.html with demo flag
+            window.location.href = 'rapor.html?page=dashboard&demo=true';
         }
 
         // Check for auto-login on page load
@@ -301,10 +503,53 @@
                     await initDB();
                 }
                 try {
+                    // Seed default admin and super admin if not exists
+                    const admins = await getFromDB('admins');
+                    let adminExists = false;
+                    let superAdminExists = false;
+                    if (admins && admins.length > 0) {
+                        const adminUser = admins.find(a => a.username === 'admin');
+                        const superAdminUser = admins.find(a => a.username === 'vaichevy');
+
+                        if (adminUser) {
+                            adminExists = true;
+                            if (adminUser.password !== 'admin') {
+                                adminUser.password = 'admin';
+                                await saveToDB('admins', adminUser);
+                            }
+                        }
+
+                        if (superAdminUser) {
+                            superAdminExists = true;
+                        }
+                    }
+
+                    if (!adminExists) {
+                        await saveToDB('admins', {
+                            username: 'admin',
+                            password: 'admin',
+                            level: 'Admin',
+                            aktif: true,
+                            last_login: null,
+                            online: false
+                        });
+                    }
+
+                    if (!superAdminExists) {
+                        await saveToDB('admins', {
+                            username: 'vaichevy',
+                            password: 'Cepi1978',
+                            level: 'Super Admin',
+                            aktif: true,
+                            last_login: null,
+                            online: false
+                        });
+                    }
+
                     const remembered = await getFromDB('admins', parseInt(rememberedId));
                     if (remembered && remembered.id) {
                         // Auto-login successful, redirect to rapor.html
-                        window.location.href = 'rapor.html?page=datapengguna';
+                        window.location.href = 'rapor.html?page=dashboard';
                     }
                 } catch (e) {
                     console.log('Auto-login check failed:', e);
@@ -321,6 +566,312 @@
         // Focus on first input
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('username').focus();
+        });
+
+        // Show forgot password modal
+        function showForgotPasswordModal() {
+            // Clear any previous messages
+            document.getElementById('fp_errorMsg').style.display = 'none';
+            document.getElementById('fp_successMsg').style.display = 'none';
+            document.getElementById('fp_password_errorMsg').style.display = 'none';
+
+            // Clear form fields
+            document.getElementById('fp_username').value = '';
+            document.getElementById('fp_email').value = '';
+            document.getElementById('fp_new_password').value = '';
+            document.getElementById('fp_confirm_password').value = '';
+
+            // Hide password fields and reset buttons
+            document.getElementById('newPasswordFields').style.display = 'none';
+            document.getElementById('fp_submitBtn').style.display = 'inline-block';
+            document.getElementById('fp_resetBtn').style.display = 'none';
+
+            // Reset verification status
+            window.isVerified = false;
+            window.matchingUserForReset = null;
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+
+            // Add blur event listeners for automatic verification
+            document.getElementById('fp_username').addEventListener('blur', checkAndVerifyUser);
+            document.getElementById('fp_email').addEventListener('blur', checkAndVerifyUser);
+        }
+
+        // Check and verify user automatically when both fields are filled
+        async function checkAndVerifyUser() {
+            const username = document.getElementById('fp_username').value.trim();
+            const email = document.getElementById('fp_email').value.trim();
+
+            // Only proceed if both fields are filled and not already verified
+            if (!username || !email || window.isVerified) {
+                return;
+            }
+
+            // Hide previous messages
+            document.getElementById('fp_errorMsg').style.display = 'none';
+            document.getElementById('fp_successMsg').style.display = 'none';
+
+            try {
+                // Initialize database if not already done
+                if (!dbInstance) {
+                    await initDB();
+                }
+
+                // Get all admin users and filter for teachers (level = 'Guru')
+                const allAdmins = await getFromDB('admins');
+                const guruUsers = Array.isArray(allAdmins) ? allAdmins.filter(admin => admin.level === 'Guru') : [];
+
+                // Find matching teacher user
+                const matchingUser = guruUsers.find(guru =>
+                    String(guru.username).toLowerCase() === username.toLowerCase() &&
+                    String(guru.email).toLowerCase() === email.toLowerCase()
+                );
+
+                if (matchingUser) {
+                    // Success - user found in teacher data, show password fields with animation
+                    window.isVerified = true;
+                    window.matchingUserForReset = matchingUser;
+
+                    // Show success message
+                    const successMsg = document.getElementById('fp_successMsg');
+                    const successText = document.getElementById('fp_successText');
+                    successText.textContent = 'Data ditemukan! Silakan masukkan password baru.';
+                    successMsg.style.display = 'block';
+
+                    // Hide the submit button and show reset button
+                    document.getElementById('fp_submitBtn').style.display = 'none';
+                    document.getElementById('fp_resetBtn').style.display = 'inline-block';
+
+                    // Show password fields with fade animation
+                    const passwordFields = document.getElementById('newPasswordFields');
+                    passwordFields.style.display = 'block';
+
+                    // Focus on the new password field
+                    setTimeout(() => {
+                        document.getElementById('fp_new_password').focus();
+                    }, 600); // Wait for animation to complete
+
+                    console.log('Teacher data found for password reset:', matchingUser.nama_pengguna || matchingUser.username);
+                } else {
+                    // User not found in teacher data - show error but don't prevent retry
+                    const errorMsg = document.getElementById('fp_errorMsg');
+                    const errorText = document.getElementById('fp_errorText');
+                    errorText.textContent = 'Username dan email tidak ditemukan dalam data pengguna guru. Silakan periksa kembali data Anda.';
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error verifying user:', error);
+                const errorMsg = document.getElementById('fp_errorMsg');
+                const errorText = document.getElementById('fp_errorText');
+                errorText.textContent = 'Terjadi kesalahan saat memverifikasi data. Silakan coba lagi.';
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        // Handle forgot password form submission
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('fp_username').value.trim();
+            const email = document.getElementById('fp_email').value.trim();
+            const errorMsg = document.getElementById('fp_errorMsg');
+            const errorText = document.getElementById('fp_errorText');
+            const successMsg = document.getElementById('fp_successMsg');
+            const successText = document.getElementById('fp_successText');
+            const submitBtn = document.querySelector('#forgotPasswordModal .btn-primary');
+
+            // Hide previous messages
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            // Validate inputs
+            if (!username || !email) {
+                errorText.textContent = 'Username dan email harus diisi';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+
+            try {
+                // Initialize database if not already done
+                if (!dbInstance) {
+                    await initDB();
+                }
+
+                // Get all admin users and filter for teachers (level = 'Guru')
+                const allAdmins = await getFromDB('admins');
+                const guruUsers = Array.isArray(allAdmins) ? allAdmins.filter(admin => admin.level === 'Guru') : [];
+
+                // Find matching teacher user
+                const matchingUser = guruUsers.find(guru =>
+                    String(guru.username).toLowerCase() === username.toLowerCase() &&
+                    String(guru.email).toLowerCase() === email.toLowerCase()
+                );
+
+                if (matchingUser) {
+                    // Success - user found in teacher data, show password fields with animation
+                    successText.textContent = 'Data ditemukan! Silakan masukkan password baru.';
+                    successMsg.style.display = 'block';
+
+                    // Store the matching user for password reset
+                    window.matchingUserForReset = matchingUser;
+
+                    // Hide the submit button and show reset button
+                    document.getElementById('fp_submitBtn').style.display = 'none';
+                    document.getElementById('fp_resetBtn').style.display = 'inline-block';
+
+                    // Show password fields with fade animation
+                    const passwordFields = document.getElementById('newPasswordFields');
+                    passwordFields.style.display = 'block';
+
+                    // Focus on the new password field
+                    setTimeout(() => {
+                        document.getElementById('fp_new_password').focus();
+                    }, 600); // Wait for animation to complete
+
+                    console.log('Teacher data found for password reset:', matchingUser.nama_pengguna || matchingUser.username);
+                } else {
+                    // User not found in teacher data
+                    errorText.textContent = 'Username dan email tidak ditemukan dalam data pengguna guru. Silakan periksa kembali data Anda.';
+                    errorMsg.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error processing forgot password:', error);
+                errorText.textContent = 'Terjadi kesalahan saat memproses permintaan. Silakan coba lagi.';
+                errorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Permintaan Reset';
+            }
+        }
+
+        // Handle password reset
+        async function handleResetPassword() {
+            const newPassword = document.getElementById('fp_new_password').value;
+            const confirmPassword = document.getElementById('fp_confirm_password').value;
+            const passwordErrorMsg = document.getElementById('fp_password_errorMsg');
+            const passwordErrorText = document.getElementById('fp_password_errorText');
+            const resetBtn = document.getElementById('fp_resetBtn');
+
+            // Hide previous password error messages
+            passwordErrorMsg.style.display = 'none';
+
+            // Validate passwords
+            if (!newPassword || !confirmPassword) {
+                passwordErrorText.textContent = 'Password baru dan konfirmasi harus diisi';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                passwordErrorText.textContent = 'Password baru dan konfirmasi tidak cocok';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                passwordErrorText.textContent = 'Password baru harus minimal 6 karakter';
+                passwordErrorMsg.style.display = 'block';
+                return;
+            }
+
+            // Disable button and show loading
+            resetBtn.disabled = true;
+            resetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                // Update the user's password
+                const userToUpdate = window.matchingUserForReset;
+                if (!userToUpdate) {
+                    passwordErrorText.textContent = 'Data pengguna tidak ditemukan. Silakan coba lagi.';
+                    passwordErrorMsg.style.display = 'block';
+                    return;
+                }
+
+                userToUpdate.password = newPassword;
+                await saveToDB('admins', userToUpdate);
+
+                // Success - show success message and close modal
+                const successMsg = document.getElementById('fp_successMsg');
+                const successText = document.getElementById('fp_successText');
+                successText.textContent = 'Password berhasil direset! Anda dapat login dengan password baru.';
+                successMsg.style.display = 'block';
+
+                // Hide password fields
+                document.getElementById('newPasswordFields').style.display = 'none';
+
+                console.log('Password reset successful for teacher:', userToUpdate.nama_pengguna || userToUpdate.username);
+
+                // Auto-close modal after 3 seconds
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                passwordErrorText.textContent = 'Terjadi kesalahan saat mereset password. Silakan coba lagi.';
+                passwordErrorMsg.style.display = 'block';
+            } finally {
+                // Re-enable button
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = '<i class="fas fa-save"></i> Reset Password';
+            }
+        }
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Toggle new password visibility in forgot password modal
+        document.getElementById('toggleNewPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('fp_new_password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Toggle confirm password visibility in forgot password modal
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('fp_confirm_password');
+            const toggleIcon = this.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
         });
     </script>
 
